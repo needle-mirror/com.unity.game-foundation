@@ -1,0 +1,5 @@
+{
+	"displayName":"00 Catalog (required for samples)",
+	"description": "This sample contains a catalog which should be used in all other samples. It also contains a class with helper methods for the samples.",
+	"createSeparatePackage": false
+}

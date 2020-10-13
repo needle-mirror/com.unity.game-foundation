@@ -1,0 +1,5 @@
+{
+	"displayName":"06 Data Persistence",
+	"description": "This sample showcases how to use a Persistence Data Layer to save and load your data.",
+	"createSeparatePackage": false
+}

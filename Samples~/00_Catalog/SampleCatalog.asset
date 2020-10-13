@@ -1,0 +1,1167 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6d6d794703b5406883240f543e5b084, type: 3}
+  m_Name: SampleCatalog
+  m_EditorClassIdentifier: 
+  m_TagCatalog: {fileID: 114608161626123994}
+  m_Items:
+  - {fileID: 114111288034979372}
+  - {fileID: 114532053198895066}
+  - {fileID: 114489717636918192}
+  - {fileID: 114674835862245226}
+  - {fileID: 114136775103787426}
+  - {fileID: 114074766923664790}
+  - {fileID: 114141986699463882}
+  - {fileID: 114455455712863322}
+  - {fileID: 114267310922593840}
+  - {fileID: 114576005736459526}
+  - {fileID: 114044753342449240}
+  - {fileID: 114687066732881900}
+  - {fileID: 114227038817648988}
+  - {fileID: 114380099918377076}
+  - {fileID: 114294507380274446}
+  - {fileID: 114030569654119844}
+  - {fileID: 114452650798478222}
+  - {fileID: 114601887665146480}
+  - {fileID: 114820507406671948}
+  - {fileID: 114966957739022948}
+  - {fileID: 114265722432059762}
+  - {fileID: 114799983886057584}
+  - {fileID: 114798237291745272}
+  - {fileID: 114292006653059874}
+  - {fileID: 114125457658351640}
+  - {fileID: 114339078838686224}
+  - {fileID: 114851398262591066}
+  - {fileID: 114642307150274470}
+  - {fileID: 114958259741618730}
+  - {fileID: 114782201703462752}
+--- !u!114 &114030569654119844
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_coinPack_500
+  m_EditorClassIdentifier: 
+  m_DisplayName: 500 Coin Pack
+  m_Key: coinPack_500
+  m_Tags:
+  - {fileID: 114247682783611946}
+  m_StaticPropertyKeys:
+  - item_icon
+  - item_icon_big
+  m_StaticPropertyValues:
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/coin_pack_icon
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/coin_pack_icon_big
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114532053198895066}
+      m_Amount: 500
+  m_Costs:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114489717636918192}
+      m_Amount: 20
+--- !u!114 &114032718787655868
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4178f7fa125e7644ba2a2d0c6300db1, type: 3}
+  m_Name: Tag_fruit
+  m_EditorClassIdentifier: 
+  m_Key: fruit
+  m_Catalog: {fileID: 0}
+--- !u!114 &114044753342449240
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcbd052539327467295d2009d33aa660, type: 3}
+  m_Name: Item_sword
+  m_EditorClassIdentifier: 
+  m_DisplayName: Sword
+  m_Key: sword
+  m_Tags:
+  - {fileID: 114333925658888598}
+  m_StaticPropertyKeys:
+  - promotion_icon
+  - hud_icon
+  m_StaticPropertyValues:
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/sword_promotion_icon
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/sword_hud_icon
+  m_InitialAllocation: 0
+  m_IsStackableFlag: 0
+  m_InitialQuantityPerStack: 1
+  m_MutablePropertyKeys:
+  - damage
+  - quantity
+  - durability
+  m_MutablePropertyDefaultValues:
+  - <type>k__BackingField: 1
+    m_ValueType:
+      longValue: 4627730092099895296
+    m_StringValue: 
+  - <type>k__BackingField: 0
+    m_ValueType:
+      longValue: 5
+    m_StringValue: 
+  - <type>k__BackingField: 0
+    m_ValueType:
+      longValue: 3
+    m_StringValue: 
+--- !u!114 &114074766923664790
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcbd052539327467295d2009d33aa660, type: 3}
+  m_Name: Item_broccoli
+  m_EditorClassIdentifier: 
+  m_DisplayName: Broccoli
+  m_Key: broccoli
+  m_Tags:
+  - {fileID: 114458968409616030}
+  - {fileID: 114941349583486390}
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_InitialAllocation: 0
+  m_IsStackableFlag: 0
+  m_InitialQuantityPerStack: 1
+  m_MutablePropertyKeys: []
+  m_MutablePropertyDefaultValues: []
+--- !u!114 &114111288034979372
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b81b157322addcd439104bd3c59b830b, type: 3}
+  m_Name: Store_main
+  m_EditorClassIdentifier: 
+  m_DisplayName: Main
+  m_Key: main
+  m_Tags: []
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_StoreItems:
+  - m_Transaction: {fileID: 114687066732881900}
+    m_Enabled: 1
+  - m_Transaction: {fileID: 114227038817648988}
+    m_Enabled: 1
+  - m_Transaction: {fileID: 114380099918377076}
+    m_Enabled: 1
+  - m_Transaction: {fileID: 114294507380274446}
+    m_Enabled: 1
+  - m_Transaction: {fileID: 114030569654119844}
+    m_Enabled: 1
+  - m_Transaction: {fileID: 114452650798478222}
+    m_Enabled: 1
+  - m_Transaction: {fileID: 114601887665146480}
+    m_Enabled: 1
+  - m_Transaction: {fileID: 114820507406671948}
+    m_Enabled: 1
+  - m_Transaction: {fileID: 114966957739022948}
+    m_Enabled: 1
+  - m_Transaction: {fileID: 114265722432059762}
+    m_Enabled: 1
+--- !u!114 &114125457658351640
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_carrotIngredient
+  m_EditorClassIdentifier: 
+  m_DisplayName: Carrot Ingredient
+  m_Key: carrotIngredient
+  m_Tags: []
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114141986699463882}
+      m_Amount: 3
+  m_Costs:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114532053198895066}
+      m_Amount: 3
+--- !u!114 &114125977559564024
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4178f7fa125e7644ba2a2d0c6300db1, type: 3}
+  m_Name: Tag_potion
+  m_EditorClassIdentifier: 
+  m_Key: potion
+  m_Catalog: {fileID: 0}
+--- !u!114 &114136775103787426
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcbd052539327467295d2009d33aa660, type: 3}
+  m_Name: Item_banana
+  m_EditorClassIdentifier: 
+  m_DisplayName: Banana
+  m_Key: banana
+  m_Tags:
+  - {fileID: 114032718787655868}
+  - {fileID: 114941349583486390}
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_InitialAllocation: 0
+  m_IsStackableFlag: 0
+  m_InitialQuantityPerStack: 1
+  m_MutablePropertyKeys: []
+  m_MutablePropertyDefaultValues: []
+--- !u!114 &114141986699463882
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcbd052539327467295d2009d33aa660, type: 3}
+  m_Name: Item_carrot
+  m_EditorClassIdentifier: 
+  m_DisplayName: Carrot
+  m_Key: carrot
+  m_Tags:
+  - {fileID: 114458968409616030}
+  - {fileID: 114941349583486390}
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_InitialAllocation: 0
+  m_IsStackableFlag: 0
+  m_InitialQuantityPerStack: 1
+  m_MutablePropertyKeys: []
+  m_MutablePropertyDefaultValues: []
+--- !u!114 &114227038817648988
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_coinPack_10
+  m_EditorClassIdentifier: 
+  m_DisplayName: 10 Coin Pack
+  m_Key: coinPack_10
+  m_Tags:
+  - {fileID: 114247682783611946}
+  m_StaticPropertyKeys:
+  - item_icon
+  - item_icon_big
+  m_StaticPropertyValues:
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/coin_pack_icon
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/coin_pack_icon_big
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114532053198895066}
+      m_Amount: 10
+  m_Costs:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114489717636918192}
+      m_Amount: 1
+--- !u!114 &114247682783611946
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4178f7fa125e7644ba2a2d0c6300db1, type: 3}
+  m_Name: Tag_coinPacks
+  m_EditorClassIdentifier: 
+  m_Key: coinPacks
+  m_Catalog: {fileID: 0}
+--- !u!114 &114265722432059762
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_gemPack_50
+  m_EditorClassIdentifier: 
+  m_DisplayName: 50 Gem Pack
+  m_Key: gemPack_50
+  m_Tags:
+  - {fileID: 114747490182996174}
+  m_StaticPropertyKeys:
+  - item_icon
+  - item_icon_big
+  m_StaticPropertyValues:
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/gem_pack_icon
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/gem_pack_icon_big
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114489717636918192}
+      m_Amount: 50
+  m_Costs:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114532053198895066}
+      m_Amount: 350
+--- !u!114 &114267310922593840
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcbd052539327467295d2009d33aa660, type: 3}
+  m_Name: Item_orange
+  m_EditorClassIdentifier: 
+  m_DisplayName: Orange
+  m_Key: orange
+  m_Tags:
+  - {fileID: 114032718787655868}
+  - {fileID: 114941349583486390}
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_InitialAllocation: 1
+  m_IsStackableFlag: 0
+  m_InitialQuantityPerStack: 1
+  m_MutablePropertyKeys: []
+  m_MutablePropertyDefaultValues: []
+--- !u!114 &114292006653059874
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_broccoliIngredient
+  m_EditorClassIdentifier: 
+  m_DisplayName: Broccoli Ingredient
+  m_Key: broccoliIngredient
+  m_Tags: []
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114074766923664790}
+      m_Amount: 1
+  m_Costs:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114532053198895066}
+      m_Amount: 5
+--- !u!114 &114294507380274446
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_coinPack_250
+  m_EditorClassIdentifier: 
+  m_DisplayName: 250 Coin Pack
+  m_Key: coinPack_250
+  m_Tags:
+  - {fileID: 114247682783611946}
+  m_StaticPropertyKeys:
+  - item_icon
+  - item_icon_big
+  m_StaticPropertyValues:
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/coin_pack_icon
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/coin_pack_icon_big
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114532053198895066}
+      m_Amount: 250
+  m_Costs:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114489717636918192}
+      m_Amount: 10
+--- !u!114 &114333925658888598
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4178f7fa125e7644ba2a2d0c6300db1, type: 3}
+  m_Name: Tag_weapon
+  m_EditorClassIdentifier: 
+  m_Key: weapon
+  m_Catalog: {fileID: 0}
+--- !u!114 &114339078838686224
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_fruitSmoothie
+  m_EditorClassIdentifier: 
+  m_DisplayName: Fruit Smoothie
+  m_Key: fruitSmoothie
+  m_Tags: []
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114576005736459526}
+      m_Amount: 1
+  m_Costs:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114674835862245226}
+      m_Amount: 1
+    - m_CatalogItem: {fileID: 114267310922593840}
+      m_Amount: 1
+    - m_CatalogItem: {fileID: 114136775103787426}
+      m_Amount: 1
+--- !u!114 &114380099918377076
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_coinPack_100
+  m_EditorClassIdentifier: 
+  m_DisplayName: 100 Coin Pack
+  m_Key: coinPack_100
+  m_Tags:
+  - {fileID: 114247682783611946}
+  m_StaticPropertyKeys:
+  - item_icon
+  - item_icon_big
+  m_StaticPropertyValues:
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/coin_pack_icon
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/coin_pack_icon_big
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114532053198895066}
+      m_Amount: 100
+  m_Costs:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114489717636918192}
+      m_Amount: 5
+--- !u!114 &114452650798478222
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_gemPack_2
+  m_EditorClassIdentifier: 
+  m_DisplayName: 2 Gem Pack
+  m_Key: gemPack_2
+  m_Tags:
+  - {fileID: 114747490182996174}
+  m_StaticPropertyKeys:
+  - item_icon
+  - item_icon_big
+  m_StaticPropertyValues:
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/gem_pack_icon
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/gem_pack_icon_big
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114489717636918192}
+      m_Amount: 2
+  m_Costs:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114532053198895066}
+      m_Amount: 20
+--- !u!114 &114455455712863322
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcbd052539327467295d2009d33aa660, type: 3}
+  m_Name: Item_healthPotion
+  m_EditorClassIdentifier: 
+  m_DisplayName: Health Potion
+  m_Key: healthPotion
+  m_Tags:
+  - {fileID: 114125977559564024}
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_InitialAllocation: 0
+  m_IsStackableFlag: 1
+  m_InitialQuantityPerStack: 1
+  m_MutablePropertyKeys:
+  - quantity
+  - healthRestore
+  m_MutablePropertyDefaultValues:
+  - <type>k__BackingField: 0
+    m_ValueType:
+      longValue: 7
+    m_StringValue: 
+  - <type>k__BackingField: 1
+    m_ValueType:
+      longValue: 4632233691727265792
+    m_StringValue: 
+--- !u!114 &114458968409616030
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4178f7fa125e7644ba2a2d0c6300db1, type: 3}
+  m_Name: Tag_vegetable
+  m_EditorClassIdentifier: 
+  m_Key: vegetable
+  m_Catalog: {fileID: 0}
+--- !u!114 &114489717636918192
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6736b79f77dc474c8bc820c305c2c2e, type: 3}
+  m_Name: Currency_gem
+  m_EditorClassIdentifier: 
+  m_DisplayName: Gem
+  m_Key: gem
+  m_Tags: []
+  m_StaticPropertyKeys:
+  - item_icon
+  - hud_icon
+  - purchase_button_icon
+  - promotion_icon
+  m_StaticPropertyValues:
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/gem_icon
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/gem_hud_icon
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/gem_purchase_button_icon
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/gem_promotion_icon
+  m_InitialBalance: 50
+  m_MaximumBalance: 0
+  m_Type: 1
+--- !u!114 &114532053198895066
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6736b79f77dc474c8bc820c305c2c2e, type: 3}
+  m_Name: Currency_coin
+  m_EditorClassIdentifier: 
+  m_DisplayName: Coin
+  m_Key: coin
+  m_Tags: []
+  m_StaticPropertyKeys:
+  - item_icon
+  - hud_icon
+  - purchase_button_icon
+  - promotion_icon
+  - reward_icon
+  m_StaticPropertyValues:
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/coin_icon
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/coin_hud_icon
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/coin_purchase_button_icon
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/coin_promotion_icon
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/coin_icon_daily_reward
+  m_InitialBalance: 500
+  m_MaximumBalance: 0
+  m_Type: 0
+--- !u!114 &114576005736459526
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcbd052539327467295d2009d33aa660, type: 3}
+  m_Name: Item_smoothie
+  m_EditorClassIdentifier: 
+  m_DisplayName: Smoothie
+  m_Key: smoothie
+  m_Tags:
+  - {fileID: 114941349583486390}
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_InitialAllocation: 0
+  m_IsStackableFlag: 0
+  m_InitialQuantityPerStack: 1
+  m_MutablePropertyKeys: []
+  m_MutablePropertyDefaultValues: []
+--- !u!114 &114601887665146480
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_gemPack_5
+  m_EditorClassIdentifier: 
+  m_DisplayName: 5 Gem Pack
+  m_Key: gemPack_5
+  m_Tags:
+  - {fileID: 114747490182996174}
+  m_StaticPropertyKeys:
+  - item_icon
+  - item_icon_big
+  m_StaticPropertyValues:
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/gem_pack_icon
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/gem_pack_icon_big
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114489717636918192}
+      m_Amount: 5
+  m_Costs:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114532053198895066}
+      m_Amount: 50
+--- !u!114 &114608161626123994
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9190a04da29ae24ab35e05133ebf087, type: 3}
+  m_Name: _Catalog_Tags
+  m_EditorClassIdentifier: 
+  m_Tags:
+  - {fileID: 114247682783611946}
+  - {fileID: 114032718787655868}
+  - {fileID: 114458968409616030}
+  - {fileID: 114941349583486390}
+  - {fileID: 114747490182996174}
+  - {fileID: 114125977559564024}
+  - {fileID: 114333925658888598}
+  - {fileID: 114878377960753744}
+  m_CatalogAsset: {fileID: 11400000}
+--- !u!114 &114642307150274470
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_veggieSmoothie
+  m_EditorClassIdentifier: 
+  m_DisplayName: Veggie Ingredient
+  m_Key: veggieSmoothie
+  m_Tags: []
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114576005736459526}
+      m_Amount: 1
+  m_Costs:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114141986699463882}
+      m_Amount: 1
+    - m_CatalogItem: {fileID: 114074766923664790}
+      m_Amount: 1
+--- !u!114 &114674835862245226
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcbd052539327467295d2009d33aa660, type: 3}
+  m_Name: Item_apple
+  m_EditorClassIdentifier: 
+  m_DisplayName: Apple
+  m_Key: apple
+  m_Tags:
+  - {fileID: 114032718787655868}
+  - {fileID: 114941349583486390}
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_InitialAllocation: 2
+  m_IsStackableFlag: 0
+  m_InitialQuantityPerStack: 1
+  m_MutablePropertyKeys: []
+  m_MutablePropertyDefaultValues: []
+--- !u!114 &114687066732881900
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_coinPack_2
+  m_EditorClassIdentifier: 
+  m_DisplayName: 2 Coin Pack
+  m_Key: coinPack_2
+  m_Tags:
+  - {fileID: 114247682783611946}
+  m_StaticPropertyKeys:
+  - item_icon
+  - item_icon_big
+  m_StaticPropertyValues:
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/coin_pack_icon
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/coin_pack_icon_big
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114532053198895066}
+      m_Amount: 2
+  m_Costs:
+    m_Exchanges: []
+--- !u!114 &114747490182996174
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4178f7fa125e7644ba2a2d0c6300db1, type: 3}
+  m_Name: Tag_gemPacks
+  m_EditorClassIdentifier: 
+  m_Key: gemPacks
+  m_Catalog: {fileID: 0}
+--- !u!114 &114782201703462752
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08c9c5456074d4a83b08e8cf93c38d19, type: 3}
+  m_Name: Reward_checkInReward
+  m_EditorClassIdentifier: 
+  m_DisplayName: Check In Reward
+  m_Key: checkInReward
+  m_Tags: []
+  m_StaticPropertyKeys:
+  - description
+  - reward_item_title
+  m_StaticPropertyValues:
+  - <type>k__BackingField: 3
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Claim your reward for checking in!
+  - <type>k__BackingField: 3
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Day {0}
+  m_CooldownSeconds: 30
+  m_CooldownDisplayUnits: 3
+  m_ExpirationSeconds: 60
+  m_ExpirationDisplayUnits: 3
+  m_ResetIfExpired: 0
+  m_RewardItems:
+  - <key>k__BackingField: 888cc271-303c-4c5b-8e1f-e35cf5ef3266
+    m_Payout:
+      m_Exchanges:
+      - m_CatalogItem: {fileID: 114532053198895066}
+        m_Amount: 10
+  - <key>k__BackingField: 89c4a188-373b-42c1-96bd-d51e841882a1
+    m_Payout:
+      m_Exchanges:
+      - m_CatalogItem: {fileID: 114532053198895066}
+        m_Amount: 20
+  - <key>k__BackingField: e2aa91af-bff2-49a6-9e08-355e30b9bd8c
+    m_Payout:
+      m_Exchanges:
+      - m_CatalogItem: {fileID: 114532053198895066}
+        m_Amount: 30
+  - <key>k__BackingField: f3248109-2967-4c96-beae-44596f0ca9c2
+    m_Payout:
+      m_Exchanges:
+      - m_CatalogItem: {fileID: 114532053198895066}
+        m_Amount: 40
+  - <key>k__BackingField: 62f179eb-2fca-4378-a5cf-35d6feb03d92
+    m_Payout:
+      m_Exchanges:
+      - m_CatalogItem: {fileID: 114532053198895066}
+        m_Amount: 60
+  - <key>k__BackingField: 6677e4d8-4e65-4921-afd1-87aaffe07777
+    m_Payout:
+      m_Exchanges:
+      - m_CatalogItem: {fileID: 114532053198895066}
+        m_Amount: 70
+--- !u!114 &114798237291745272
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_bananaIngredient
+  m_EditorClassIdentifier: 
+  m_DisplayName: Banana Ingredient
+  m_Key: bananaIngredient
+  m_Tags: []
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114136775103787426}
+      m_Amount: 3
+  m_Costs:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114532053198895066}
+      m_Amount: 7
+--- !u!114 &114799983886057584
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_appleIngredient
+  m_EditorClassIdentifier: 
+  m_DisplayName: Apple Ingredient
+  m_Key: appleIngredient
+  m_Tags: []
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114674835862245226}
+      m_Amount: 1
+  m_Costs:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114532053198895066}
+      m_Amount: 5
+--- !u!114 &114820507406671948
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_gemPack_10
+  m_EditorClassIdentifier: 
+  m_DisplayName: 10 Gem Pack
+  m_Key: gemPack_10
+  m_Tags:
+  - {fileID: 114747490182996174}
+  m_StaticPropertyKeys:
+  - item_icon
+  - item_icon_big
+  m_StaticPropertyValues:
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/gem_pack_icon
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/gem_pack_icon_big
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114489717636918192}
+      m_Amount: 10
+  m_Costs:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114532053198895066}
+      m_Amount: 100
+--- !u!114 &114851398262591066
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_orangeIngredient
+  m_EditorClassIdentifier: 
+  m_DisplayName: Orange Ingredient
+  m_Key: orangeIngredient
+  m_Tags: []
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114267310922593840}
+      m_Amount: 1
+  m_Costs:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114532053198895066}
+      m_Amount: 5
+--- !u!114 &114878377960753744
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4178f7fa125e7644ba2a2d0c6300db1, type: 3}
+  m_Name: Tag_starterPack
+  m_EditorClassIdentifier: 
+  m_Key: starterPack
+  m_Catalog: {fileID: 0}
+--- !u!114 &114941349583486390
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4178f7fa125e7644ba2a2d0c6300db1, type: 3}
+  m_Name: Tag_food
+  m_EditorClassIdentifier: 
+  m_Key: food
+  m_Catalog: {fileID: 0}
+--- !u!114 &114958259741618730
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_starterPack
+  m_EditorClassIdentifier: 
+  m_DisplayName: Starter Pack
+  m_Key: starterPack
+  m_Tags:
+  - {fileID: 114878377960753744}
+  m_StaticPropertyKeys:
+  - promotion_description
+  - promotion_badge
+  m_StaticPropertyValues:
+  - <type>k__BackingField: 3
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Don't miss that awesome offer!
+  - <type>k__BackingField: 3
+    m_ValueType:
+      longValue: 0
+    m_StringValue: 20% off
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114532053198895066}
+      m_Amount: 100
+    - m_CatalogItem: {fileID: 114489717636918192}
+      m_Amount: 20
+    - m_CatalogItem: {fileID: 114044753342449240}
+      m_Amount: 2
+  m_Costs:
+    m_Exchanges: []
+--- !u!114 &114966957739022948
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_gemPack_25
+  m_EditorClassIdentifier: 
+  m_DisplayName: 25 Gem Pack
+  m_Key: gemPack_25
+  m_Tags:
+  - {fileID: 114747490182996174}
+  m_StaticPropertyKeys:
+  - item_icon
+  - item_icon_big
+  m_StaticPropertyValues:
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/gem_pack_icon
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/gem_pack_icon_big
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114489717636918192}
+      m_Amount: 25
+  m_Costs:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114532053198895066}
+      m_Amount: 200

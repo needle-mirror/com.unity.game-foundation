@@ -1,0 +1,18 @@
+{
+    "name": "Unity.GameFoundation.Components.Editor",
+    "references": [
+        "Unity.GameFoundation",
+        "Unity.GameFoundation.DefaultCatalog",
+        "Unity.GameFoundation.Components"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
+}

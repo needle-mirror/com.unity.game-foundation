@@ -1,0 +1,5 @@
+{
+	"displayName":"02a Stackable Inventory Items",
+	"description": "This sample showcases the traditional way to handle a stack of items with quantity.",
+	"createSeparatePackage": false
+}

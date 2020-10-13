@@ -1,0 +1,14 @@
+{
+    "name": "Unity.GameFoundation",
+    "references": [
+        "Unity.Promise"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
+}

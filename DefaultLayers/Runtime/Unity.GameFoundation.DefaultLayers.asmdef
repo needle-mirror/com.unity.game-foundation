@@ -1,0 +1,16 @@
+{
+    "name": "Unity.GameFoundation.DefaultLayers",
+    "references": [
+        "Unity.Promise",
+        "Unity.GameFoundation",
+        "Unity.GameFoundation.DefaultCatalog"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
+}

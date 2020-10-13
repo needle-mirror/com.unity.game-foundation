@@ -1,0 +1,99 @@
+{
+  "name": "com.unity.game-foundation",
+  "displayName": "Game Foundation",
+  "version": "0.7.0-preview.4",
+  "unity": "2018.4",
+  "description": "Game Foundation core package.\n\nThis package contains the following components: \n▪ Inventory System \n▪ Virtual Currency Wallet \n▪ Properties System \n▪ Transaction System  \n▪ Reward System  \n▪ Core Systems \n\nNote: CatalogManager now holds the reference to the catalogs at Runtime. Any runtime code that was previously written as \nGameFoundationSettings.database.xCatalog should now be written as CatalogManager.xCatalog. \nGameFoundation's Initialization changed to take an IDataAccessLayer as an argument instead of a persistence object. \n\nNote: Preview release, public API subject to change.",
+  "keywords": [
+    "unity",
+    "Game Foundation",
+    "Inventory",
+    "Wallet",
+    "Virtual Currency",
+    "Virtual Goods",
+    "Item Stats",
+    "Progression",
+    "Reward"
+  ],
+  "dependencies": {
+    "com.unity.analytics": "3.3.2"
+  },
+  "samples": [
+    {
+      "displayName": "00 Catalog",
+      "description": "This sample contains a catalog which should be used in all other samples. It also contains a class with helper methods for the samples.",
+      "path": "Samples~/00_Catalog"
+    },
+    {
+      "displayName": "01 Inventory Basics",
+      "description": "This sample showcases the basics of how to work with a single inventory.",
+      "path": "Samples~/01_InventoryBasics"
+    },
+    {
+      "displayName": "02a Stackable Inventory Items",
+      "description": "This sample showcases the traditional way to handle a stack of items with quantity.",
+      "path": "Samples~/02a_StackableInventoryItem"
+    },
+    {
+      "displayName": "02b Inventory With Quantity",
+      "description": "This sample showcases an alternative to StackableInventoryItems to group inventory items to represent quantity.",
+      "path": "Samples~/02b_InventoryWithQuantity"
+    },
+    {
+      "displayName": "03 Tags",
+      "description": "This sample showcases how to work with tags.",
+      "path": "Samples~/03_Tags"
+    },
+    {
+      "displayName": "04 Wallet",
+      "description": "This sample showcases how to work with the wallet and currencies.",
+      "path": "Samples~/04_Wallet"
+    },
+    {
+      "displayName": "05 Properties",
+      "description": "This sample showcases how to work with the properties system.",
+      "path": "Samples~/05_Properties"
+    },
+    {
+      "displayName": "06 Data Persistence",
+      "description": "This sample showcases how to use data persistence to save and load your data.",
+      "path": "Samples~/06_DataPersistence"
+    },
+    {
+      "displayName": "07 Transactions",
+      "description": "This sample showcases how to use the Transaction System.",
+      "path": "Samples~/07_Transactions"
+    },
+    {
+      "displayName": "08 ChilliConnect",
+      "description": "This sample showcases how to use the ChilliConnect Adapter for Game Foundation.",
+      "path": "Samples~/08_ChilliConnect"
+    },
+    {
+      "displayName": "09 Inventory Reset and Initial Allocation",
+      "description": "This sample showcases inventory initial allocation and to reinitialize Game Foundation.",
+      "path": "Samples~/09_InventoryResetAndInitialAllocation"
+    },
+    {
+      "displayName": "10 Item Lists",
+      "description": "This sample showcases how to add and remove items from Item Lists in Game Foundation.",
+      "path": "Samples~/10_ItemLists"
+    },
+    {
+      "displayName": "11 Item Maps",
+      "description": "This sample showcases add and remove items from Item Maps in Game Foundation.",
+      "path": "Samples~/11_ItemMaps"
+    }
+  ],
+  "relatedPackages": {
+    "com.unity.game-foundation.tests": "0.7.0-preview.4"
+  },
+  "upmCi": {
+    "footprint": "e433491401c007d23b756fb1c52bb7b56d68dd1a"
+  },
+  "repository": {
+    "url": "https://github.cds.internal.unity3d.com/unity/game-foundation.git",
+    "type": "git",
+    "revision": "77bbe9a2373e99647b0c21ec5d34f9e6f117b790"
+  }
+}

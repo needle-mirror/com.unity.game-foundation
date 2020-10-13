@@ -1,0 +1,5 @@
+{
+	"displayName":"02b Inventory With Quantity",
+	"description": "This sample showcases an alternative to StackableInventoryItems to group inventory items to represent quantity.",
+	"createSeparatePackage": false
+}
