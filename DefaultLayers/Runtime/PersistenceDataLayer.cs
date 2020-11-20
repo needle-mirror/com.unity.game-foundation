@@ -41,15 +41,22 @@ namespace UnityEngine.GameFoundation.DefaultLayers
         {
             void InitializeWith(GameFoundationData data)
             {
-                InitializeInventoryDataLayer(data.inventoryManagerData, catalogAsset);
-                InitializeWalletDataLayer(data.walletData, catalogAsset);
+                try
+                {
+                    InitializeInventoryDataLayer(data.inventoryManagerData);
+                    InitializeWalletDataLayer(data.walletData);
 
-                // this must be called *after* inventory and wallet
-                InitializeRewardDataLayer(data.rewardManagerData, catalogAsset);
+                    // this must be called *after* inventory and wallet
+                    InitializeRewardDataLayer(data.rewardManagerData);
 
-                m_Version = data.version;
+                    m_Version = data.version;
 
-                completer.Resolve();
+                    completer.Resolve();
+                }
+                catch (Exception e)
+                {
+                    completer.Reject(e);
+                }
             }
 
             persistence.Load(
@@ -59,7 +66,7 @@ namespace UnityEngine.GameFoundation.DefaultLayers
                     switch (error)
                     {
                         case FileNotFoundException _:
-                            InitializeWith(catalogAsset.CreateDefaultData());
+                            InitializeWith(m_CatalogAsset.CreateDefaultData());
                             break;
 
                         default:

@@ -16,6 +16,11 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         const string k_MainStoreDefinitionName = "Main";
         internal const string k_MainStoreDefinitionKey = "main";
 
+        /// <summary>
+        ///     Instance of the GameFoundationDebug class to use for logging.
+        /// </summary>
+        static readonly GameFoundationDebug k_Logger = GameFoundationDebug.Get<CatalogAsset>();
+
         /// <inheritdoc cref="tagCatalog"/>
         [SerializeField]
         internal TagCatalogAsset m_TagCatalog;
@@ -53,7 +58,7 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
             {
                 mainStore = CreateInstance<StoreAsset>();
                 mainStore.m_Key = k_MainStoreDefinitionKey;
-                mainStore.m_DisplayName = k_MainStoreDefinitionName;
+                mainStore.SetDisplayName(k_MainStoreDefinitionName);
 
 #if UNITY_EDITOR
 
@@ -131,7 +136,10 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         public int GetItems<TCatalogItemAsset>(ICollection<TCatalogItemAsset> target = null, bool clearTarget = true)
             where TCatalogItemAsset : CatalogItemAsset
         {
-            if (clearTarget) target?.Clear();
+            if (clearTarget)
+            {
+                target?.Clear();
+            }
 
             var count = 0;
             foreach (var item in m_Items)
@@ -202,7 +210,10 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
 
             var count = 0;
 
-            if (clearTarget) target?.Clear();
+            if (clearTarget)
+            {
+                target?.Clear();
+            }
 
             foreach (var item in m_Items)
             {
@@ -290,17 +301,17 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         }
 
         /// <summary>
-        ///     Override all data that isn't set through <see cref="ICatalogConfigurator.Configure"/>
-        ///     but are still used by Game Foundation systems.
+        ///     Override all data that are used by Game Foundation systems
+        ///     before <see cref="ICatalogConfigurator.Configure"/> is called.
         /// </summary>
         /// <param name="valueProvider">
         ///     A value provider to override some catalog item's data with an external source.
         /// </param>
-        internal void OverrideNonConfiguredData(IExternalValueProvider valueProvider)
+        void OverridePreConfigurationData(IExternalValueProvider valueProvider)
         {
             foreach (var itemAsset in m_Items)
             {
-                itemAsset.OverrideNonConfiguredData(valueProvider);
+                itemAsset.OverridePreConfigurationData(valueProvider);
             }
         }
 
@@ -324,9 +335,18 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
             var inventoryItemDefs = new List<InventoryItemDefinitionAsset>();
             GetItems(inventoryItemDefs);
 
-            foreach (var inventory in inventoryItemDefs)
+            foreach (var definition in inventoryItemDefs)
             {
-                initialAllocations += inventory.initialAllocation;
+                if (definition.initialAllocation < 0)
+                {
+                    definition.initialAllocation.SetExternalValue(0);
+
+                    k_Logger.LogWarning(
+                        $"The inventory item definition \"{definition.key}\" has a negative " +
+                        $"{nameof(definition.initialAllocation)}, it has been set to 0 to avoid errors.");
+                }
+
+                initialAllocations += definition.initialAllocation;
             }
 
             var currencyAssets = new List<CurrencyAsset>();
@@ -366,6 +386,16 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
             for (var i = 0; i < currencyAssets.Count; i++)
             {
                 var currency = currencyAssets[i];
+                if (currency.maximumBalance > 0
+                    && currency.initialBalance > currency.maximumBalance)
+                {
+                    currency.initialBalance.SetExternalValue(currency.maximumBalance);
+
+                    var message = $"The initial balance for {currency.key} has been" +
+                        $" clamped to {currency.maximumBalance.currentValue.ToString()} to respect the maximum balance.";
+                    k_Logger.LogWarning(message);
+                }
+
                 data.walletData.balances[i] = new BalanceData
                 {
                     currencyKey = currency.key,
@@ -387,7 +417,7 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         {
             m_ValueProvider = valueProvider;
 
-            OverrideNonConfiguredData(m_ValueProvider);
+            OverridePreConfigurationData(m_ValueProvider);
         }
 
         /// <inheritdoc/>
@@ -403,6 +433,7 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         // even though we are using RemoveObjectFromAsset and SetDirty properly.
         // We can ensure no nulls remain when we serialize and deserialize.
 
+        /// <inheritdoc/>
         public void OnBeforeSerialize()
         {
             // repair the list in case of a null value
@@ -416,6 +447,7 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
             }
         }
 
+        /// <inheritdoc/>
         public void OnAfterDeserialize()
         {
             // repair the list in case of a null value

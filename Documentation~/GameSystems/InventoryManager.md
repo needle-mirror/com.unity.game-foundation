@@ -2,8 +2,7 @@
 
 ## Overview
 
-The __Inventory Manager__ is a central piece of the Game Foundation architecture.
-It creates and destroys item instances.
+The __Inventory Manager__ is a central piece of the Game Foundation architecture.  It tracks all Inventory Items in a player's inventory acquired through an [In-App Purchase](../CatalogItems/IAPTransaction.md), a [Virtual Transaction](../CatalogItems/VirtualTransaction.md), or a script in response to a game event. Inventory Items can track player progress, purchases, rewards, etc. and can also be used by your [Game Economy](../GameSystems/GameEconomy.md) to provide objectives and track game play accomplishments.
 
 ![Main inventory example](../images/image16.png)  
 *Example: the main inventory contains characters, hats, bonuses, and themes.*
@@ -34,6 +33,9 @@ To remove items, the __Inventory Manager__ exposes various methods:
 Removing items from the __Inventory Manager__ doesn't destroy the item object in memory.
 It wouldn't be an expected behaviour for a managed language like C#.
 Instead, the items are _discarded_: they are removed from the [data layer] and they cannot be part of any process, but their `ID`, `display name` and `definition` remain accessible.
+
+## 
+< [_table of contents_](../TableOfContents.md)
 
 
 

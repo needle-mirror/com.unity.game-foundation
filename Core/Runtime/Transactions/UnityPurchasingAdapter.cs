@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using UnityEngine.GameFoundation.Exceptions;
 using UnityEngine.Promise;
 using UnityEngine.Purchasing;
 using UnityEngine.Purchasing.Security;
@@ -19,7 +20,7 @@ namespace UnityEngine.GameFoundation
     /// </summary>
     sealed class UnityPurchasingAdapter : IStoreListener
     {
-        public TransactionManagerImpl transactionImpl => GameFoundationSdk.transactions as TransactionManagerImpl;
+        public static TransactionManagerImpl transactionImpl => GameFoundationSdk.transactions as TransactionManagerImpl;
 
         /// <summary>
         ///     Are we currently running on the Apple iOS platform?
@@ -36,7 +37,7 @@ namespace UnityEngine.GameFoundation
         /// </summary>
         public bool isFakeStore { get; private set; }
 
-        bool m_IsInitialized;
+        public bool isInitialized { get; private set; }
 
         IStoreController m_Controller;
         Action m_OnInitializeSucceededCallback;
@@ -102,7 +103,7 @@ namespace UnityEngine.GameFoundation
 
             if (Debug.isDebugBuild)
             {
-                string message = $"purchase receipt: {currentPurchaseEventArgs.purchasedProduct.receipt}";
+                var message = $"purchase receipt: {currentPurchaseEventArgs.purchasedProduct.receipt}";
                 k_GFLogger.Log(message);
             }
 
@@ -189,11 +190,10 @@ namespace UnityEngine.GameFoundation
             Action onInitializeSucceededCallback = null,
             Action<Exception> onInitializeFailedCallback = null)
         {
-            if (m_IsInitialized)
+            if (isInitialized)
             {
-                // already been initialized once, so don't reinitialize the purchasing controller 
-
-                transactionImpl.PurchasingAdapterInitializationSucceeded();
+                // already been initialized once, so don't reinitialize the purchasing controller.
+                onInitializeSucceededCallback?.Invoke();
 
                 m_SuccessfulPurchaseQueueCoroutine =
                     GameFoundationSdk.updater.StartCoroutine(ProcessSuccessfulPurchaseQueue());
@@ -236,10 +236,10 @@ namespace UnityEngine.GameFoundation
 
 #if UNITY_EDITOR
 #if UNITY_ANDROID
-                        if (storeID.store == "GooglePlay") 
+                        if (storeID.store == "GooglePlay")
                             ids.Add(storeID.id, "fake");
 #elif UNITY_IOS
-                        if (storeID.store == "AppleAppStore")  
+                        if (storeID.store == "AppleAppStore")
                             ids.Add(storeID.id, "fake");
 #endif
 #endif
@@ -272,7 +272,7 @@ namespace UnityEngine.GameFoundation
 
         void ThrowIfNotInitialized(string callingMethod)
         {
-            if (!m_IsInitialized)
+            if (!isInitialized)
             {
                 throw new InvalidOperationException(
                     $"{nameof(UnityPurchasingAdapter)} Error: GameFoundationSdk.Initialize() must be called before " +
@@ -288,9 +288,7 @@ namespace UnityEngine.GameFoundation
             m_GooglePlayStoreExtensions = extensions.GetExtension<IGooglePlayStoreExtensions>();
             m_TransactionHistoryExtensions = extensions.GetExtension<ITransactionHistoryExtensions>();
 
-            m_IsInitialized = true;
-
-            transactionImpl.PurchasingAdapterInitializationSucceeded();
+            isInitialized = true;
 
             m_OnInitializeSucceededCallback?.Invoke();
             m_OnInitializeSucceededCallback = null;
@@ -303,38 +301,7 @@ namespace UnityEngine.GameFoundation
         /// <inheritdoc cref="IStoreListener.OnInitializeFailed"/>
         public void OnInitializeFailed(InitializationFailureReason initializationFailureReason)
         {
-            var exception = new Exception(
-                "Unity Purchasing failed to initialize, for the following reason: " +
-                "An unrecognized problem occurred!");
-
-            switch (initializationFailureReason)
-            {
-                case InitializationFailureReason.AppNotKnown:
-
-                    exception = new Exception(
-                        "Unity Purchasing failed to initialize, for the following reason: " +
-                        "Unknown app. Make sure your app was uploaded to the respective platform store.");
-
-                    break;
-
-                case InitializationFailureReason.PurchasingUnavailable:
-
-                    exception = new Exception(
-                        "Unity Purchasing failed to initialize, for the following reason: " +
-                        "Purchasing is not enabled on this platform.");
-
-                    break;
-
-                case InitializationFailureReason.NoProductsAvailable:
-
-                    exception = new Exception(
-                        "Unity Purchasing failed to initialize, for the following reason: " +
-                        "No products are available for purchase.");
-
-                    break;
-            }
-
-            transactionImpl.PurchasingAdapterInitializationFailed(exception);
+            var exception = new PurchasingAdapterInitializationException(initializationFailureReason);
 
             m_OnInitializeFailedCallback?.Invoke(exception);
             m_OnInitializeSucceededCallback = null;
@@ -429,7 +396,7 @@ namespace UnityEngine.GameFoundation
             PurchaseEventArgs purchaseEventArgs,
             Completer<TransactionResult> completer)
         {
-            if (!m_IsInitialized)
+            if (!isInitialized)
             {
                 completer.Reject(new InvalidOperationException(
                     $"Error: A purchase of {purchaseEventArgs.purchasedProduct.definition.id} was attempted by " +
@@ -496,11 +463,11 @@ namespace UnityEngine.GameFoundation
 
                             k_GFLogger.Log(sb.ToString());
 
-                            // TODO: improved local receipt validation 
-                            // For improved security, consider comparing the signed 
-                            // IPurchaseReceipt.productId, IPurchaseReceipt.transactionID, and other data 
-                            // embedded in the signed receipt objects to the data which the game is using 
-                            // to make this purchase. 
+                            // TODO: improved local receipt validation
+                            // For improved security, consider comparing the signed
+                            // IPurchaseReceipt.productId, IPurchaseReceipt.transactionID, and other data
+                            // embedded in the signed receipt objects to the data which the game is using
+                            // to make this purchase.
                         }
                     }
                     catch (IAPSecurityException ex)
@@ -517,35 +484,34 @@ namespace UnityEngine.GameFoundation
 
             if (isValid)
             {
-                var deferred = transactionImpl.FinalizeSuccessfulIAP(currentPurchaseEventArgs);
-
-                while (!deferred.isDone || GameFoundationSdk.transactions.currentIap != null)
+                using (var deferred = transactionImpl.FinalizeSuccessfulIAP(currentPurchaseEventArgs))
                 {
-                    yield return null;
-                }
-
-                if (!deferred.isFulfilled)
-                {
-                    if (Debug.isDebugBuild)
+                    while (!deferred.isDone || GameFoundationSdk.transactions.currentIap != null)
                     {
-                        string message = "Purchase has been validated but TransactionManager encountered a " +
-                            $"problem trying to fulfill it: {deferred.error}";
-                        k_GFLogger.LogError(message);
+                        yield return null;
                     }
 
-                    // pass the async error on to the caller
+                    if (!deferred.isFulfilled)
+                    {
+                        if (Debug.isDebugBuild)
+                        {
+                            string message = "Purchase has been validated but TransactionManager encountered a " +
+                                $"problem trying to fulfill it: {deferred.error}";
+                            k_GFLogger.LogError(message);
+                        }
 
-                    completer.Reject(deferred.error);
-                    deferred.Release();
-                    currentPurchaseEventArgs = null;
-                    yield break;
+                        // pass the async error on to the caller
+
+                        completer.Reject(deferred.error);
+                        currentPurchaseEventArgs = null;
+
+                        yield break;
+                    }
+
+                    // pass the async result on to the caller
+
+                    completer.Resolve(deferred.result);
                 }
-
-                // pass the async result on to the caller
-
-                completer.Resolve(deferred.result);
-
-                deferred.Release();
             }
 
             currentPurchaseEventArgs = null;
@@ -557,7 +523,7 @@ namespace UnityEngine.GameFoundation
             // TODO: we could have purchasing adapter error codes 
             // for now, we'll just compile a big long string 
 
-            string message = $"Platform purchase for product id '{product.definition.storeSpecificId}' ...\n" +
+            var message = $"Platform purchase for product id '{product.definition.storeSpecificId}' ...\n" +
                 $"failed with reason code: {failureReason}\n" +
                 $"The platform returned code: {m_TransactionHistoryExtensions.GetLastStoreSpecificPurchaseErrorCode()}";
 
@@ -594,7 +560,7 @@ namespace UnityEngine.GameFoundation
 
             if (string.IsNullOrEmpty(productId))
             {
-                string message = $"Tried to complete a pending purchase with a null or empty {nameof(productId)}.";
+                var message = $"Tried to complete a pending purchase with a null or empty {nameof(productId)}.";
                 k_GFLogger.LogError(message);
                 return;
             }
@@ -603,11 +569,11 @@ namespace UnityEngine.GameFoundation
 
             if (product == null)
             {
-                string platform = isFakeStore ? "Fake Store" :
+                var platform = isFakeStore ? "Fake Store" :
                     isGooglePlay ? "Google Play" :
                     isAppleIOS ? "Apple iOS" : "unknown platform";
 
-                string message = $"Tried to complete a pending purchase for {nameof(productId)} '{productId}', " +
+                var message = $"Tried to complete a pending purchase for {nameof(productId)} '{productId}', " +
                     $"but that product was not found in the product collection of the platform {platform}.";
                 k_GFLogger.LogError(message);
 
@@ -663,28 +629,35 @@ namespace UnityEngine.GameFoundation
         public LocalizedProductMetadata GetLocalizedProductInfo(string productId)
         {
             ThrowIfNotInitialized(nameof(GetLocalizedProductInfo));
+            var platform = isFakeStore ? "Fake Store" :
+                isGooglePlay ? "Google Play" :
+                isAppleIOS ? "Apple iOS" : "unknown platform";
+
+            var productMetadata = new LocalizedProductMetadata
+            {
+                name = "",
+                price = ""
+            };
 
             var product = m_Controller.products.WithStoreSpecificID(productId);
 
             if (product == null)
             {
-                string platform = isFakeStore ? "Fake Store" :
-                    isGooglePlay ? "Google Play" :
-                    isAppleIOS ? "Apple iOS" : "unknown platform";
-                throw new ArgumentException($"Could not find product with id {productId} in platform {platform}.");
+                k_GFLogger.LogWarning($"Could not find product with id {productId} in platform {platform}.");
+                return productMetadata;
             }
 
             if (product.metadata == null)
             {
-                throw new ArgumentException($"The object of the product with {nameof(productId)} '{productId}' " +
-                    "is missing metadata.");
+                k_GFLogger.LogWarning($"The object of the product with {nameof(productId)} '{productId}' " +
+                    "is missing metadata in platform {platform}.");
+                return productMetadata;
             }
 
-            return new LocalizedProductMetadata
-            {
-                name = product.metadata.localizedTitle,
-                price = product.metadata.localizedPriceString
-            };
+            productMetadata.name = product.metadata.localizedTitle;
+            productMetadata.price = product.metadata.localizedPriceString;
+
+            return productMetadata;
         }
 
         /// <summary>

@@ -53,7 +53,8 @@ Choose `"My First Item"` and set the quantity to `3`.
 Your [virtual transaction] is now properly configured.
 In [the next tutorial], we'll see how to initiate a purchase, using this [transaction].
 
-
+## 
+< [_table of contents_](../TableOfContents.md)
 
 
 

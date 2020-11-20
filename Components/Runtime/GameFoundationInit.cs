@@ -19,7 +19,7 @@ namespace UnityEngine.GameFoundation.Components
         public DataLayerType dataLayerType => m_DataLayerType;
 
         [SerializeField]
-        internal DataLayerType m_DataLayerType;
+        internal DataLayerType m_DataLayerType = DataLayerType.LocalPersistence;
 
         /// <summary>
         ///     Local persistence filename for save file.
@@ -40,23 +40,6 @@ namespace UnityEngine.GameFoundation.Components
 
         [SerializeField]
         internal CatalogAsset m_CatalogAsset;
-
-        /// <summary>
-        ///     Whether <see cref="CatalogAsset"/> will be overridden or not.
-        /// </summary>
-        internal bool overrideCatalogAsset
-        {
-            get => m_OverrideCatalogAsset;
-            set
-            {
-                if (!value)
-                {
-                    m_CatalogAsset = null;
-                }
-
-                m_OverrideCatalogAsset = value;
-            }
-        }
 
         [SerializeField]
         internal bool m_OverrideCatalogAsset;
@@ -116,7 +99,10 @@ namespace UnityEngine.GameFoundation.Components
             LocalPersistence
         }
 
-        static readonly GameFoundationDebug k_GFLogger = GameFoundationDebug.Get<GameFoundationSettings>();
+        /// <summary>
+        ///     Instance of the GameFoundationDebug class to use for logging.
+        /// </summary>
+        static readonly GameFoundationDebug k_GFLogger = GameFoundationDebug.Get<GameFoundationInit>();
 
         void Awake()
         {
@@ -200,11 +186,12 @@ namespace UnityEngine.GameFoundation.Components
         IEnumerator ExecuteInitialization()
         {
             IDataAccessLayer dataLayer = null;
+            var currentCatalog = m_OverrideCatalogAsset ? m_CatalogAsset : null;
 
             if (dataLayerType == DataLayerType.Memory)
             {
                 // this data layer will not save any data, it is usually used for examples or tests
-                dataLayer = new MemoryDataLayer(m_CatalogAsset);
+                dataLayer = new MemoryDataLayer(currentCatalog);
             }
             else if (dataLayerType == DataLayerType.LocalPersistence)
             {
@@ -214,15 +201,16 @@ namespace UnityEngine.GameFoundation.Components
                     yield return null;
                 }
 
-                dataLayer = new PersistenceDataLayer(new LocalPersistence(m_LocalPersistenceFilename, new JsonDataSerializer()), m_CatalogAsset);
+                dataLayer = new PersistenceDataLayer(new LocalPersistence(m_LocalPersistenceFilename, new JsonDataSerializer()), currentCatalog);
             }
 
-            // initialize Game Foundation for runtime access
-            var initDeferred = GameFoundationSdk.Initialize(dataLayer);
-            yield return initDeferred.Wait();
-
-            // It optimizes the memory as it allows the object to be reused.
-            initDeferred.Release();
+            // Initialize Game Foundation for runtime access.
+            // The using instruction will automatically release the promise from initDeferred,
+            // it optimizes the memory as it allows the promise to be reused.
+            using (var initDeferred = GameFoundationSdk.Initialize(dataLayer))
+            {
+                yield return initDeferred.Wait();
+            }
         }
 
         /// <summary>

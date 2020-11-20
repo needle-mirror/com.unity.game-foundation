@@ -48,8 +48,8 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         {
             return new RewardItemConfig
             {
-                m_Key = key,
-                m_Payout = m_Payout.Configure()
+                key = key,
+                payout = m_Payout.Configure()
             };
         }
 

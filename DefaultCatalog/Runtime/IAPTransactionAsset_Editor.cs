@@ -19,6 +19,8 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         internal void Editor_SetAppleId(string id)
         {
             m_AppleId = id;
+            m_AppleIdWrapper = new ExternalizableValue<string>(m_AppleId);
+
             EditorUtility.SetDirty(this);
         }
 
@@ -31,6 +33,8 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         internal void Editor_SetGoogleId(string id)
         {
             m_GoogleId = id;
+            m_GoogleIdWrapper = new ExternalizableValue<string>(m_GoogleId);
+
             EditorUtility.SetDirty(this);
         }
 
@@ -43,17 +47,15 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
                     $"{nameof(IAPTransactionAsset)}: The {nameof(CatalogItemAsset)} target parameter cannot be null.");
             }
 
-            var iapTransactionTarget = target as IAPTransactionAsset;
-
-            if (iapTransactionTarget == null)
+            if (!(target is IAPTransactionAsset iapTransactionTarget))
             {
                 throw new InvalidCastException(
                     $"{nameof(IAPTransactionAsset)}: The target object {target.displayName} of type " +
                     $"'{target.GetType()}' could not be cast to {GetType()}.");
             }
 
-            iapTransactionTarget.m_AppleId = m_AppleId;
-            iapTransactionTarget.m_GoogleId = m_GoogleId;
+            iapTransactionTarget.Editor_SetAppleId(m_AppleId);
+            iapTransactionTarget.Editor_SetGoogleId(m_GoogleId);
 
             base.CopyValues(iapTransactionTarget);
         }

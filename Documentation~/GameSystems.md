@@ -1,4 +1,23 @@
-# Game systems
+# Game Systems
+
+The following `Game Systems`, accessible through [GameFoundationSdk](GameFoundationSdk.md), can be used to enhance your game, permit [IAP Transactions](CatalogItems/IAPTransaction.md) and save time as you make your game.
+
+## Inventory
+
+The [Inventory Manager](GameSystems/InventoryManager.md) tracks all items in player's inventory (items could have been acquired through an [In App Purchase](CatalogItems/IAPTransaction.md), a [Virtual Transaction](CatalogItems/VirtualTransaction.md), or granted through script in response to a game event) and can be used by your [Game Economy](GameSystems/GameEconomy.md) to provide objectives and track accomplisments (i.e. game play) in your game.
+
+## Wallet
+
+The [Wallet Manager](GameSystems/WalletManager.md), similar to the Inventory Manager (above), tracks [Currencies](CatalogItems/Currency.md) acquired by the player in your game to maintain your [Game Economy](GameSystems/GameEconomy.md).
+
+## Rewards
+
+The [Reward Manager](GameSystems/RewardManager.md) provides access to in-game rewards such as Daily Bonuses, Promotions, etc.  These rewards can promote retention and generally improve your player's experience in your game world.
+
+## Transaction
+
+The [Transaction Manager](GameSystems/TransactionManager.md) process both [Virtual Transaction](CatalogItems/VirtualTransaction.md) and [IAP Transaction](CatalogItems/IAPTransaction.md) within your game.
+
 
 ## Data access layer
 
@@ -14,23 +33,8 @@ You can also implement your own `IDataAccessLayer` if you have more specific req
 
 More info [in this page].
 
-## Inventory
-
-See the [Inventory Manager] page.
-
-## Wallet
-
-See the [Wallet Manager] page.
-
-## Rewards
-
-See the [Reward Manager] page.
-
-## Transaction
-
-See the [Transaction Manager] page.
-
-
+## 
+< [_table of contents_](TableOfContents.md)
 
 
 

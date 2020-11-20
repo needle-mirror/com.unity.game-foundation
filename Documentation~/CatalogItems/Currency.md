@@ -2,9 +2,9 @@
 
 ## Overview
 
-A __Currency__ is a [catalog item] dedicated to the [Wallet Management], which can help track the quantity of your in-game resources without the additional overhead of item instances, unlike [inventory]. 
+A __Currency__ is a [catalog item] dedicated to the [Wallet Management], which can help track the quantity of your in-game resources without the additional overhead of item instances, unlike [Inventory Items](InventoryItemDefinition.md). 
 
-You may want to deal with a collectible resource, but don't need to identify each instance of the resource. A [Currency] is the type of [catalog item] you need. 
+You may want to deal with a collectible resource, but don't need to identify each instance of the resource. A __Currency__ is the type of [catalog item] you need. 
 
 While in-game money is the most common use case, there're other currency-like resources belonging to a player, such as energy, score, number of lifes / moves,that can also be defined as Currency. 
 
@@ -36,6 +36,9 @@ The Currency window will let you configure Currencies.
 The interface is similar to the other [catalog items editor].
 
 (1) In addition to the shared General section, you'll find the three special fields `Initial allocation`, `Maximum allocation,` and `Type`.
+
+## 
+< [_table of contents_](../TableOfContents.md)
 
 
 

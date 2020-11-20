@@ -107,7 +107,8 @@ Having a store, populated with virtual transactions and in-app purchasing transa
 Because you need your retention to be great, and the user experience to be fine tuned, you may need to organize the products you want to sell, or maybe displaying only part of the offers based on conditions (like the player level).  
 Game Foundation has a solution for you: [Stores], that are covered in [the next tutorial].
 
-
+## 
+< [_table of contents_](../TableOfContents.md)
 
 
 

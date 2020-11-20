@@ -3,8 +3,7 @@
 ## Overview
 
 The __Wallet Manager__ is dedicated to the management of the [currencies] and their balance.  
-Contrary to the [Inventory Manager], which manages item instances, the __Wallet Manager__ doesn't create or destroy any object when adding or removing amounts.
-It just changes the balance of the related [currency].
+Contrary to the [Inventory Manager], which manages item instances, the __Wallet Manager__ doesn't create or destroy any object when adding or removing amounts. It just changes the balance of the related [currency].
 
 ## Wallet System vs Inventory System
 
@@ -42,6 +41,9 @@ The __Wallet Manager__ comes with a basic set of expected methods to:
 - Get the balance of a [currency].
 - Set the balance of a [currency].
 - Adjust the balance by adding or removing an amount.
+
+## 
+< [_table of contents_](../TableOfContents.md)
 
 
 

@@ -8,7 +8,7 @@ namespace UnityEngine.GameFoundation.Exceptions
         /// <summary>
         ///     The identifier of the <see cref="InventoryItem"/> not found.
         /// </summary>
-        public readonly string itemId;
+        public string itemId { get; }
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="InventoryItemNotFoundException"/> class.
@@ -17,11 +17,23 @@ namespace UnityEngine.GameFoundation.Exceptions
         ///     The id of the item not found.
         /// </param>
         public InventoryItemNotFoundException(string id)
+            : base(BuildMessage(id))
         {
             itemId = id;
         }
 
-        /// <inheritdoc/>
-        public override string Message => $"{nameof(InventoryItem)} {itemId} not found";
+        /// <summary>
+        ///     Get the error message for the given <paramref name="id"/>.
+        /// </summary>
+        /// <param name="id">
+        ///     The id of the item not found.
+        /// </param>
+        static string BuildMessage(string id)
+        {
+            k_MessageBuilder.Clear()
+                .Append($"{nameof(InventoryItem)} {id} not found");
+
+            return k_MessageBuilder.ToString();
+        }
     }
 }

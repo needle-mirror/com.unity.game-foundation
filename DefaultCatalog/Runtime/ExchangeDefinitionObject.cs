@@ -14,6 +14,7 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         internal TradableDefinitionAsset m_CatalogItem;
 
         /// <inheritdoc cref="amount"/>
+        [Min(0)]
         [SerializeField]
         internal long m_Amount;
 
@@ -33,12 +34,7 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         /// <returns>
         ///     The config.
         /// </returns>
-        internal ExchangeDefinitionConfig Configure() =>
-            new ExchangeDefinitionConfig
-            {
-                tradableKey = m_CatalogItem.key,
-                amount = m_Amount
-            };
+        internal ExchangeDefinitionConfig Configure() => new ExchangeDefinitionConfig(m_CatalogItem.key, m_Amount);
 
         /// <summary>
         ///     Creates a deep copy of this object.

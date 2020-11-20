@@ -15,14 +15,30 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
     {
         /// <inheritdoc cref="displayName"/>
         [SerializeField]
-        internal string m_DisplayName;
+        string m_DisplayName;
+
+        /// <summary>
+        ///     Wrapper for <see cref="m_DisplayName"/>.
+        /// </summary>
+        ExternalizableValue<string> m_DisplayNameWrapper;
 
         /// <summary>
         ///     The readable name of this <see cref="CatalogItemAsset"/> instance.
         ///     It is used to make the Editor more comfortable, but it can also be
         ///     used at runtime to display a readable information to the players.
         /// </summary>
-        public string displayName => m_DisplayName;
+        public ExternalizableValue<string> displayName
+        {
+            get
+            {
+                if (m_DisplayNameWrapper is null)
+                {
+                    m_DisplayNameWrapper = new ExternalizableValue<string>(m_DisplayName);
+                }
+
+                return m_DisplayNameWrapper;
+            }
+        }
 
         /// <inheritdoc cref="key"/>
         [SerializeField]
@@ -52,8 +68,8 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         ///     Key: Property's key.
         ///     Value: Property's type & default value.
         /// </summary>
-        internal Dictionary<string, Property> staticProperties { get; }
-            = new Dictionary<string, Property>();
+        internal Dictionary<string, ExternalizableValue<Property>> staticProperties { get; }
+            = new Dictionary<string, ExternalizableValue<Property>>();
 
         /// <summary>
         ///     Fills the given <paramref name="target"/> collection with all the <see cref="TagAsset"/>
@@ -137,7 +153,10 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
                 return false;
             }
 
-            return staticProperties.TryGetValue(propertyKey, out property);
+            var isFound = staticProperties.TryGetValue(propertyKey, out var wrapper);
+            property = isFound ? wrapper.currentValue : default;
+
+            return isFound;
         }
 
         /// <summary>
@@ -166,7 +185,11 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
             m_StaticPropertyKeys = new List<string>(staticProperties.Keys);
-            m_StaticPropertyValues = new List<Property>(staticProperties.Values);
+            m_StaticPropertyValues = new List<Property>(staticProperties.Values.Count);
+            foreach (var staticPropertiesValue in staticProperties.Values)
+            {
+                m_StaticPropertyValues.Add(staticPropertiesValue);
+            }
 
             OnBeforeItemSerialize();
         }
@@ -192,7 +215,10 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         ///     Called at the end of <see cref="ISerializationCallbackReceiver.OnAfterDeserialize"/>.
         ///     Enable inheritance to add specific deserialization process.
         /// </summary>
-        protected virtual void OnAfterItemDeserialize() { }
+        protected virtual void OnAfterItemDeserialize()
+        {
+            m_DisplayNameWrapper = new ExternalizableValue<string>(m_DisplayName);
+        }
 
         /// <summary>
         ///     Configures a specified <paramref name="builder"/> with this item.
@@ -208,43 +234,55 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         {
             var item = ConfigureItem(builder, valueProvider);
 
-            if (valueProvider == null
-                || !valueProvider.TryGetValue(
-                    ExternalValueProviderNames.displayName, key, out var externalDisplayName))
-            {
-                item.displayName = displayName;
-            }
-            else
-            {
-                item.displayName = externalDisplayName;
-            }
+            var hasValueProvider = !(valueProvider is null);
 
-            foreach (var property in staticProperties)
+            // Display name.
             {
-                var propertyName = ExternalValueProviderNames.GetStaticPropertyName(property.Key);
-                if (valueProvider == null
-                    || !valueProvider.TryGetValue(propertyName, key, out var propertyValue))
+                if (hasValueProvider
+                    && valueProvider.TryGetValue(
+                        ExternalValueProviderNames.displayName, key, out var externalDisplayName))
                 {
-                    propertyValue = property.Value;
+                    displayName.SetExternalValue(externalDisplayName);
+                }
+                else
+                {
+                    displayName.ResetExternalValue();
                 }
 
-                item.staticProperties.Add(property.Key, propertyValue);
+                item.displayName = displayName;
             }
 
+            // Static properties.
+            {
+                var staticPropertiesKeys = new List<string>(staticProperties.Keys);
+
+                //We can't do a foreach loop on the dictionary since we modify the entry.
+                foreach (var propertyKey in staticPropertiesKeys)
+                {
+                    var propertyName = ExternalValueProviderNames.GetStaticPropertyName(propertyKey);
+                    if (hasValueProvider
+                        && valueProvider.TryGetValue(propertyName, key, out var externalPropertyValue))
+                    {
+                        staticProperties[propertyKey].SetExternalValue(externalPropertyValue);
+                    }
+                    else
+                    {
+                        staticProperties[propertyKey].ResetExternalValue();
+                    }
+
+                    item.staticProperties.Add(propertyKey, staticProperties[propertyKey]);
+                }
+            }
+
+            // Tags.
             foreach (var tagAsset in m_Tags)
             {
                 item.tags.Add(tagAsset.key);
             }
         }
 
-        /// <summary>
-        ///     Override all data that isn't set through <see cref="ICatalogConfigurator.Configure"/>
-        ///     but are still used by Game Foundation systems.
-        /// </summary>
-        /// <param name="valueProvider">
-        ///     A value provider to override some catalog item's data with an external source.
-        /// </param>
-        internal virtual void OverrideNonConfiguredData(IExternalValueProvider valueProvider) { }
+        /// <inheritdoc cref="CatalogAsset.OverridePreConfigurationData"/>
+        internal virtual void OverridePreConfigurationData(IExternalValueProvider valueProvider) { }
 
         /// <summary>
         ///     Configures a specified <paramref name="builder"/> with the specifics
@@ -321,6 +359,54 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
             // Clear lists to avoid storing duplicated data.
             keys.Clear();
             values.Clear();
+        }
+
+        /// <inheritdoc cref="DeserializeListsToDictionary{TKey,TValue}(System.Collections.Generic.List{TKey},System.Collections.Generic.List{TValue},System.Collections.Generic.Dictionary{TKey,TValue})"/>
+        protected static void DeserializeListsToDictionary<TKey, TValue>(
+            List<TKey> keys, List<TValue> values, Dictionary<TKey, ExternalizableValue<TValue>> container)
+        {
+            if (keys == null)
+                throw new ArgumentNullException(nameof(keys));
+
+            if (values == null)
+                throw new ArgumentNullException(nameof(values));
+
+            if (container == null)
+                throw new ArgumentNullException(nameof(container));
+
+            container.Clear();
+
+            var itemCount = keys.Count;
+            if (itemCount != values.Count)
+                throw new SerializationException(
+                    $"{nameof(CatalogItemAsset)}: An error occured during the deserialization of this object. It contains corrupted data.");
+
+            if (itemCount <= 0)
+                return;
+
+            for (var i = 0; i < itemCount; i++)
+            {
+                var key = keys[i];
+                var value = values[i];
+
+                container[key] = value;
+            }
+
+            // Clear lists to avoid storing duplicated data.
+            keys.Clear();
+            values.Clear();
+        }
+
+        /// <summary>
+        ///     Set <see cref="m_DisplayName"/> and update its wrapper.
+        /// </summary>
+        /// <param name="value">
+        ///     The new display name.
+        /// </param>
+        internal void SetDisplayName(string value)
+        {
+            m_DisplayName = value;
+            m_DisplayNameWrapper = new ExternalizableValue<string>(m_DisplayName);
         }
     }
 }

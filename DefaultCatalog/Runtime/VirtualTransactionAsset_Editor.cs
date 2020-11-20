@@ -105,9 +105,7 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
                     $"{nameof(VirtualTransactionAsset)}: The {nameof(CatalogItemAsset)} target parameter cannot be null.");
             }
 
-            var virtualTransactionTarget = target as VirtualTransactionAsset;
-
-            if (virtualTransactionTarget == null)
+            if (!(target is VirtualTransactionAsset virtualTransactionTarget))
             {
                 throw new InvalidCastException(
                     $"{nameof(VirtualTransactionAsset)}: The target object {target.displayName} of type " +

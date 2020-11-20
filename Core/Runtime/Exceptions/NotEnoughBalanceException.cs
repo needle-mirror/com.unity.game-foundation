@@ -8,17 +8,17 @@ namespace UnityEngine.GameFoundation.Exceptions
         /// <summary>
         ///     The id of the currency.
         /// </summary>
-        public readonly string currencyKey;
+        public string currencyKey { get; }
 
         /// <summary>
         ///     The expected balance.
         /// </summary>
-        public readonly long expectedBalance;
+        public long expectedBalance { get; }
 
         /// <summary>
         ///     The actual balance.
         /// </summary>
-        public readonly long actualBalance;
+        public long actualBalance { get; }
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="NotEnoughBalanceException"/> class.
@@ -32,16 +32,33 @@ namespace UnityEngine.GameFoundation.Exceptions
         /// <param name="actualBalance">
         ///     The available balance.
         /// </param>
-        internal NotEnoughBalanceException
-            (string currencyKey, long expectedBalance, long actualBalance)
+        internal NotEnoughBalanceException(string currencyKey, long expectedBalance, long actualBalance)
+            : base(BuildMessage(currencyKey, expectedBalance, actualBalance))
         {
             this.currencyKey = currencyKey;
             this.expectedBalance = expectedBalance;
             this.actualBalance = actualBalance;
         }
 
-        /// <inheritdoc/>
-        public override string Message
-            => $"Not enough balance for {currencyKey}. Expected: {expectedBalance}, found: {actualBalance}";
+        /// <summary>
+        ///     Get the error message for the given <paramref name="currencyKey"/>,
+        ///     <paramref name="expectedBalance"/>, and <paramref name="actualBalance"/>.
+        /// </summary>
+        /// <param name="currencyKey">
+        ///     The identifier of the <see cref="Currency"/>
+        /// </param>
+        /// <param name="expectedBalance">
+        ///     The necessary balance.
+        /// </param>
+        /// <param name="actualBalance">
+        ///     The available balance.
+        /// </param>
+        static string BuildMessage(string currencyKey, long expectedBalance, long actualBalance)
+        {
+            k_MessageBuilder.Clear()
+                .Append($"Not enough balance for {currencyKey}. Expected: {expectedBalance.ToString()}, found: {actualBalance.ToString()}");
+
+            return k_MessageBuilder.ToString();
+        }
     }
 }

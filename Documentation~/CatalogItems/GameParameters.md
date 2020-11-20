@@ -2,9 +2,8 @@
 
 ## Overview
 
-A __Game Parameter__ is a [catalog item] providing static configuration for your game.  
-A __game parameter__ works pretty much the same than any other [catalog items], except they don't have a `display name`.  
-The game parameter is static data that you can use to describe a piece of configuration of your game.  
+__Game Parameters__ provide static configuration for your game that is accessible through script. These parameters can control various aspects of your game, including your [Game Economy](../GameSystems/GameEconomy.md). Each Game Parameter is a [catalog item] and works similar to other [catalog items], except they don't have a `display name`.  
+
 You can create __Game Parameter__ objects, then define static properties to further define that concept.
 
 ## Editor Overview
@@ -14,8 +13,10 @@ The __Game Parameter__ window will let you configure game parameters.
 
 ![An overview of the Game Parameter Window](../images/game-parameter-window.png)
 
-In the example above, we've created a __Game Parameter__ per level of the game.  
-That can be an approach to setup the difficulty, or switch on/off some features.
+In the example above, a __Game Parameter__ is created per game level. This game parameter can be an approach to set up the difficulty of the levels in a game, or toggle some features on or off according to difficulty of game level.
+
+## 
+< [_table of contents_](../TableOfContents.md)
 
 
 

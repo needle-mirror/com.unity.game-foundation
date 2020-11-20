@@ -10,7 +10,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
         /// </summary>
         public static void ShowWindow()
         {
-            GetWindow<TransactionEditorWindow>(false, "Transactions", true);
+            GetWindow<TransactionEditorWindow>(false, "Transaction", true);
         }
 
         /// <summary>

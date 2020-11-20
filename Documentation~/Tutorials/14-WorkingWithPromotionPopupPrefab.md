@@ -110,7 +110,8 @@ Finally there is a host of callbacks you may want to subscribe to for knowing wh
 We hope this prefab will help to provide a simple and easy way for adding a promotion to your game.
 In the [next section] you'll learn about additional tools for configuring your game.
 
-
+## 
+< [_table of contents_](../TableOfContents.md)
 
 
 

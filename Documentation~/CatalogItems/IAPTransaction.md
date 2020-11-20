@@ -2,7 +2,7 @@
 
 ## Overview
 
-An __IAP Transaction__ is a [catalog item] dedicated to In-App Purchasing.
+An __IAP Transaction__ permits players to exchange real-world money for in-game Inventory Items and/or Currencies using payouts described in each transaction.  Each IAP Transaction is a [catalog item] dedicated to In-App Purchasing.
 
 This type of transaction shows 2 specifics fields:
 
@@ -25,6 +25,9 @@ The interface is similar to the other [catalog items editor].
 (2) The Payouts section shows a list of [currencies] and [item definitions].
   Those are the outcome of the transaction.
   The amounts next to each entry are the number of those items the player will get from the transaction.
+
+## 
+< [_table of contents_](../TableOfContents.md)
 
 
 

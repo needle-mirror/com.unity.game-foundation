@@ -1,7 +1,8 @@
 {
     "name": "Unity.GameFoundation.Editor",
     "references": [
-        "Unity.GameFoundation"
+        "Unity.GameFoundation",
+        "Unity.Promise"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [

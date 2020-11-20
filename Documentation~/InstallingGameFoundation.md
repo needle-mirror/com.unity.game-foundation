@@ -40,12 +40,12 @@ public class MyGameManager : MonoBehaviour
         // This data layer will not persist any data, it is usually used for examples or tests.
         MemoryDataLayer dataLayer = new MemoryDataLayer();
 
-        // Initialize Game Foundation for runtime access.
-        Deferred initialization = GameFoundationSdk.Initialize(dataLayer);
-        yield return initialization.Wait();
-
-        // It optimizes the memory as it allows the object to be reused.
-        initialization.Release();
+        // - Initialize Game Foundation for runtime access.
+        // - We use a using block to automatically release the deferred promise handler.
+        using (Deferred initialization = GameFoundationSdk.Initialize(dataLayer))
+        {
+            yield return initialization.Wait();
+        }
     }
 }
 ```
@@ -68,12 +68,12 @@ public class MyGameManager : MonoBehaviour
         // This data layer will not persist any data, it is usually used for examples or tests.
         MemoryDataLayer dataLayer = new MemoryDataLayer();
 
-        // Initialize Game Foundation for runtime access.
-        Deferred initialization = GameFoundationSdk.Initialize(dataLayer);
-        yield return initialization.Wait();
-
-        // It optimizes the memory as it allows the object to be reused.
-        initialization.Release();
+        // - Initialize Game Foundation for runtime access.
+        // - We use a using block to automatically release the deferred promise handler.
+        using (Deferred initialization = GameFoundationSdk.Initialize(dataLayer))
+        {
+            yield return initialization.Wait();
+        }
 
         // Verify that the manager is initialized.
         if (GameFoundationSdk.inventory != null)
@@ -111,3 +111,6 @@ Now you can head over to one of our Tutorials for more information:
 1. [Configure your game with parameters](Tutorials/15-ConfigureYourGameWithParameters.md)
 
 Also, please visit [Known Issues](KnownIssues.md) if you need further assistance.
+
+## 
+< [_table of contents_](TableOfContents.md)

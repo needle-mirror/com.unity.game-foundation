@@ -13,11 +13,11 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
         enum DefaultFilterOptions
         {
             All = 0,
-            None = 1,
+            NoTags = 1,
         }
 
         const string k_All = "<All>";
-        const string k_None = "<None>";
+        const string k_NoTags = "<No Tags>";
         const int k_ListOffset = 2;
         int m_SelectedFilterTagIndex = (int)DefaultFilterOptions.All;
         string m_SelectedFilterTagKey = k_All;
@@ -57,7 +57,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
                 return fullList;
             }
 
-            if (m_SelectedFilterTagIndex == (int)DefaultFilterOptions.None)
+            if (m_SelectedFilterTagIndex == (int)DefaultFilterOptions.NoTags)
             {
                 return fullList.FindAll(item =>
                 {
@@ -139,7 +139,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
             // Create Names for Pull-down menus
             m_TagNamesForFilter = new string[tagFilterCount];
             m_TagNamesForFilter[(int)DefaultFilterOptions.All] = k_All;
-            m_TagNamesForFilter[(int)DefaultFilterOptions.None] = k_None;
+            m_TagNamesForFilter[(int)DefaultFilterOptions.NoTags] = k_NoTags;
 
             int tagOn = k_ListOffset;
 
@@ -173,7 +173,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
                 var tag = CatalogSettings.catalogAsset.tagCatalog.FindTag(m_SelectedFilterTagKey);
 
                 // if filtered to none and current item has a tag then reset filter to 'all'
-                if (m_SelectedFilterTagIndex == (int)DefaultFilterOptions.None &&
+                if (m_SelectedFilterTagIndex == (int)DefaultFilterOptions.NoTags &&
                     selectedItem.m_Tags.Count > 0)
                 {
                     ResetTagFilterToAll();

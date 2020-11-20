@@ -2,9 +2,7 @@
 
 ## Overview
 
-An __Inventory Item Definition__ is a [catalog item] providing static data for your item instances.
-
-It is the only item you can instantiate.
+An __Inventory Item Definition__ represents a template for creating items owned by a player in the game. Items can also maintain properties (see Tutorials [06](../Tutorials/06-StaticProperties.md), [07](../Tutorials/07-MutablePropertiesEditor.md), and [08](../Tutorials/08-MutablePropertiesRuntime.md) for reference and examples).  Once the item definitions are created, you can use them to instantiate instances of __Inventory Items__ in your game.
 
 ## Editor Overview
 
@@ -25,6 +23,9 @@ The interface is similar to the other [catalog items editor].
 
   Mutable Properties belong only to the definition they are declared into.
   This means you can use the same property key in different definitions with a different type if you want to.
+
+## 
+< [_table of contents_](../TableOfContents.md)
 
 
 

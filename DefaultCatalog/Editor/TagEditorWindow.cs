@@ -10,7 +10,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
         /// </summary>
         public static void ShowWindow()
         {
-            GetWindow<TagEditorWindow>(false, "Tags Management", true);
+            GetWindow<TagEditorWindow>(false, "Tag Management", true);
         }
 
         /// <summary>

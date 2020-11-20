@@ -34,7 +34,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
                         break;
 
                     default:
-                        throw new Exception($"{nameof(ExchangeEditor)}: Cannot draw exchange UI for " +
+                        throw new NotSupportedException($"{nameof(ExchangeEditor)}: Cannot draw exchange UI for " +
                             $"{exchange.catalogItem.displayName} because only {nameof(CurrencyAsset)} " +
                             $"and {nameof(InventoryItemDefinitionAsset)} are supported. This item is of type" +
                             $"{exchange.catalogItem.GetType()}.");

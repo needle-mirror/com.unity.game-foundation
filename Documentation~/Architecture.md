@@ -1,5 +1,7 @@
 # Architecture
 
+- Game Foundation is divided into various systems, each with managers referenced from the static class [GameFoundationSdk].  Once you have set up all your [Catalogs] in the Unity Editor, and initialized Game Foundation in your application, you will be ready to start using the Game Foundation package to facilitate [In App Purchases], implement your [Game Economy] and utilize the many features that Game Foundation supports.
+
 ## General purpose
 
 - The [Inventory Manager] helps you create new objects and get access to their static data (basically the configuration of your game).
@@ -25,6 +27,8 @@ These components can be as simple as a local persistence system:
 But the solution can be a lot more powerful if you decide to use a Data Layer implementation connected to some backend services.
 Cloud save, but also server authoritative transactions, A/B Testing and segmentation are then easy to use, as the Game Foundation Core API doesn't change if you decide to switch from local persistence to cloud persistence.
 
+## 
+< [_table of contents_](TableOfContents.md)
 
 
 
@@ -32,7 +36,13 @@ Cloud save, but also server authoritative transactions, A/B Testing and segment
 
 
 
+[GameFoundationSdk]: GameFoundationSdk.md
 
+[Catalogs]: GameSystems.md
+
+[in app purchases]: CatalogItems/IAPTransaction.md
+
+[game economy]: GameSystems/GameEconomy.md
 
 [inventory manager]: GameSystems/InventoryManager.md
 

@@ -10,7 +10,6 @@ using UnityEditor;
 #endif
 #if UNITY_PURCHASING && UNITY_PURCHASING_FOR_GAME_FOUNDATION
 using UnityEngine.Purchasing;
-
 #endif
 
 namespace UnityEngine.GameFoundation.Components
@@ -156,6 +155,11 @@ namespace UnityEngine.GameFoundation.Components
         ///     Default string to display when there is no cost defined in the Transaction Item.
         /// </summary>
         internal static readonly string kDefaultNoPriceString = "FREE";
+        
+        /// <summary>
+        ///     Instance of the GameFoundationDebug class to use for logging.
+        /// </summary>
+        static readonly GameFoundationDebug k_GFLogger = GameFoundationDebug.Get<PurchaseButton>();
 
         /// <summary>
         ///     Adds listeners, if the application is playing.
@@ -170,7 +174,7 @@ namespace UnityEngine.GameFoundation.Components
                 RegisterEvents();
             }
 
-            if (!ReferenceEquals(m_Transaction, null) && !m_IsDrivenByOtherComponent)
+            if (!(m_Transaction is null) && !m_IsDrivenByOtherComponent)
             {
                 UpdateContent();
             }
@@ -240,9 +244,9 @@ namespace UnityEngine.GameFoundation.Components
         {
             m_Button = GetComponent<Button>();
 
-            if (Application.isPlaying)
+            if (Application.isPlaying && m_Button.onClick.GetPersistentEventCount() <= 0)
             {
-                m_Button.onClick.AddListener(Purchase);
+                k_GFLogger.LogWarning("There are no onClick listeners attached to the PurchaseButton named " + m_Button.name + " via the Inspector UI. This may cause unexpected behavior when trying to purchase transaction.");
             }
         }
 
@@ -293,7 +297,7 @@ namespace UnityEngine.GameFoundation.Components
                 return;
             }
 
-            ThrowIfNotInitialized();
+            ThrowIfNotInitialized(nameof(Start));
 
             if (!m_IsDrivenByOtherComponent)
             {
@@ -325,7 +329,7 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         public void SetTransaction(BaseTransaction transaction)
         {
-            ThrowIfNotInitialized();
+            ThrowIfNotInitialized(nameof(SetTransaction));
 
             m_Transaction = transaction;
             m_TransactionKey = transaction?.key;
@@ -350,7 +354,7 @@ namespace UnityEngine.GameFoundation.Components
             var transactionItem = GameFoundationSdk.catalog?.Find<BaseTransaction>(definitionKey);
             if (transactionItem != null || !m_ShowDebugLogs) return transactionItem;
 
-            Debug.LogWarning($"{nameof(TransactionItemView)} - TransactionItem \"{definitionKey}\" doesn't exist in Transaction catalog.");
+            k_GFLogger.LogWarning($"TransactionItem \"{definitionKey}\" doesn't exist in Transaction catalog.");
             return null;
         }
 
@@ -362,9 +366,9 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         public void Purchase()
         {
-            if (ReferenceEquals(m_Transaction, null))
+            if (m_Transaction is null)
             {
-                Debug.LogError($"{nameof(PurchaseButton)} - Transaction Item is not defined.");
+                k_GFLogger.LogError("Transaction Item is not defined.");
                 return;
             }
 
@@ -381,71 +385,68 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         IEnumerator ExecuteTransaction(BaseTransaction transaction)
         {
-            Deferred<TransactionResult> deferred = GameFoundationSdk.transactions.BeginTransaction(transaction);
-
-            if (m_ShowDebugLogs)
-            {
-                Debug.Log($"{nameof(PurchaseButton)} - Now processing purchase: {transaction.displayName}");
-            }
-
-            // Wait for the transaction to be processed
-            int currentStep = 0;
-
-            while (!deferred.isDone)
-            {
-                // Keep track of the current step and possibly show a progress UI
-                if (deferred.currentStep != currentStep)
-                {
-                    currentStep = deferred.currentStep;
-
-                    if (m_ShowDebugLogs)
-                    {
-                        Debug.Log($"{nameof(PurchaseButton)} - Transaction is now on step {currentStep} of {deferred.totalSteps}");
-                    }
-                }
-
-                yield return null;
-            }
-
-            // We re-enable the button before the break even if there is an error
-            SetInteractableInternal(true);
-
-            // Now that the transaction has been processed, check for an error
-            if (!deferred.isFulfilled)
+            using (Deferred<TransactionResult> deferred = GameFoundationSdk.transactions.BeginTransaction(transaction))
             {
                 if (m_ShowDebugLogs)
                 {
-                    Debug.LogError($"{nameof(PurchaseButton)} - Transaction Key: \"{transaction.key}\" - Error Message: {deferred.error}");
+                    k_GFLogger.Log($"Now processing purchase: {transaction.displayName}");
                 }
 
-                onPurchaseFailure?.Invoke(transaction, deferred.error);
+                // Wait for the transaction to be processed
+                int currentStep = 0;
 
-                deferred.Release();
-                yield break;
-            }
-
-            // Here we can assume success
-            if (m_ShowDebugLogs)
-            {
-                Debug.Log("The purchase was successful in both the platform store and the data layer!");
-
-                foreach (var tradable in deferred.result.payout.products)
+                while (!deferred.isDone)
                 {
-                    if (tradable is CurrencyExchange currencyExchange)
+                    // Keep track of the current step and possibly show a progress UI
+                    if (deferred.currentStep != currentStep)
                     {
-                        Debug.Log($"Player was awarded {currencyExchange.amount} of currency '{currencyExchange.currency.displayName}'");
+                        currentStep = deferred.currentStep;
+
+                        if (m_ShowDebugLogs)
+                        {
+                            k_GFLogger.Log($"Transaction is now on step {currentStep} of {deferred.totalSteps}");
+                        }
                     }
-                    else if (tradable is InventoryItem inventoryItem)
+
+                    yield return null;
+                }
+
+                // We re-enable the button before the break even if there is an error
+                SetInteractableInternal(true);
+
+                // Now that the transaction has been processed, check for an error
+                if (!deferred.isFulfilled)
+                {
+                    if (m_ShowDebugLogs)
                     {
-                        Debug.Log($"Player was awarded 1 of Inventory Item '{inventoryItem.definition.displayName}'");
+                        k_GFLogger.LogError($"Transaction Key: \"{transaction.key}\" - Error Message: {deferred.error}");
+                    }
+
+                    onPurchaseFailure?.Invoke(transaction, deferred.error);
+
+                    yield break;
+                }
+
+                // Here we can assume success
+                if (m_ShowDebugLogs)
+                {
+                    k_GFLogger.Log("The purchase was successful in both the platform store and the data layer!");
+
+                    foreach (var tradable in deferred.result.payout.products)
+                    {
+                        if (tradable is CurrencyExchange currencyExchange)
+                        {
+                            k_GFLogger.Log($"Player was awarded {currencyExchange.amount} of currency '{currencyExchange.currency.displayName}'");
+                        }
+                        else if (tradable is InventoryItem inventoryItem)
+                        {
+                            k_GFLogger.Log($"Player was awarded 1 of Inventory Item '{inventoryItem.definition.displayName}'");
+                        }
                     }
                 }
+
+                onPurchaseSuccess?.Invoke(transaction);
             }
-
-            onPurchaseSuccess?.Invoke(transaction);
-
-            // All done
-            deferred.Release();
         }
 
         /// <summary>
@@ -609,13 +610,13 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         void SetContent(Sprite priceIcon, string priceText)
         {
-            if (!ReferenceEquals(m_PriceIconImageField, null))
+            if (!(m_PriceIconImageField is null))
             {
                 if (m_PriceIconImageField.sprite != priceIcon)
                 {
                     m_PriceIconImageField.sprite = priceIcon;
 
-                    if (!ReferenceEquals(priceIcon, null))
+                    if (!(priceIcon is null))
                     {
                         m_PriceIconImageField.gameObject.SetActive(true);
                         m_PriceIconImageField.SetNativeSize();
@@ -632,10 +633,10 @@ namespace UnityEngine.GameFoundation.Components
             }
             else
             {
-                Debug.LogWarning($"{nameof(PurchaseButton)} - Icon Image Field is not defined.");
+                k_GFLogger.LogWarning("Icon Image Field is not defined.");
             }
 
-            if (!ReferenceEquals(m_PriceTextField, null))
+            if (!(m_PriceTextField is null))
             {
                 if (m_PriceTextField.text != priceText)
                 {
@@ -648,7 +649,7 @@ namespace UnityEngine.GameFoundation.Components
             }
             else
             {
-                Debug.LogWarning($"{nameof(PurchaseButton)} - Price Text Field is not defined.");
+                k_GFLogger.LogWarning("Price Text Field is not defined.");
             }
         }
 
@@ -686,7 +687,7 @@ namespace UnityEngine.GameFoundation.Components
             {
                 if (DoesHaveMultipleCost(vTransaction))
                 {
-                    Debug.LogWarning($"{nameof(PurchaseButton)} - Transaction item \"{vTransaction.displayName}\" has multiple exchange item. {nameof(PurchaseButton)} can only show the first item on UI.");
+                    k_GFLogger.LogWarning($"Transaction item \"{vTransaction.displayName}\" has multiple exchange item. {nameof(PurchaseButton)} can only show the first item on UI.");
                 }
 
                 GetVirtualCost(vTransaction, 0, out var cost, out var costItem);
@@ -699,9 +700,9 @@ namespace UnityEngine.GameFoundation.Components
                         sprite = spriteProperty.AsAsset<Sprite>();
                     }
 
-                    if (ReferenceEquals(sprite, null))
+                    if (sprite is null)
                     {
-                        Debug.LogWarning($"{nameof(PurchaseButton)} - \"{costItem.displayName}\" doesn't have sprite called \"{m_PriceIconSpritePropertyKey}\"");
+                        k_GFLogger.LogWarning($"\"{costItem.displayName}\" doesn't have sprite called \"{m_PriceIconSpritePropertyKey}\"");
                     }
 
                     SetContent(sprite, cost.ToString());
@@ -722,7 +723,7 @@ namespace UnityEngine.GameFoundation.Components
 #if UNITY_PURCHASING && UNITY_PURCHASING_FOR_GAME_FOUNDATION
                 if (string.IsNullOrEmpty(iapTransaction.productId))
                 {
-                    Debug.LogError($"{nameof(PurchaseButton)} - Transaction Item \"{iapTransaction.displayName}\" shouldn't have empty or null product id.");
+                    k_GFLogger.LogError($"Transaction Item \"{iapTransaction.displayName}\" shouldn't have empty or null product id.");
                 }
                 else if (GameFoundationSdk.transactions.purchasingAdapterIsInitialized)
                 {
@@ -783,7 +784,7 @@ namespace UnityEngine.GameFoundation.Components
             }
             else if (m_ShowDebugLogs)
             {
-                Debug.LogError($"{nameof(PurchaseButton)} - Transaction Item \"{iapTransaction.displayName}\" localized price is empty or null.");
+                k_GFLogger.LogError($"Transaction Item \"{iapTransaction.displayName}\" localized price is empty or null.");
             }
         }
 #endif
@@ -804,7 +805,7 @@ namespace UnityEngine.GameFoundation.Components
                 ? CatalogSettings.catalogAsset.FindItem(m_TransactionKey) as BaseTransactionAsset
                 : null;
 
-            if (ReferenceEquals(transactionAsset, null))
+            if (transactionAsset is null)
             {
                 SetContent(null, null);
                 return;
@@ -814,12 +815,12 @@ namespace UnityEngine.GameFoundation.Components
             {
                 if (DoesHaveMultipleCost(vTransactionAsset))
                 {
-                    Debug.LogWarning($"{nameof(PurchaseButton)} - Transaction item \"{vTransactionAsset.displayName}\" has multiple exchange item. {nameof(PurchaseButton)} can only show the first item on UI.");
+                    k_GFLogger.LogWarning($"Transaction item \"{vTransactionAsset.displayName}\" has multiple exchange item. {nameof(PurchaseButton)} can only show the first item on UI.");
                 }
 
                 GetVirtualCostAsset(vTransactionAsset, 0, out var cost, out var itemAsset);
 
-                if (cost > 0 && !ReferenceEquals(itemAsset, null))
+                if (cost > 0 && !(itemAsset is null))
                 {
                     Sprite sprite = null;
                     if (itemAsset.TryGetStaticProperty(m_PriceIconSpritePropertyKey, out var spriteProperty))
@@ -827,9 +828,9 @@ namespace UnityEngine.GameFoundation.Components
                         sprite = spriteProperty.AsAsset<Sprite>();
                     }
 
-                    if (ReferenceEquals(sprite, null))
+                    if (sprite is null)
                     {
-                        Debug.LogWarning($"{nameof(PurchaseButton)} - \"{itemAsset.displayName}\" transaction item doesn't have sprite called \"{m_PriceIconSpritePropertyKey}\"");
+                        k_GFLogger.LogWarning($"\"{itemAsset.displayName}\" transaction item doesn't have sprite called \"{m_PriceIconSpritePropertyKey}\"");
                     }
 
                     SetContent(sprite, cost.ToString());
@@ -843,7 +844,7 @@ namespace UnityEngine.GameFoundation.Components
             {
                 if (string.IsNullOrEmpty(iapTransactionAsset.productId))
                 {
-                    Debug.LogWarning($"{nameof(PurchaseButton)} - Transaction Item \"{iapTransactionAsset.displayName}\" shouldn't have empty or null product id.");
+                    k_GFLogger.LogWarning($"Transaction Item \"{iapTransactionAsset.displayName}\" shouldn't have empty or null product id.");
                 }
 
                 SetContent(null, "N/A");
@@ -901,12 +902,15 @@ namespace UnityEngine.GameFoundation.Components
         /// <summary>
         ///     Throws an Invalid Operation Exception if GameFoundation has not been initialized before this view is used.
         /// </summary>
-        /// <exception cref="InvalidOperationException"></exception>
-        void ThrowIfNotInitialized()
+        /// <param name="callingMethod">
+        ///     Calling method name.
+        /// </param>
+        void ThrowIfNotInitialized(string callingMethod)
         {
             if (!GameFoundationSdk.IsInitialized)
             {
-                throw new InvalidOperationException($"Error: GameFoundation.Initialize() must be called before the {nameof(PurchaseButton)} is used.");
+                var message = $"GameFoundationSdk.Initialize() must be called before {callingMethod} is used.";
+                k_GFLogger.LogException(message, new InvalidOperationException(message));
             }
         }
 
@@ -950,7 +954,7 @@ namespace UnityEngine.GameFoundation.Components
         {
             if (m_ShowDebugLogs)
             {
-                Debug.LogError($"{nameof(PurchaseButton)} - Transaction Key: \"{m_TransactionKey}\" - Error Message: {exception.Message}");
+                k_GFLogger.LogError($"Transaction Key: \"{m_TransactionKey}\" - Error Message: {exception.Message}");
             }
 
             m_WillPurchasingAdapterInitialized = false;

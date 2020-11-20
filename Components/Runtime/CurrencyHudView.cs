@@ -3,7 +3,6 @@ using UnityEngine.UI;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.GameFoundation.DefaultCatalog;
-
 #endif
 
 namespace UnityEngine.GameFoundation.Components
@@ -60,6 +59,11 @@ namespace UnityEngine.GameFoundation.Components
         ///     Specifies whether the debug logs is visible.
         /// </summary>
         bool m_ShowDebugLogs = false;
+        
+        /// <summary>
+        ///     Instance of the GameFoundationDebug class to use for logging.
+        /// </summary>
+        static readonly GameFoundationDebug k_GFLogger = GameFoundationDebug.Get<CurrencyHudView>();
 
         /// <summary>
         ///     Adds listeners, if the application is playing.
@@ -74,7 +78,7 @@ namespace UnityEngine.GameFoundation.Components
                 RegisterEvents();
             }
 
-            if (!ReferenceEquals(m_Currency, null))
+            if (!(m_Currency is null))
             {
                 UpdateContent();
             }
@@ -118,7 +122,7 @@ namespace UnityEngine.GameFoundation.Components
             if (!Application.isPlaying)
                 return;
 
-            ThrowIfNotInitialized();
+            ThrowIfNotInitialized(nameof(Start));
 
             m_Currency = GetCurrency(m_CurrencyKey);
             UpdateContent();
@@ -132,7 +136,7 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         public void SetCurrency(Currency currency)
         {
-            ThrowIfNotInitialized();
+            ThrowIfNotInitialized(nameof(SetCurrency));
 
             m_Currency = currency;
             m_CurrencyKey = currency?.key;
@@ -171,7 +175,7 @@ namespace UnityEngine.GameFoundation.Components
             var currency = GameFoundationSdk.catalog?.Find<Currency>(currencyKey);
             if (currency != null || !m_ShowDebugLogs) return currency;
 
-            Debug.LogWarning($"{nameof(CurrencyHudView)} - Currency \"{currencyKey}\" doesn't exist in Currency catalog.");
+            k_GFLogger.LogWarning($"Currency \"{currencyKey}\" doesn't exist in Currency catalog.");
             return null;
         }
 
@@ -286,14 +290,14 @@ namespace UnityEngine.GameFoundation.Components
         {
             if (m_IconImageField == null)
             {
-                Debug.LogWarning($"{nameof(CurrencyHudView)} - Icon Image field is not defined.");
+                k_GFLogger.LogWarning("Icon Image field is not defined.");
                 return;
             }
 
             if (m_IconImageField.sprite != icon)
             {
                 m_IconImageField.sprite = icon;
-                if (!ReferenceEquals(icon, null)) m_IconImageField.SetNativeSize();
+                if (!(icon is null)) m_IconImageField.SetNativeSize();
 #if UNITY_EDITOR
                 EditorUtility.SetDirty(m_IconImageField);
 #endif
@@ -324,7 +328,7 @@ namespace UnityEngine.GameFoundation.Components
         {
             if (m_QuantityTextField == null)
             {
-                Debug.LogWarning($"{nameof(CurrencyHudView)} - Item Quantity Text field is not defined.");
+                k_GFLogger.LogWarning("Item Quantity Text field is not defined.");
                 return;
             }
 
@@ -341,12 +345,15 @@ namespace UnityEngine.GameFoundation.Components
         /// <summary>
         ///     Throws an Invalid Operation Exception if GameFoundation has not been initialized before this view is used.
         /// </summary>
-        /// <exception cref="InvalidOperationException"></exception>
-        void ThrowIfNotInitialized()
+        /// <param name="callingMethod">
+        ///     Calling method name.
+        /// </param>
+        void ThrowIfNotInitialized(string callingMethod)
         {
             if (!GameFoundationSdk.IsInitialized)
             {
-                throw new InvalidOperationException($"Error: GameFoundation.Initialize() must be called before the {nameof(CurrencyHudView)} is used.");
+                var message = $"GameFoundationSdk.Initialize() must be called before {callingMethod} is used.";
+                 k_GFLogger.LogException(message, new InvalidOperationException(message));
             }
         }
 

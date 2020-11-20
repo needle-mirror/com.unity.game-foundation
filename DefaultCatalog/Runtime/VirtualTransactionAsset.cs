@@ -5,7 +5,8 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
     /// <summary>
     ///     Description for <see cref="VirtualTransaction"/>
     /// </summary>
-    public sealed partial class VirtualTransactionAsset : BaseTransactionAsset
+    public sealed partial class VirtualTransactionAsset
+        : BaseTransactionAsset<VirtualTransaction, VirtualTransactionConfig>
     {
         /// <inheritdoc cref="costs"/>
         [SerializeField]
@@ -26,7 +27,7 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         }
 
         /// <inheritdoc/>
-        protected override BaseTransactionConfig ConfigureTransaction(
+        protected override VirtualTransactionConfig ConfigureTransaction(
             CatalogBuilder builder, IExternalValueProvider valueProvider)
         {
             var config = builder.Create<VirtualTransactionConfig>(key);

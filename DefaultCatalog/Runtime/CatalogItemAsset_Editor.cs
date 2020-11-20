@@ -71,7 +71,7 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         {
             GFTools.ThrowIfArgNullOrEmpty(value, nameof(value));
 
-            m_DisplayName = value;
+            SetDisplayName(value);
 
             EditorUtility.SetDirty(this);
         }

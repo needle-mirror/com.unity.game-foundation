@@ -1,4 +1,3 @@
-using System;
 using UnityEngine.GameFoundation.Configs;
 
 namespace UnityEngine.GameFoundation.DefaultCatalog
@@ -11,22 +10,28 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         /// <summary>
         ///     The balance provided to a new player.
         /// </summary>
+        [Min(0)]
         [Tooltip("The balance given to a new player")]
         [SerializeField]
-        internal long m_InitialBalance;
+        long m_InitialBalance;
 
         /// <summary>
-        ///     External override for <see cref="m_InitialBalance"/>.
+        ///     Wrapper for <see cref="m_InitialBalance"/>.
         /// </summary>
-        [NonSerialized]
-        long? m_ExternalInitialBalance;
+        ExternalizableValue<long> m_InitialBalanceWrapper;
 
         /// <summary>
         ///     The maximum balance a player can have.
         /// </summary>
+        [Min(0)]
         [Tooltip("The maximum balance a player can have")]
         [SerializeField]
-        internal long m_MaximumBalance;
+        long m_MaximumBalance;
+
+        /// <summary>
+        ///     Wrapper for <see cref="m_MaximumBalance"/>.
+        /// </summary>
+        ExternalizableValue<long> m_MaximumBalanceWrapper;
 
         /// <summary>
         ///     Tells whether the currency is Soft or Hard.
@@ -35,59 +40,126 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         ///     All currencies are handled the same way in Game Foundation.
         /// </summary>
         [SerializeField]
-        internal CurrencyType m_Type;
+        CurrencyType m_Type;
+
+        /// <summary>
+        ///     Wrapper for <see cref="m_Type"/>.
+        /// </summary>
+        ExternalizableValue<CurrencyType> m_TypeWrapper;
 
         /// <inheritdoc cref="m_InitialBalance"/>
-        public long initialBalance => m_ExternalInitialBalance ?? m_InitialBalance;
+        public ExternalizableValue<long> initialBalance
+        {
+            get
+            {
+                if (m_InitialBalanceWrapper is null)
+                {
+                    m_InitialBalanceWrapper = new ExternalizableValue<long>(m_InitialBalance);
+                }
+
+                return m_InitialBalanceWrapper;
+            }
+        }
 
         /// <inheritdoc cref="m_MaximumBalance"/>
-        public long maximumBalance => m_MaximumBalance;
+        public ExternalizableValue<long> maximumBalance
+        {
+            get
+            {
+                if (m_MaximumBalanceWrapper is null)
+                {
+                    m_MaximumBalanceWrapper = new ExternalizableValue<long>(m_MaximumBalance);
+                }
+
+                return m_MaximumBalanceWrapper;
+            }
+        }
 
         /// <inheritdoc cref="m_Type"/>
-        public CurrencyType type => m_Type;
+        public ExternalizableValue<CurrencyType> type
+        {
+            get
+            {
+                if (m_TypeWrapper is null)
+                {
+                    m_TypeWrapper = new ExternalizableValue<CurrencyType>(m_Type);
+                }
+
+                return m_TypeWrapper;
+            }
+        }
 
         /// <inheritdoc/>
         protected override CatalogItemConfig ConfigureItem(CatalogBuilder builder, IExternalValueProvider valueProvider)
         {
             var config = builder.Create<CurrencyConfig>(key);
-            if (valueProvider == null
-                || !valueProvider.TryGetValue(
-                    ExternalValueProviderNames.maximumBalance, key, out var externalMaximumBalance))
-            {
-                config.maximumBalance = m_MaximumBalance;
-            }
-            else
-            {
-                config.maximumBalance = externalMaximumBalance;
-            }
+            var hasValueProvider = !(valueProvider is null);
 
-            if (valueProvider == null
-                || !valueProvider.TryGetValue(
-                    ExternalValueProviderNames.currencyType, key, out var externalType))
+            config.maximumBalance = maximumBalance;
+
+            // Type.
             {
-                config.type = m_Type;
-            }
-            else
-            {
-                config.type = (CurrencyType)externalType.AsInt();
+                if (hasValueProvider
+                    && valueProvider.TryGetValue(
+                        ExternalValueProviderNames.currencyType, key, out var externalType))
+                {
+                    var castExternalType = (CurrencyType)externalType.AsInt();
+                    type.SetExternalValue(castExternalType);
+                }
+                else
+                {
+                    type.ResetExternalValue();
+                }
+
+                config.type = type;
             }
 
             return config;
         }
 
         /// <inheritdoc/>
-        internal override void OverrideNonConfiguredData(IExternalValueProvider valueProvider)
+        internal override void OverridePreConfigurationData(IExternalValueProvider valueProvider)
         {
-            if (valueProvider != null
-                && valueProvider.TryGetValue(
-                    ExternalValueProviderNames.initialBalance, key, out var externalInitialBalance))
+            var hasValueProvider = !(valueProvider is null);
+
+            // Initial balance.
             {
-                m_ExternalInitialBalance = externalInitialBalance;
+                if (hasValueProvider
+                    && valueProvider.TryGetValue(
+                        ExternalValueProviderNames.initialBalance, key, out var externalInitialBalance))
+                {
+                    initialBalance.SetExternalValue(externalInitialBalance);
+                }
+                else
+                {
+                    initialBalance.ResetExternalValue();
+                }
             }
-            else
+
+            // Maximum balance must be set now because it is used before
+            // the configuration phase by CatalogAsset.CreateDefaultData.
             {
-                m_ExternalInitialBalance = null;
+                if (hasValueProvider
+                    && valueProvider.TryGetValue(
+                        ExternalValueProviderNames.maximumBalance, key, out var externalMaximumBalance))
+                {
+                    maximumBalance.SetExternalValue(externalMaximumBalance);
+                }
+                else
+                {
+                    maximumBalance.ResetExternalValue();
+                }
             }
+        }
+
+        /// <inheritdoc/>
+        protected override void OnAfterItemDeserialize()
+        {
+            base.OnAfterItemDeserialize();
+
+            m_InitialBalanceWrapper = new ExternalizableValue<long>(m_InitialBalance);
+            m_MaximumBalanceWrapper = new ExternalizableValue<long>(m_MaximumBalance);
+            m_TypeWrapper = new ExternalizableValue<CurrencyType>(m_Type);
         }
     }
 }

@@ -21,7 +21,7 @@ namespace UnityEditor.GameFoundation
         }
 
         /// <summary>
-        ///     Gets of the sub-folder names from the Resources folder.
+        ///     Gets the list of all the Resources folders contained in the project (Assets & Packages).
         /// </summary>
         /// <returns>
         ///     A list of the sub-folders.
@@ -54,9 +54,12 @@ namespace UnityEditor.GameFoundation
 
             FindResourcesFolder("Assets");
 
-            foreach (var packageInfo in s_Request.Result)
+            if (!(s_Request?.Result is null))
             {
-                FindResourcesFolder($"Packages/{packageInfo.name}");
+                foreach (var packageInfo in s_Request.Result)
+                {
+                    FindResourcesFolder($"Packages/{packageInfo.name}");
+                }
             }
 
             return new List<string>(s_AllResourcesFolderPaths);

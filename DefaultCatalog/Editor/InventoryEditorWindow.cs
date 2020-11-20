@@ -10,7 +10,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
         /// </summary>
         public static void ShowWindow()
         {
-            GetWindow<InventoryEditorWindow>(false, "Inventory", true);
+            GetWindow<InventoryEditorWindow>(false, "Inventory Item", true);
         }
 
         /// <summary>

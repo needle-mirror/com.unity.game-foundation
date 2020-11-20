@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Text;
-using UnityEngine.GameFoundation.DefaultLayers;
 using UnityEngine.UI;
 
 namespace UnityEngine.GameFoundation.Sample
@@ -33,11 +31,6 @@ namespace UnityEngine.GameFoundation.Sample
         public Text mainText;
 
         /// <summary>
-        /// Reference to the panel to display when the wrong database is in use.
-        /// </summary>
-        public GameObject wrongDatabasePanel;
-
-        /// <summary>
         /// References to the remove buttons to enable/disable when the action is not possible.
         /// </summary>
         public Button addAppleButton;
@@ -57,19 +50,12 @@ namespace UnityEngine.GameFoundation.Sample
         /// Game Foundation finishes initialization or when script is enabled.
         /// </summary>
         private bool m_SubscribedFlag = false;
-		
+
         /// <summary>
         /// Standard starting point for Unity scripts.
         /// </summary>
-        private IEnumerator Start()
+        private void Start()
         {
-            // The database is NOT correct, show message and abort.
-            if (!SamplesHelper.VerifyDatabase())
-            {
-                wrongDatabasePanel.SetActive(true);
-                yield break;
-            }
-
             // Put all buttons into array for easy access to enable/disable as a group
             m_AllButtons = new Button[] {
                 addAppleButton,
@@ -80,47 +66,18 @@ namespace UnityEngine.GameFoundation.Sample
                 removeAllOrangesButton
             };
 
-            // Initialize Game Foundation.
-            yield return InitializeGameFoundation();
-        }
-
-        /// <summary>
-        /// Initialize Game Foundation.  
-        /// Called at startup as well as when reinitializing.
-        /// </summary>
-        private IEnumerator InitializeGameFoundation()
-        {
-            // Disable all buttons while initializing
-            EnableAllButtons(false);
-
-            // - Initialize must always be called before working with any game foundation code.
-            // - GameFoundation requires an IDataAccessLayer object that will provide and persist
-            //   the data required for the various services (Inventory, Wallet, ...).
-            // - For this sample we don't need to persist any data so we use the MemoryDataLayer
-            //   that will store GameFoundation's data only for the play session.
-            var initDeferred = GameFoundationSdk.Initialize(new MemoryDataLayer());
-
-            // Wait for initialization to complete, then continue.
-            yield return initDeferred.Wait();
-
-            // Continue initialization process or report error on failure.
-            if (initDeferred.isFulfilled)
+            // Game Foundation Initialization is being managed by GameFoundationInit Game Object
+            if (!GameFoundationSdk.IsInitialized)
             {
-                OnGameFoundationInitialized();
+                // Disable all buttons while initializing
+                EnableAllButtons(false);
             }
-            else
-            {
-                OnGameFoundationException(initDeferred.error);
-            }
-
-            // Release deferred promise handler.
-            initDeferred.Release();
         }
 
         /// <summary>
         /// Once Game Foundation completes initialization, we enable buttons, setup callbacks, update GUI, etc.
         /// </summary>
-        private void OnGameFoundationInitialized()
+        public void OnGameFoundationInitialized()
         { 
             // The Inventory Manager starts with initial allocation of 2 apples and 1 orange, but we 
             // can add 2 additional oranges here to get us started.
@@ -336,6 +293,9 @@ namespace UnityEngine.GameFoundation.Sample
         /// </param>
         private void EnableAllButtons(bool enableFlag = true)
         {
+            if (m_AllButtons is null)
+                return;
+
             foreach (var button in m_AllButtons)
             {
                 button.interactable = enableFlag;
@@ -348,7 +308,7 @@ namespace UnityEngine.GameFoundation.Sample
         /// <param name="exception">
         /// Exception thrown by GameFoundation.
         /// </param>
-        private void OnGameFoundationException(Exception exception)
+        public void OnGameFoundationException(Exception exception)
         {
             Debug.LogError($"GameFoundation exception: {exception}");
         }

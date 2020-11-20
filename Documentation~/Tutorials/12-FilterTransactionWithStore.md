@@ -64,16 +64,17 @@ public class GFInit : MonoBehaviour
         // with the default parameters.
         MemoryDataLayer dataLayer = new MemoryDataLayer();
 
-        // Initializes Game Foundation with the data layer.
-        Deferred initDeferred = GameFoundationSdk.Initialize(dataLayer);
-        yield return initDeferred.Wait();
-
-        if (initDeferred.isFulfilled)
-            OnInitSucceeded();
-        else
-            OnInitFailed(initDeferred.error);
-
-        initDeferred.Release();
+        // - Initializes Game Foundation with the data layer.
+        // - We use a using block to automatically release the deferred promise handler.
+        using (Deferred initDeferred = GameFoundationSdk.Initialize(dataLayer))
+        {
+            yield return initDeferred.Wait();
+    
+            if (initDeferred.isFulfilled)
+                OnInitSucceeded();
+            else
+                OnInitFailed(initDeferred.error);
+        }
     }
 
     // Called when Game Foundation is successfully initialized.
@@ -162,16 +163,17 @@ public class GFInit : MonoBehaviour
         // with the default parameters.
         MemoryDataLayer dataLayer = new MemoryDataLayer();
 
-        // Initializes Game Foundation with the data layer.
-        Deferred initDeferred = GameFoundationSdk.Initialize(dataLayer);
-        yield return initDeferred.Wait();
-
-        if (initDeferred.isFulfilled)
-            OnInitSucceeded();
-        else
-            OnInitFailed(initDeferred.error);
-
-        initDeferred.Release();
+        // - Initializes Game Foundation with the data layer.
+        // - We use a using block to automatically release the deferred promise handler.
+        using (Deferred initDeferred = GameFoundationSdk.Initialize(dataLayer))
+        {
+            yield return initDeferred.Wait();
+    
+            if (initDeferred.isFulfilled)
+                OnInitSucceeded();
+            else
+                OnInitFailed(initDeferred.error);
+        }
     }
 
     // Called when Game Foundation is successfully initialized.
@@ -206,6 +208,8 @@ public class GFInit : MonoBehaviour
 }
 ```
 
+## 
+< [_table of contents_](../TableOfContents.md)
 
 
 

@@ -2,7 +2,7 @@
 
 ## Getting and claiming a reward at runtime
 
-So far you have set up [Reward Definitions] by [creating a simple daily reward or progressive daily reward in your game], and seen how to use them with the Reward prefab in the [previous tutorial].
+So far you have set up [Reward Definitions] by [creating a simple daily reward or progressive daily reward in your game], and seen how to use them with the Progressive Reward Popup prefab in the [previous tutorial].
 However there may be times where you don't want to use the Reward prefab, and want to work directly with the Reward system.
 This tutorial will show you how to do that.
 
@@ -28,9 +28,8 @@ IEnumerator ClaimReward()
 
     string claimableKey = reward.GetLastClaimableRewardItemKey();
 
-    var deferredResult = GameFoundationSdk.rewards.Claim(reward.rewardDefinition, claimableKey);
-
-    try
+    // We use a using block to automatically release the deferred promise handler.
+    using (var deferredResult = GameFoundationSdk.rewards.Claim(reward.rewardDefinition, claimableKey))
     {
         // Wait for the process to finish
         while (!deferredResult.isDone)
@@ -59,11 +58,6 @@ IEnumerator ClaimReward()
                 }
             }
         }
-    }
-    finally
-    {
-        // the process handle should be released
-        deferredResult.Release();
     }
 }
 ```
@@ -103,7 +97,8 @@ For any reward state object, you can check several aspects of its state, such as
 ### Conclusion
 We hope the Game Foundation Reward System helps you to provide the most enjoyable game experience to your players, thereby helping your retention!
 
-
+## 
+< [_table of contents_](../TableOfContents.md)
 
 
 

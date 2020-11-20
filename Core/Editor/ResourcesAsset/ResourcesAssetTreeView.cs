@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEditor.IMGUI.Controls;
+using UnityEngine;
 
 namespace UnityEditor.GameFoundation
 {
@@ -25,7 +26,7 @@ namespace UnityEditor.GameFoundation
 
         protected override void SelectionChanged(IList<int> selectedIds)
         {
-            if (selectedIds == null
+            if (selectedIds is null
                 || selectedIds.Count != 1)
                 return;
 
@@ -67,7 +68,6 @@ namespace UnityEditor.GameFoundation
                 pathHash.Clear();
 
                 var folderNode = new TreeViewItem(resourcesFolderPath.GetHashCode(), depth, resourcesFolderPath);
-                root.AddChild(folderNode);
 
                 ++depth;
                 var assetGuids = AssetDatabase.FindAssets("", new[] { resourcesFolderPath });
@@ -80,21 +80,27 @@ namespace UnityEditor.GameFoundation
                     if (!pathHash.Add(assetPath))
                         continue;
 
-                    var allAssets = AssetDatabase.LoadAllAssetsAtPath(assetPath);
-                    foreach (var asset in allAssets)
-                    {
-                        //Resources doesn't handle sub asset.
-                        if (asset == null
-                            || AssetDatabase.IsSubAsset(asset))
-                            continue;
+                    //Skip folders since they are considered as assets.
+                    if (AssetDatabase.IsValidFolder(assetPath))
+                        continue;
 
-                        var assetNode = new ResourcesAssetTreeViewItem(
-                            assetGuid.GetHashCode(), depth, asset.name, assetPath);
-                        folderNode.AddChild(assetNode);
-                    }
+                    //LoadAssetAtPath returns the main asset's path so it is safe to directly work with this result.
+                    var asset = AssetDatabase.LoadAssetAtPath<Object>(assetPath);
+                    if (asset is null)
+                        continue;
+
+                    var assetNode = new ResourcesAssetTreeViewItem(
+                        assetGuid.GetHashCode(), depth, asset.name, assetPath);
+                    folderNode.AddChild(assetNode);
                 }
 
                 --depth;
+
+                //Add folder node only if it has children nodes.
+                if (folderNode.hasChildren)
+                {
+                    root.AddChild(folderNode);
+                }
             }
 
             return root;

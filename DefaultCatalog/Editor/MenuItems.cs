@@ -15,7 +15,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
         /// <summary>
         ///     Creates menu item for game parameters system and shows the window when clicked.
         /// </summary>
-        [MenuItem("Window/Game Foundation/Game Parameters", priority = GF_GameParameter)]
+        [MenuItem("Window/Game Foundation/Game Parameter", priority = GF_GameParameter)]
         public static void ShowGameParameterWindow()
         {
             GameParameterEditorWindow.ShowWindow();
@@ -33,7 +33,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
         /// <summary>
         ///     Creates menu item for inventory system and shows the window when clicked.
         /// </summary>
-        [MenuItem("Window/Game Foundation/Inventory", priority = GF_Inventory)]
+        [MenuItem("Window/Game Foundation/Inventory Item", priority = GF_Inventory)]
         public static void ShowInventoriesWindow()
         {
             InventoryEditorWindow.ShowWindow();
@@ -51,7 +51,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
         /// <summary>
         ///     Creates menu item for Store system and shows the window when clicked.
         /// </summary>
-        [MenuItem("Window/Game Foundation/Transactions", priority = GF_Transactions)]
+        [MenuItem("Window/Game Foundation/Transaction", priority = GF_Transactions)]
         public static void ShowPurchasesWindow()
         {
             TransactionEditorWindow.ShowWindow();
@@ -69,7 +69,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
         /// <summary>
         ///     Creates menu item for tag system and shows the window when clicked.
         /// </summary>
-        [MenuItem("Window/Game Foundation/Tags", priority = GF_Tags)]
+        [MenuItem("Window/Game Foundation/Tag Management", priority = GF_Tags)]
         public static void ShowTagWindow()
         {
             TagEditorWindow.ShowWindow();

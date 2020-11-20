@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Text;
-using UnityEngine.GameFoundation.DefaultLayers;
 using UnityEngine.UI;
 
 namespace UnityEngine.GameFoundation.Sample
@@ -39,11 +37,6 @@ namespace UnityEngine.GameFoundation.Sample
         private readonly StringBuilder m_DisplayText = new StringBuilder();
 
         /// <summary>
-        /// Reference to the panel to display when the wrong database is in use.
-        /// </summary>
-        public GameObject wrongDatabasePanel;
-
-        /// <summary>
         /// We will need a reference to the main text box in the scene so we can easily modify it.
         /// </summary>
         public Text mainText;
@@ -59,57 +52,11 @@ namespace UnityEngine.GameFoundation.Sample
         /// Game Foundation finishes initialization or when script is enabled.
         /// </summary>
         private bool m_SubscribedFlag = false;
-        
-        /// <summary>
-        /// Standard starting point for Unity scripts.
-        /// </summary>
-        private IEnumerator Start()
-        {
-            // The database is NOT correct, show message and abort.
-            if (!SamplesHelper.VerifyDatabase())
-            {
-                wrongDatabasePanel.SetActive(true);
-                yield break;
-            }
-
-            // Initialize Game Foundation.
-            yield return InitializeGameFoundation();
-        }
-
-        /// <summary>
-        /// Initialize Game Foundation.  
-        /// Called at startup as well as when reinitializing.
-        /// </summary>
-        private IEnumerator InitializeGameFoundation()
-        {
-            // - Initialize must always be called before working with any game foundation code.
-            // - GameFoundation requires an IDataAccessLayer object that will provide and persist
-            //   the data required for the various services (Inventory, Wallet, ...).
-            // - For this sample we don't need to persist any data so we use the MemoryDataLayer
-            //   that will store GameFoundation's data only for the play session.
-            var initDeferred = GameFoundationSdk.Initialize(new MemoryDataLayer());
-
-            // Wait for initialization to complete, then continue.
-            yield return initDeferred.Wait();
-
-            // Continue initialization process or report error on failure.
-            if (initDeferred.isFulfilled)
-            {
-                OnGameFoundationInitialized();
-            }
-            else
-            {
-                OnGameFoundationException(initDeferred.error);
-            }
-
-            // Release deferred promise handler.
-            initDeferred.Release();
-        }
 
         /// <summary>
         /// Once Game Foundation completes initialization, we enable buttons, setup callbacks, update GUI, etc.
         /// </summary>
-        private void OnGameFoundationInitialized()
+        public void OnGameFoundationInitialized()
         {
             // For this sample, we're focusing on swords and health, so let's remove all others from the Inventory.
             // Note: this is helpful since we have an initial allocation of 2 apples and 1 orange.
@@ -463,7 +410,7 @@ namespace UnityEngine.GameFoundation.Sample
         /// <param name="exception">
         /// Exception thrown by GameFoundation.
         /// </param>
-        private void OnGameFoundationException(Exception exception)
+        public void OnGameFoundationException(Exception exception)
         {
             Debug.LogError($"GameFoundation exception: {exception}");
         }

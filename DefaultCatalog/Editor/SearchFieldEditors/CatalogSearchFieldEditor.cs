@@ -35,7 +35,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
 
             return fullList.FindAll(item =>
                 item.key.ToLowerInvariant().Contains(m_ItemSearchString.ToLowerInvariant()) ||
-                item.displayName.ToLowerInvariant().Contains(m_ItemSearchString.ToLowerInvariant())
+                item.displayName.currentValue.ToLowerInvariant().Contains(m_ItemSearchString.ToLowerInvariant())
             );
         }
     }

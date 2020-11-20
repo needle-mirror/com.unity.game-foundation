@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.8.0] - 2020-11-20
+
+### Added
+
+* Inventory now implements a new event `itemMutablePropertyChanged` which is fired any time any item's mutable property is changed in the entire `GameFoundationSdk.inventory` (specific item and property effected are passed as an argument).  This is in addition to individual InventoryItem's `mutablePropertyChanged` event which targets only mutable property changes to a specific `InventoryItem`.
+* `GameFoundationSdk.inventory` now emits OnCollectionAddedCallback or OnCollectionDeletedCallback events when `IItemCollections` are created or deleted (respectively), as well as OnCollectionItemAddedCallback or OnCollectionItemRemovedCallback events whenever items are added to or removed from `IItemCollections`.
+* Added a `[Generate Constants]` button to `CatalogAssets` in Unity Inspector window to permit exporting constants.  To utilize this feature, select a Catalog (i.e. 'SampleCatalog') and click the `[Generate Constants]` button at the top.  Specify an export filename (must be inside Assets folder and is of type 'cs') and GameFoundation will generate all constants to simplify catalog access and avoid typos.
+* `GameFoundationSdk.inventory` now allows `StackableInventoryItems` to be created with quantity in 1 step using `CreateItem(StackableInventoryItemDefinition, quantity)`.
+* `InventoryItemDefinitionAsset.initialQuantityPerStack` has been added to the list of overridable catalog data for `IExternalValueProvider`.
+* Some fields from the different implementations of `CatalogItemAsset` are now wrapped in a `ExternalizableValue<T>`. They can be used as regular `T` properties.
+  These fields are externalizable through `IExternalValueProvider` if you want to override them with an external source.
+* Rewards now appear in the Game Foundation Debugger.
+
+### Changed
+
+* Game Foundation Init Prefab's default Data Layer has changed to Local Data Persistence from Memory Layer.
+* PurchaseButton and RewardClaimButton prefabs now have a weak reference to the Purchase and Claim methods.
+  They can be found in the button's onClick listener list in the inspector, and can be removed to change the functionality of what happens to the button when clicked.
+* Renamed `Reward Popup` prefab to `Progressive Reward Popup`.
+* Game Foundation initialization will no longer fail if an IAP Transaction's product id is missing for the platform being built to.
+  The purchase of that IAP Transaction can be attempted but will fail because a product id is required, however it will no longer prevent all of Game Foundation from functioning.
+* `Deferred` and `Deferred<T>` are now `IDisposable` so you can use them in an `using` block to release them automatically.
+* All sample scenes using Memory Data Layer or Persistence Data Layer now use Game Foundation Init Prefab instead of code initialization.
+* Changed GameFoundationSdk.dataLayer property to public from internal.
+
+### Removed
+
+* `IDictionaryConvertible` has been removed since the `JsonDetail` no longer exists.
+
+### Fixed
+
+* Fixed compilation errors when using IAP package version 2.1.0 or 2.1.1.
+* Fixed an issue where the reward countdown would start going backwards if you missed an item and `Reset if Expired` is set to false.
+* Fixed an issue where a reward with multiple items, `Reset if Expired` set to true, and a countdown of 0 would be reset immediately after the first claim.
+* Fixed an issue where a missed reward item would show as Locked if it was right before the latest claimed item and during cooldown.
+* GameFoundationInit component now serializes changes to the Override Catalog Asset bool and asset values, and the catalog asset value is no longer forgotten when unchecked.
+
 ## [0.7.0] - 2020-10-13
 
 ### Added

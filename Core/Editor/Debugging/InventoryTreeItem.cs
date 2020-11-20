@@ -74,4 +74,39 @@ namespace UnityEditor.GameFoundation.Debugging
             return $"{nameof(CurrencyView)} key:{currency.key}";
         }
     }
+
+    sealed class RewardView : TreeViewItem
+    {
+        public readonly Reward reward;
+
+        public RewardView(int id, int depth, string displayName, Reward reward) : base(id, depth, displayName)
+        {
+            this.reward = reward;
+        }
+
+        public override string ToString()
+        {
+            return $"{nameof(RewardView)} key:{reward.rewardDefinition.key}";
+        }
+    }
+    
+    sealed class RewardItemView : TreeViewItem
+    {
+        
+        public readonly Reward reward;
+
+        public readonly (string key, RewardItemState value) rewardItem;
+
+        public RewardItemView(int id, int depth, string displayName, Reward reward, (string key, RewardItemState value) rewardItem)
+            : base(id, depth, $"{displayName} (key: {rewardItem.key})")
+        {
+            this.reward = reward;
+            this.rewardItem = rewardItem;
+        }
+
+        public override string ToString()
+        {
+            return $"{nameof(RewardItemView)} reward key: {reward.rewardDefinition.key}, reward item key:{rewardItem.key}";
+        }
+    }
 }

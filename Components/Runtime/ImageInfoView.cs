@@ -41,13 +41,13 @@ namespace UnityEngine.GameFoundation.Components
         /// <param name="icon">Icon sprite to display</param>
         public void SetIcon(Sprite icon)
         {
-            if (ReferenceEquals(m_ImageField, null) || m_ImageField.sprite == icon)
+            if (m_ImageField is null || m_ImageField.sprite == icon)
             {
                 return;
             }
 
             m_ImageField.sprite = icon;
-            if (!ReferenceEquals(icon, null)) m_ImageField.SetNativeSize();
+            if (!(icon is null)) m_ImageField.SetNativeSize();
 #if UNITY_EDITOR
             EditorUtility.SetDirty(m_ImageField);
 #endif
@@ -59,7 +59,7 @@ namespace UnityEngine.GameFoundation.Components
         /// <param name="text">Text to display</param>
         public void SetText(string text)
         {
-            if (ReferenceEquals(m_TextField, null) || m_TextField.text == text)
+            if (m_TextField is null || m_TextField.text == text)
             {
                 return;
             }

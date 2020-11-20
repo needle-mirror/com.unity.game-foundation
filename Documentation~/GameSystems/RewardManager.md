@@ -2,7 +2,7 @@
 
 ## Overview
 
-The __Reward Manager__ is responsible for processing [Reward] claims. A Reward defines a schedule for making Reward Items available to players to claim when certain conditions are met.
+The __Reward Manager__ provides access to in-game [Rewards], which can promote retention, improve a player's game experience, and incentivize players to continue playing.  A Reward defines a schedule for making Reward Items available to players to claim when certain conditions are met.
 
 ## Managing Reward instances
 
@@ -16,12 +16,15 @@ Processing a reward is done by sending a reward item into the __Reward Manager__
 
 If you use the ChilliConnect adapter as your data layer, the Reward system won't work because ChilliConnect doesn't currently have a reward system.
 
+## 
+< [_table of contents_](../TableOfContents.md)
 
 
 
 
 
 
-[Reward]: ../CatalogItems/RewardDefinition.md
+
+[Rewards]: ../CatalogItems/RewardDefinition.md
 
 [catalog]: ../Catalog.md

@@ -2,7 +2,7 @@
 
 ## Overview
 
-A __Virtual Transaction__ is a [catalog item] dedicated to purchases using virtual currencies and counterparts.
+A __Virtual Transaction__ manages the exchange of specific in-game items and/or currencies for other items and/or currencies. As the heart of your [Game Economy](../GameSystems/GameEconomy.md), virtual transactions can be extremely useful for a crafting system, for example, or to use currency to purchase items. Game play can decide when a transaction is executed and the appropriate costs are consumed and payouts received.  Each Virtual Transaction is a [catalog item] dedicated to purchases using virtual currencies and counterparts.
 
 This type of transaction has 2 specifics fields:
 
@@ -27,6 +27,9 @@ The interface is similar to the other [catalog items editor].
 (2) The Payouts section shows a list of [currencies] and [item definitions].
   Those are the output of the transaction.
   The amounts next to each entry are the number of those items the player will get from the transaction.
+
+## 
+< [_table of contents_](../TableOfContents.md)
 
 
 

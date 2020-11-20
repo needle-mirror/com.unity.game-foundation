@@ -24,16 +24,17 @@ public class GFInit : MonoBehaviour
         // with the default parameters.
         MemoryDataLayer dataLayer = new MemoryDataLayer();
 
-        // Initializes Game Foundation with the data layer.
-        Deferred initDeferred = GameFoundationSdk.Initialize(dataLayer);
-        yield return initDeferred.Wait();
+        // - Initializes Game Foundation with the data layer.
+        // - We use a using block to automatically release the deferred promise handler.
+        using (Deferred initDeferred = GameFoundationSdk.Initialize(dataLayer))
+        {
+            yield return initDeferred.Wait();
 
-        if (initDeferred.isFulfilled)
-            OnInitSucceeded();
-        else
-            OnInitFailed(initDeferred.error);
-
-        initDeferred.Release();
+            if (initDeferred.isFulfilled)
+                OnInitSucceeded();
+            else
+                OnInitFailed(initDeferred.error);
+        }
     }
 
     // Called when Game Foundation is successfully initialized.
@@ -97,10 +98,9 @@ Create the `InitiateTransaction()` method according to the following snippet:
 ```cs
 IEnumerator InitiateTransaction(BaseTransaction transaction)
 {
-    // Gets the handle of the transaction.
-    Deferred<TransactionResult> deferredResult = GameFoundationSdk.transactions.BeginTransaction(transaction);
-
-    try
+    // - Gets the handle of the transaction.
+    // - We use a using block to automatically release the deferred promise handler.
+    using (Deferred<TransactionResult> deferredResult = GameFoundationSdk.transactions.BeginTransaction(transaction))
     {
         // Waits for the process to finish
         while (!deferredResult.isDone)
@@ -121,11 +121,6 @@ IEnumerator InitiateTransaction(BaseTransaction transaction)
 
             // TODO: display the result
         }
-    }
-    finally
-    {
-        // A process handle can be released.
-        deferredResult.Release();
     }
 }
 ```
@@ -242,16 +237,17 @@ public class GFInit : MonoBehaviour
         // with the default parameters.
         MemoryDataLayer dataLayer = new MemoryDataLayer();
 
-        // Initializes Game Foundation with the data layer.
-        Deferred initDeferred = GameFoundationSdk.Initialize(dataLayer);
-        yield return initDeferred.Wait();
-
-        if (initDeferred.isFulfilled)
-            OnInitSucceeded();
-        else
-            OnInitFailed(initDeferred.error);
-
-        initDeferred.Release();
+        // - Initializes Game Foundation with the data layer.
+        // - We use a using block to automatically release the deferred promise handler.
+        using (Deferred initDeferred = GameFoundationSdk.Initialize(dataLayer))
+        {
+            yield return initDeferred.Wait();
+    
+            if (initDeferred.isFulfilled)
+                OnInitSucceeded();
+            else
+                OnInitFailed(initDeferred.error);
+        }
     }
 
     // Called when Game Foundation is successfully initialized.
@@ -274,10 +270,9 @@ public class GFInit : MonoBehaviour
 
     IEnumerator InitiateTransaction(BaseTransaction transaction)
     {
-        // Gets the handle of the transaction.
-        Deferred<TransactionResult> deferredResult = GameFoundationSdk.transactions.BeginTransaction(transaction);
-
-        try
+        // - Gets the handle of the transaction.
+        // - We use a using block to automatically release the deferred promise handler.
+        using (Deferred<TransactionResult> deferredResult = GameFoundationSdk.transactions.BeginTransaction(transaction))
         {
             // Waits for the process to finish
             yield return deferredResult.Wait();
@@ -295,11 +290,6 @@ public class GFInit : MonoBehaviour
 
                 DisplayResult(result);
             }
-        }
-        finally
-        {
-            // A process handle can be released.
-            deferredResult.Release();
         }
     }
 
@@ -344,7 +334,8 @@ public class GFInit : MonoBehaviour
 }
 ```
 
-
+## 
+< [_table of contents_](../TableOfContents.md)
 
 
 

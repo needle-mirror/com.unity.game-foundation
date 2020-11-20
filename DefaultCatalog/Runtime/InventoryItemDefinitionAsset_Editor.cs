@@ -121,6 +121,8 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         {
             // negative allocation not permitted.
             m_InitialAllocation = Math.Max(0, value);
+            m_InitialAllocationWrapper = new ExternalizableValue<int>(m_InitialAllocation);
+
             EditorUtility.SetDirty(this);
         }
 
@@ -133,6 +135,7 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         internal void Editor_SetIsStackableFlag(bool value)
         {
             m_IsStackableFlag = value;
+
             EditorUtility.SetDirty(this);
         }
 
@@ -146,6 +149,8 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         internal void Editor_SetInitialQuantityPerStack(long value)
         {
             m_InitialQuantityPerStack = Math.Max(0, value);
+            m_InitialQuantityPerStackWrapper = new ExternalizableValue<long>(m_InitialQuantityPerStack);
+
             EditorUtility.SetDirty(this);
         }
 
@@ -158,16 +163,16 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
                     $"{nameof(InventoryItemDefinitionAsset)}: The {nameof(CatalogItemAsset)} target parameter cannot be null.");
             }
 
-            var inventoryItemTarget = target as InventoryItemDefinitionAsset;
-
-            if (inventoryItemTarget == null)
+            if (!(target is InventoryItemDefinitionAsset inventoryItemTarget))
             {
                 throw new InvalidCastException(
                     $"{nameof(InventoryItemDefinitionAsset)}: The target object {target.displayName} of type " +
                     $"'{target.GetType()}' could not be cast to {GetType()}.");
             }
 
-            inventoryItemTarget.m_InitialAllocation = m_InitialAllocation;
+            inventoryItemTarget.Editor_SetInitialAllocation(m_InitialAllocation);
+            inventoryItemTarget.Editor_SetIsStackableFlag(m_IsStackableFlag);
+            inventoryItemTarget.Editor_SetInitialQuantityPerStack(m_InitialQuantityPerStack);
 
             foreach (var kvp in mutableProperties)
             {

@@ -56,6 +56,11 @@ namespace UnityEngine.GameFoundation.Components
         ///     Specifies whether the button is driven by other component.
         /// </summary>
         internal bool m_IsDrivenByOtherComponent;
+        
+        /// <summary>
+        ///     Instance of the GameFoundationDebug class to use for logging.
+        /// </summary>
+        static readonly GameFoundationDebug k_GFLogger = GameFoundationDebug.Get<RewardClaimButton>();
 
         /// <summary>
         ///     Adds listeners, if the application is playing.
@@ -132,9 +137,9 @@ namespace UnityEngine.GameFoundation.Components
         {
             m_Button = GetComponent<Button>();
 
-            if (Application.isPlaying)
+            if (Application.isPlaying && m_Button.onClick.GetPersistentEventCount() <= 0)
             {
-                m_Button.onClick.AddListener(Claim);
+                k_GFLogger.LogWarning("There are no onClick listeners attached to the RewardClaimButton named " + m_Button.name + " via the Inspector UI. This may cause unexpected behavior when trying to claim reward.");
             }
         }
 
@@ -146,7 +151,7 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         void Start()
         {
-            ThrowIfNotInitialized();
+            ThrowIfNotInitialized(nameof(Start));
 
             if (!m_IsDrivenByOtherComponent)
             {
@@ -187,7 +192,7 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         public void SetRewardItemDefinition(RewardItemDefinition definition)
         {
-            ThrowIfNotInitialized();
+            ThrowIfNotInitialized(nameof(SetRewardItemDefinition));
 
             m_RewardItemDefinition = definition;
 
@@ -229,7 +234,7 @@ namespace UnityEngine.GameFoundation.Components
             {
                 if (m_ShowDebugLogs)
                 {
-                    Debug.LogWarning($"{nameof(RewardClaimButton)} - Reward \"{rewardDefinitionKey}\" doesn't exist in Reward catalog.");
+                    k_GFLogger.LogWarning($"Reward \"{rewardDefinitionKey}\" doesn't exist in Reward catalog.");
                 }
 
                 return null;
@@ -238,7 +243,7 @@ namespace UnityEngine.GameFoundation.Components
             var rewardItemDefinition = rewardDefinition.FindRewardItem(rewardItemDefinitionKey);
             if (rewardItemDefinition == null && m_ShowDebugLogs)
             {
-                Debug.LogWarning($"{nameof(RewardClaimButton)} - No Reward Item with the key \" {rewardItemDefinitionKey}\" can be found in the Reward catalog.");
+                k_GFLogger.LogWarning($"No Reward Item with the key \" {rewardItemDefinitionKey}\" can be found in the Reward catalog.");
             }
 
             return rewardItemDefinition;
@@ -249,7 +254,7 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         public void Claim()
         {
-            ThrowIfNotInitialized();
+            ThrowIfNotInitialized(nameof(Claim));
 
             if (m_RewardItemDefinition != null)
             {
@@ -374,12 +379,15 @@ namespace UnityEngine.GameFoundation.Components
         /// <summary>
         ///     Throws an Invalid Operation Exception if GameFoundation has not been initialized before this view is used.
         /// </summary>
-        /// <exception cref="InvalidOperationException"></exception>
-        void ThrowIfNotInitialized()
+        /// <param name="callingMethod">
+        ///     Calling method name.
+        /// </param>
+        void ThrowIfNotInitialized(string callingMethod)
         {
             if (!GameFoundationSdk.IsInitialized)
             {
-                throw new InvalidOperationException($"Error: GameFoundation.Initialize() must be called before the {nameof(RewardClaimButton)} is used.");
+                var message = $"GameFoundationSdk.Initialize() must be called before {callingMethod} is used.";
+                k_GFLogger.LogException(message, new InvalidOperationException(message));
             }
         }
     }

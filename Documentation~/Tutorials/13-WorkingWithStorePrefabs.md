@@ -158,7 +158,8 @@ This component has the following fields:
 We hope these prefabs and components assist you when adding a simple store to your game, in addition to providing a useful jumping off point for any more advanced stores you may choose to create.
 The [next section] of the tutorial will introduce you to another prefab we offer, which creates a pop up for advertising a special promotion, like a starter pack.
 
-
+## 
+< [_table of contents_](../TableOfContents.md)
 
 
 

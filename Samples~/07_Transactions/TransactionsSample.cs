@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
-using UnityEngine.GameFoundation.DefaultLayers;
 using UnityEngine.Promise;
 using UnityEngine.UI;
 
@@ -44,11 +43,6 @@ namespace UnityEngine.GameFoundation.Sample
         private readonly StringBuilder m_DisplayText = new StringBuilder();
 
         /// <summary>
-        /// Reference to the panel to display when the wrong database is in use.
-        /// </summary>
-        public GameObject wrongDatabasePanel;
-
-        /// <summary>
         /// We will need a reference to the main text box in the scene so we can easily modify it.
         /// </summary>
         public Text mainText;
@@ -71,55 +65,9 @@ namespace UnityEngine.GameFoundation.Sample
         bool m_SubscribedFlag = false;
 
         /// <summary>
-        /// Standard starting point for Unity scripts.
-        /// </summary>
-        private IEnumerator Start()
-        {
-            // The database is NOT correct, show message and abort.
-            if (!SamplesHelper.VerifyDatabase())
-            {
-                wrongDatabasePanel.SetActive(true);
-                yield break;
-            }
-
-            // Initialize Game Foundation.
-            yield return InitializeGameFoundation();
-        }
-
-        /// <summary>
-        /// Initialize Game Foundation.  
-        /// Called at startup as well as when reinitializing.
-        /// </summary>
-        private IEnumerator InitializeGameFoundation()
-        {
-            // - Initialize must always be called before working with any game foundation code.
-            // - GameFoundation requires an IDataAccessLayer object that will provide and persist
-            //   the data required for the various services (Inventory, Wallet, ...).
-            // - For this sample we don't need to persist any data so we use the MemoryDataLayer
-            //   that will store GameFoundation's data only for the play session.
-            var initDeferred = GameFoundationSdk.Initialize(new MemoryDataLayer());
-
-            // Wait for initialization to complete, then continue.
-            yield return initDeferred.Wait();
-
-            // Continue initialization process or report error on failure.
-            if (initDeferred.isFulfilled)
-            {
-                OnGameFoundationInitialized();
-            }
-            else
-            {
-                OnGameFoundationException(initDeferred.error);
-            }
-
-            // Release deferred promise handler.
-            initDeferred.Release();
-        }
-
-        /// <summary>
         /// Once Game Foundation completes initialization, we enable buttons, setup callbacks, update GUI, etc.
         /// </summary>
-        private void OnGameFoundationInitialized()
+        public void OnGameFoundationInitialized()
         { 
             // Grab references to the transactions.
             m_AppleIngredientTransaction = GameFoundationSdk.catalog.Find<VirtualTransaction>("appleIngredient");
@@ -326,51 +274,49 @@ namespace UnityEngine.GameFoundation.Sample
         {
             Debug.Log($"Now processing purchase: {transaction.displayName}");
 
-            Deferred<TransactionResult> deferred = GameFoundationSdk.transactions.BeginTransaction(transaction);
-
-            // wait for the transaction to be processed
-            int currentStep = 0;
-
-            while (!deferred.isDone)
+            // We use a using block to automatically release the deferred promise handler.
+            using (Deferred<TransactionResult> deferred = GameFoundationSdk.transactions.BeginTransaction(transaction))
             {
-                // keep track of the current step and possibly show a progress UI
-                if (deferred.currentStep != currentStep)
-                {
-                    currentStep = deferred.currentStep;
+                // wait for the transaction to be processed
+                int currentStep = 0;
 
-                    Debug.Log($"Transaction is now on step {currentStep} of {deferred.totalSteps}");
+                while (!deferred.isDone)
+                {
+                    // keep track of the current step and possibly show a progress UI
+                    if (deferred.currentStep != currentStep)
+                    {
+                        currentStep = deferred.currentStep;
+
+                        Debug.Log($"Transaction is now on step {currentStep} of {deferred.totalSteps}");
+                    }
+
+                    yield return null;
                 }
 
-                yield return null;
-            }
-
-            // now that the transaction has been processed, check for an error
-            if (!deferred.isFulfilled)
-            {
-                Debug.LogError($"Transaction Id:  {transaction.key} - Error Message: {deferred.error}");
-
-                deferred.Release();
-                yield break;
-            }
-
-            // here we can assume success
-            Debug.Log("The purchase was successful in both the platform store and the data layer!");
-
-            foreach (var exchange in deferred.result.payout.products)
-            {
-                // the log will depend on the type of the received tradable.
-                if (exchange is CurrencyExchange currencyExchange)
+                // now that the transaction has been processed, check for an error
+                if (!deferred.isFulfilled)
                 {
-                    Debug.Log($"Player was awarded {currencyExchange.amount} of currency '{currencyExchange.currency.displayName}'");
+                    Debug.LogError($"Transaction Id:  {transaction.key} - Error Message: {deferred.error}");
+
+                    yield break;
                 }
-                else if (exchange is InventoryItem item)
+
+                // here we can assume success
+                Debug.Log("The purchase was successful in both the platform store and the data layer!");
+
+                foreach (var exchange in deferred.result.payout.products)
                 {
-                    Debug.Log($"Player was awarded an item made from '{item.definition.displayName}'");
+                    // the log will depend on the type of the received tradable.
+                    if (exchange is CurrencyExchange currencyExchange)
+                    {
+                        Debug.Log($"Player was awarded {currencyExchange.amount} of currency '{currencyExchange.currency.displayName}'");
+                    }
+                    else if (exchange is InventoryItem item)
+                    {
+                        Debug.Log($"Player was awarded an item made from '{item.definition.displayName}'");
+                    }
                 }
             }
-
-            // all done
-            deferred.Release();
         }
 
         /// <summary>
@@ -494,7 +440,7 @@ namespace UnityEngine.GameFoundation.Sample
         /// <param name="exception">
         /// Exception thrown by GameFoundation.
         /// </param>
-        private void OnGameFoundationException(Exception exception)
+        public void OnGameFoundationException(Exception exception)
         {
             Debug.LogError($"GameFoundation exception: {exception}");
         }

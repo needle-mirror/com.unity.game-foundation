@@ -81,6 +81,7 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         {
             value = unit.ConvertToSeconds(value);
             m_CooldownSeconds = Math.Max(0, value);
+            m_CooldownWrapper = new ExternalizableValue<int>(m_CooldownSeconds);
             m_CooldownDisplayUnits = unit;
 
             EditorUtility.SetDirty(this);
@@ -100,6 +101,7 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         {
             value = unit.ConvertToSeconds(value);
             m_ExpirationSeconds = Math.Max(0, value);
+            m_ExpirationWrapper = new ExternalizableValue<int>(m_ExpirationSeconds);
             m_ExpirationDisplayUnits = unit;
 
             EditorUtility.SetDirty(this);
@@ -114,6 +116,8 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         internal void Editor_SetResetIfExpired(bool value)
         {
             m_ResetIfExpired = value;
+            m_ResetIfExpiredWrapper = new ExternalizableValue<bool>(m_ResetIfExpired);
+
             EditorUtility.SetDirty(this);
         }
 
@@ -197,24 +201,22 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
                     $"{nameof(RewardAsset)}: The {nameof(CatalogItemAsset)} target parameter cannot be null.");
             }
 
-            var rewardTarget = target as RewardAsset;
-
-            if (rewardTarget == null)
+            if (!(target is RewardAsset rewardTarget))
             {
                 throw new InvalidCastException(
                     $"{nameof(RewardAsset)}: The target object {target.displayName} of type " +
                     $"'{target.GetType()}' could not be cast to {GetType()}.");
             }
 
-            rewardTarget.m_CooldownSeconds = m_CooldownSeconds;
+            rewardTarget.Editor_SetCooldown(m_CooldownSeconds);
             rewardTarget.m_CooldownDisplayUnits = m_CooldownDisplayUnits;
-            rewardTarget.m_ExpirationSeconds = m_ExpirationSeconds;
+            rewardTarget.Editor_SetExpiration(m_ExpirationSeconds);
             rewardTarget.m_ExpirationDisplayUnits = m_ExpirationDisplayUnits;
-            rewardTarget.m_ResetIfExpired = m_ResetIfExpired;
+            rewardTarget.Editor_SetResetIfExpired(m_ResetIfExpired);
 
             foreach (var rewardItem in m_RewardItems)
             {
-                rewardTarget.m_RewardItems.Add(rewardItem.Clone());
+                rewardTarget.Editor_AddItem(rewardItem.Clone());
             }
 
             base.CopyValues(rewardTarget);

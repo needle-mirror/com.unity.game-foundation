@@ -39,7 +39,7 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
 
                 if (s_Instance.m_CatalogAsset == null)
                 {
-                    throw new Exception($"{nameof(CatalogSettings)}: Game Foundation catalog asset reference " +
+                    throw new NullReferenceException($"{nameof(CatalogSettings)}: Game Foundation catalog asset reference " +
                         "cannot be null. Open one of the Game Foundation windows in the Unity Editor " +
                         "while not in Play Mode to have a catalog asset created for you automatically.");
                 }

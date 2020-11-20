@@ -44,6 +44,11 @@
         public const string initialAllocation = "iniAlloc";
 
         /// <summary>
+        ///     External name for <see cref="InventoryItemDefinitionAsset.initialQuantityPerStack"/>.
+        /// </summary>
+        public const string initialQuantityPerStack = "iniQuantity";
+
+        /// <summary>
         ///     External name for <see cref="IAPTransactionAsset.appleId"/>.
         /// </summary>
         public const string appleProductId = "appleId";

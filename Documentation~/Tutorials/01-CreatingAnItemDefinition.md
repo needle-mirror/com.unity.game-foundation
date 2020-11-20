@@ -60,6 +60,8 @@ You can also unassign a [tag] by clicking on the `-` button next to it.
 
 Go to [the next tutorial] to see what we can do with this [item definitions].
 
+## 
+< [_table of contents_](../TableOfContents.md)
 
 
 

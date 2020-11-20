@@ -14,6 +14,8 @@ namespace UnityEditor.GameFoundation.Components
 
         SerializedProperty m_DataLayerType_SerializedProperty;
         SerializedProperty m_LocalPersistenceFilename_SerializedProperty;
+        SerializedProperty m_CatalogAsset_SerializedProperty;
+        SerializedProperty m_OverrideCatalogAsset_SerializedProperty;
 
         readonly GUIContent m_OverrideCatalogContent = new GUIContent("Override Catalog Asset", "Overrides the catalog asset that is defined in GameFoundationSettings.");
 
@@ -32,6 +34,8 @@ namespace UnityEditor.GameFoundation.Components
 
             m_DataLayerType_SerializedProperty = serializedObject.FindProperty(nameof(m_GameFoundationInit.m_DataLayerType));
             m_LocalPersistenceFilename_SerializedProperty = serializedObject.FindProperty(nameof(m_GameFoundationInit.m_LocalPersistenceFilename));
+            m_CatalogAsset_SerializedProperty = serializedObject.FindProperty(nameof(m_GameFoundationInit.m_CatalogAsset));
+            m_OverrideCatalogAsset_SerializedProperty = serializedObject.FindProperty(nameof(m_GameFoundationInit.m_OverrideCatalogAsset));
         }
 
         public override void OnInspectorGUI()
@@ -41,7 +45,8 @@ namespace UnityEditor.GameFoundation.Components
 
             EditorGUILayout.PropertyField(m_DataLayerType_SerializedProperty);
 
-            if ((GameFoundationInit.DataLayerType)m_DataLayerType_SerializedProperty.intValue == GameFoundationInit.DataLayerType.LocalPersistence)
+            if ((GameFoundationInit.DataLayerType) m_DataLayerType_SerializedProperty.intValue ==
+                GameFoundationInit.DataLayerType.LocalPersistence)
             {
                 EditorGUILayout.PropertyField(m_LocalPersistenceFilename_SerializedProperty);
             }
@@ -50,13 +55,16 @@ namespace UnityEditor.GameFoundation.Components
 
             using (new EditorGUILayout.HorizontalScope())
             {
-                m_GameFoundationInit.overrideCatalogAsset = EditorGUILayout.Toggle(m_OverrideCatalogContent, m_GameFoundationInit.overrideCatalogAsset);
+                m_OverrideCatalogAsset_SerializedProperty.boolValue = EditorGUILayout.Toggle(m_OverrideCatalogContent, m_GameFoundationInit.m_OverrideCatalogAsset);
 
-                if (m_GameFoundationInit.overrideCatalogAsset)
+                if (m_GameFoundationInit.m_OverrideCatalogAsset)
                 {
-                    m_GameFoundationInit.m_CatalogAsset = (CatalogAsset)EditorGUILayout.ObjectField(m_GameFoundationInit.m_CatalogAsset, typeof(CatalogAsset), false);
+                    m_CatalogAsset_SerializedProperty.objectReferenceValue = EditorGUILayout.ObjectField(
+                        m_CatalogAsset_SerializedProperty.objectReferenceValue,
+                        typeof(CatalogAsset), false);
                 }
             }
+
 
             // Use the default object field GUI for these properties.
             DrawPropertiesExcluding(serializedObject, kExcludedFields);

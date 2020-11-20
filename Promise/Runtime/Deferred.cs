@@ -6,7 +6,7 @@ namespace UnityEngine.Promise
     /// <summary>
     ///     Handle to read data of a promise.
     /// </summary>
-    public struct Deferred
+    public struct Deferred : IDisposable
     {
         /// <summary>
         ///     The token is stored because <see cref="Promise"/> instances can be recycled.
@@ -91,13 +91,24 @@ namespace UnityEngine.Promise
         ///     An <see cref="IEnumerator"/> instance to use in a coroutine.
         /// </returns>
         public IEnumerator Wait() => m_Promise?.Wait(m_Token) ?? default;
+
+        /// <summary>
+        ///     Release the handled promise if it is still active.
+        /// </summary>
+        public void Dispose()
+        {
+            if (isActive)
+            {
+                Release();
+            }
+        }
     }
 
     /// <inheritdoc cref="Deferred"/>
     /// <typeparam name="TResult">
     ///     Type of the result this deferred retrieves from its <see cref="Promise{TResult}"/>.
     /// </typeparam>
-    public struct Deferred<TResult>
+    public struct Deferred<TResult> : IDisposable
     {
         /// <summary>
         ///     Implicitly converts the <see cref="Deferred{TResult}"/> into a classic <see cref="Deferred"/>.
@@ -171,5 +182,16 @@ namespace UnityEngine.Promise
         ///     An <see cref="IEnumerator"/> instance to use in a coroutine.
         /// </returns>
         public IEnumerator Wait() => m_Promise?.Wait(m_Token) ?? default;
+
+        /// <summary>
+        ///     Release the handled promise if it is still active.
+        /// </summary>
+        public void Dispose()
+        {
+            if (isActive)
+            {
+                Release();
+            }
+        }
     }
 }

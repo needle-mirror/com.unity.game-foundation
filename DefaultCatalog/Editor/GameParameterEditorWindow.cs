@@ -10,7 +10,7 @@
         /// </summary>
         public static void ShowWindow()
         {
-            GetWindow<GameParameterEditorWindow>(false, "Game Parameters", true);
+            GetWindow<GameParameterEditorWindow>(false, "Game Parameter", true);
         }
 
         /// <summary>

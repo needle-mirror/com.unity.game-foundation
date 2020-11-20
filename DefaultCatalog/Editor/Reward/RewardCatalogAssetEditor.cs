@@ -131,29 +131,28 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
                     }
                 }
 
-                using (var check = new EditorGUI.ChangeCheckScope())
+                bool resetIfExpired = reward.resetIfExpired;
+                var hasExpiration = reward.expirationSeconds > 0;
+                if (hasExpiration)
                 {
-                    var hasExpiration = reward.expirationSeconds > 0;
-                    if (hasExpiration)
-                    {
-                        m_ResetIfExpiredLabel.tooltip = k_ResetIfExpiredDefaultTooltip;
-                    }
-                    else
-                    {
-                        reward.resetIfExpired = false;
-                        m_ResetIfExpiredLabel.tooltip =
-                            "Reset if Expired can only be enabled if Expiration is greater than 0. " +
-                            k_ResetIfExpiredDefaultTooltip;
-                    }
+                    m_ResetIfExpiredLabel.tooltip = k_ResetIfExpiredDefaultTooltip;
+                }
+                else
+                {
+                    resetIfExpired = false;
+                    m_ResetIfExpiredLabel.tooltip =
+                        "Reset if Expired can only be enabled if Expiration is greater than 0. " +
+                        k_ResetIfExpiredDefaultTooltip;
+                }
 
-                    using (new EditorGUI.DisabledGroupScope(!hasExpiration))
-                    {
-                        reward.resetIfExpired = EditorGUILayout.Toggle(m_ResetIfExpiredLabel, reward.resetIfExpired);
-                    }
+                using (var check = new EditorGUI.ChangeCheckScope())
+                using (new EditorGUI.DisabledGroupScope(!hasExpiration))
+                {
+                    resetIfExpired = EditorGUILayout.Toggle(m_ResetIfExpiredLabel, resetIfExpired);
 
                     if (check.changed)
                     {
-                        reward.Editor_SetResetIfExpired(reward.resetIfExpired);
+                        reward.Editor_SetResetIfExpired(resetIfExpired);
                     }
                 }
             }

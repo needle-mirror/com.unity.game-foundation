@@ -13,18 +13,6 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
     /// </summary>
     public static class ConstantGenerator
     {
-        [MenuItem("Assets/Game Foundation/Generate Constants", validate = true)]
-        static bool GenerateConstantsEditorMenu_Validate()
-        {
-            return Selection.activeObject as CatalogAsset != null;
-        }
-
-        [MenuItem("Assets/Game Foundation/Generate Constants")]
-        static void GenerateConstantsEditorMenu()
-        {
-            GenerateConstants(Selection.activeObject as CatalogAsset);
-        }
-
         /// <summary>
         ///     Generates the type from all the keys of the <paramref name="catalogAsset"/>.
         /// </summary>
@@ -53,19 +41,19 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
 
             var @string = new CodeTypeReference(typeof(string));
 
-            var items = GenerateCatalogConstants<InventoryItemDefinitionAsset>("Items", @string);
+            var items = GenerateCatalogConstants<InventoryItemDefinitionAsset>(catalogAsset, "Items", @string);
             databaseClass.Members.Add(items);
 
-            var currencies = GenerateCatalogConstants<CurrencyAsset>("Currencies", @string);
+            var currencies = GenerateCatalogConstants<CurrencyAsset>(catalogAsset, "Currencies", @string);
             databaseClass.Members.Add(currencies);
 
-            var transactions = GenerateCatalogConstants<BaseTransactionAsset>("Transactions", @string);
+            var transactions = GenerateCatalogConstants<BaseTransactionAsset>(catalogAsset, "Transactions", @string);
             databaseClass.Members.Add(transactions);
 
-            var stores = GenerateCatalogConstants<StoreAsset>("Stores", @string);
+            var stores = GenerateCatalogConstants<StoreAsset>(catalogAsset, "Stores", @string);
             databaseClass.Members.Add(stores);
 
-            var gameParameters = GenerateCatalogConstants<GameParameterAsset>("GameParameters", @string);
+            var gameParameters = GenerateCatalogConstants<GameParameterAsset>(catalogAsset, "GameParameters", @string);
             databaseClass.Members.Add(gameParameters);
 
             using (var provider = new CSharpCodeProvider())
@@ -101,6 +89,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
         ///     Returns the created constant container.
         /// </returns>
         static CodeTypeDeclaration GenerateCatalogConstants<TCatalogItemAsset>(
+            CatalogAsset catalogAsset,
             string className,
             CodeTypeReference @string)
             where TCatalogItemAsset : CatalogItemAsset
@@ -111,7 +100,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
 
             var items = new List<TCatalogItemAsset>();
 
-            CatalogSettings.catalogAsset.GetItems(items);
+            catalogAsset.GetItems(items);
 
             var itemsContainerClass = new CodeTypeDeclaration(className)
             {
@@ -170,7 +159,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
         ///     return false otherwise.
         /// </returns>
         static bool TryGeneratePropertiesConstants(
-            Dictionary<string, Property> properties,
+            Dictionary<string, ExternalizableValue<Property>> properties,
             string className,
             CodeTypeReference @string,
             out CodeTypeDeclaration constantContainer)

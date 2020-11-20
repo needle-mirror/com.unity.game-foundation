@@ -11,68 +11,25 @@ namespace UnityEngine.GameFoundation.DefaultLayers
     public partial class BaseMemoryDataLayer
     {
         /// <summary>
-        ///     Provides <see cref="List{T}"/> instances;
-        /// </summary>
-        static readonly Pool<List<ExchangeDefinitionObject>> s_ExchangesListPool =
-            new Pool<List<ExchangeDefinitionObject>>(
-                () => new List<ExchangeDefinitionObject>(),
-                list => list.Clear());
-
-        /// <summary>
-        ///     Provides <see cref="List{Exception}"/> instances;
-        /// </summary>
-        static readonly Pool<List<Exception>> s_ExceptionListPool =
-            new Pool<List<Exception>>(
-                () => new List<Exception>(),
-                list => list.Clear());
-
-        /// <summary>
-        ///     Provides <see cref="List{string}"/> instances;
-        /// </summary>
-        static readonly Pool<List<string>> s_StringListPool =
-            new Pool<List<string>>(
-                () => new List<string>(),
-                list => list.Clear());
-
-        /// <summary>
-        ///     Provides <see cref="List{CurrencyExchangeData}"/> instances;
-        /// </summary>
-        static readonly Pool<List<CurrencyExchangeData>> s_CurrencyDataListPool =
-            new Pool<List<CurrencyExchangeData>>(
-                () => new List<CurrencyExchangeData>(),
-                list => list.Clear());
-
-        /// <summary>
-        ///     Provides <see cref="List{InventoryItemSerializableData}"/> instances;
-        /// </summary>
-        static readonly Pool<List<InventoryItemData>> s_ItemDataListPool =
-            new Pool<List<InventoryItemData>>(
-                () => new List<InventoryItemData>(),
-                list => list.Clear());
-
-        /// <summary>
-        ///     Provides <see cref="Dictionary{TKey, TValue}"/> instances;
-        /// </summary>
-        static readonly Pool<Dictionary<string, long>> s_DictionaryStringLongPool =
-            new Pool<Dictionary<string, long>>(
-                () => new Dictionary<string, long>(),
-                dic => dic.Clear());
-
-        /// <summary>
         ///     We cannot guarantee that the <paramref name="transactionExchange"/>
         ///     contains a unique entry for each currency or item.
-        ///     This method consolidates the list to regroup the amounts per
-        ///     currency/item.
+        ///     This method consolidates the list to regroup the amounts per currency/item.
         /// </summary>
-        /// <param name="transactionExchange">The transaction exchange object</param>
-        /// <param name="currencies">The target currencies exchange map.</param>
-        /// <param name="items">The target items exchange map.</param>
+        /// <param name="transactionExchange">
+        ///     The transaction exchange object.
+        /// </param>
+        /// <param name="currencies">
+        ///     The target currencies exchange map.
+        /// </param>
+        /// <param name="items">
+        ///     The target items exchange map.
+        /// </param>
         static void ConsolidateTransactionExchange(
             TransactionExchangeDefinitionObject transactionExchange,
             Dictionary<string, long> currencies,
             Dictionary<string, long> items)
         {
-            using (s_ExchangesListPool.Get(out var exchanges))
+            using (k_ExchangesListPool.Get(out var exchanges))
             {
                 // Consolidating the costs.
                 transactionExchange.GetItems(exchanges);
@@ -107,11 +64,14 @@ namespace UnityEngine.GameFoundation.DefaultLayers
         ///     Checks the costs of a virtual transaction with the player's
         ///     resources.
         /// </summary>
-        /// <param name="currencies">The currencies to pay</param>
-        /// <param name="items">The items to consume</param>
+        /// <param name="currencies">
+        ///     The currencies to pay.
+        /// </param>
+        /// <param name="items">
+        ///     The items to consume.
+        /// </param>
         /// <param name="exceptions">
-        ///     The target collection where the errors are
-        ///     added.
+        ///     The target collection where the errors are added.
         /// </param>
         void VerifyCost(
             Dictionary<string, long> currencies,
@@ -122,7 +82,18 @@ namespace UnityEngine.GameFoundation.DefaultLayers
 
             foreach (var exchange in currencies)
             {
-                var balance = m_WalletDataLayer.GetBalance(exchange.Key);
+                long balance;
+                try
+                {
+                    balance = GetBalance(exchange.Key);
+                }
+                catch (Exception e)
+                {
+                    exceptions.Add(e);
+
+                    continue;
+                }
+
                 if (balance < exchange.Value)
                 {
                     var exception = new NotEnoughBalanceException
@@ -139,7 +110,7 @@ namespace UnityEngine.GameFoundation.DefaultLayers
             {
                 // determine total quantity of all items
                 long quantity = 0;
-                foreach (var item in m_InventoryDataLayer.m_Items.Values)
+                foreach (var item in m_Items.Values)
                 {
                     if (item.definitionKey == exchange.Key)
                     {
@@ -159,27 +130,30 @@ namespace UnityEngine.GameFoundation.DefaultLayers
         }
 
         /// <summary>
-        ///     Verifies if the item counterparts provided buy the player matches
-        ///     the item cost requirements.
+        ///     Verifies if the item counterparts provided by the player matches the item cost requirements.
         /// </summary>
-        /// <param name="counterparts">The items provided by te player.</param>
-        /// <param name="requirements">The item cost requirements.</param>
+        /// <param name="counterparts">
+        ///     The items provided by te player.
+        /// </param>
+        /// <param name="requirements">
+        ///     The item cost requirements.
+        /// </param>
         /// <param name="consumed">
-        ///     The collection where consumed items are
-        ///     added.
+        ///     The collection where consumed items are added.
+        /// </param>
+        /// <param name="transactionKey">
+        ///     The key of the verified transaction.
         /// </param>
         /// <param name="exceptions">
-        ///     The target collection where the errors are
-        ///     added.
+        ///     The target collection where the errors are added.
         /// </param>
         void VerifyItemPayload(
             ICollection<string> counterparts,
             Dictionary<string, long> requirements,
             ICollection<InventoryItemData> consumed,
+            string transactionKey,
             ICollection<Exception> exceptions)
         {
-            var inventory = m_InventoryDataLayer;
-
             using (Tools.Pools.stringList.Get(out var uniqueCounterparts))
             {
                 // Get unique item ids
@@ -194,12 +168,11 @@ namespace UnityEngine.GameFoundation.DefaultLayers
                 foreach (var counterpartId in uniqueCounterparts)
                 {
                     // Check if the item exists
-                    var itemFound = inventory.TryGetItem(counterpartId, out var itemData);
+                    var itemFound = TryGetItem(counterpartId, out var itemData);
 
                     if (!itemFound)
                     {
-                        var exception =
-                            new InventoryItemNotFoundException(counterpartId);
+                        var exception = new InventoryItemNotFoundException(counterpartId);
 
                         exceptions.Add(exception);
                         continue;
@@ -208,8 +181,7 @@ namespace UnityEngine.GameFoundation.DefaultLayers
                     // Get the definition and decrement/delete the requirements.
                     var definitionKey = itemData.definitionKey;
 
-                    var requirementFound =
-                        requirements.TryGetValue(definitionKey, out var count);
+                    var requirementFound = requirements.TryGetValue(definitionKey, out var count);
 
                     if (requirementFound)
                     {
@@ -255,22 +227,18 @@ namespace UnityEngine.GameFoundation.DefaultLayers
                     // counterparts is not necessary.
                     //else
                     //{
-                    //    var exception =
-                    //        new Exception($"Wrong item for the transaction");
-
+                    //    var exception = new GameFoundationException($"Wrong item for the transaction");
                     //    exceptions.Add(exception);
                     //}
                 }
             }
 
-            // At the moment, if they is still an entry in the requirements,
+            // At the moment, if there is still an entry in the requirements,
             // that means the item payload didn't cover the requirements.
 
-            foreach (var requirement in requirements)
+            if (requirements.Count > 0)
             {
-                var exception = new Exception
-                    ($"{nameof(BaseMemoryDataLayer)}_TransactionDataLayer: Missing requirement {requirement.Key} ({requirement.Value})");
-
+                var exception = new MissingTransactionRequirementsException(transactionKey, requirements);
                 exceptions.Add(exception);
             }
         }
@@ -279,24 +247,27 @@ namespace UnityEngine.GameFoundation.DefaultLayers
         ///     Applies the payouts of a transaction.
         /// </summary>
         /// <param name="transaction">
-        ///     The transaction whose payouts are
-        ///     applied.
+        ///     The transaction whose payouts are applied.
         /// </param>
-        /// <returns>The description of the payout.</returns>
-        TransactionExchangeData ApplyTransactionPayout(BaseTransactionAsset transaction)
+        /// <param name="rejectable">
+        ///     The handle to the rejectable promise in case this operation fails.
+        /// </param>
+        /// <returns>
+        ///     The description of the payout.
+        /// </returns>
+        TransactionExchangeData ApplyTransactionPayout(BaseTransactionAsset transaction, Rejectable rejectable)
         {
             var result = new TransactionExchangeData();
 
-            var itemDataListHandle = s_ItemDataListPool.Get(out var itemDataList);
-            var currencyDataListHandle = s_CurrencyDataListPool.Get(out var currencyDataList);
-            var exchangeListHandle = s_ExchangesListPool.Get(out var exchangeList);
-
-            try
+            using (k_ItemDataListPool.Get(out var itemDataList))
+            using (k_CurrencyDataListPool.Get(out var currencyDataList))
+            using (k_ExchangesListPool.Get(out var exchangeList))
             {
                 transaction.payout.GetItems(exchangeList);
 
-                foreach (var exchange in exchangeList)
+                for (var exchangeIndex = 0; exchangeIndex < exchangeList.Count; exchangeIndex++)
                 {
+                    var exchange = exchangeList[exchangeIndex];
                     switch (exchange.catalogItem)
                     {
                         // [3a] Increment the currencies
@@ -304,7 +275,11 @@ namespace UnityEngine.GameFoundation.DefaultLayers
                         {
                             var currencyKey = exchange.catalogItem.key;
                             var balance = exchange.amount;
-                            m_WalletDataLayer.AdjustBalance(currencyKey, balance);
+                            AdjustBalance(currencyKey, balance, rejectable);
+                            if (!rejectable.isActive)
+                            {
+                                return default;
+                            }
 
                             currencyDataList.Add(new CurrencyExchangeData
                             {
@@ -316,17 +291,20 @@ namespace UnityEngine.GameFoundation.DefaultLayers
                         }
 
                         // [3b] Create the new items
-                        case InventoryItemDefinitionAsset _:
+                        case InventoryItemDefinitionAsset inventoryItemDefinition:
                         {
                             var key = exchange.catalogItem.key;
 
                             // check if exchange item is stackable
-                            var inventoryItemDefinition = exchange.catalogItem as
-                                InventoryItemDefinitionAsset;
                             if (inventoryItemDefinition.isStackableFlag)
                             {
                                 // create 1 stackable item with desired quantity
-                                var item = m_InventoryDataLayer.CreateItem(key, exchange.amount);
+                                var item = CreateItem(key, rejectable, exchange.amount);
+                                if (!rejectable.isActive)
+                                {
+                                    return default;
+                                }
+
                                 var itemData = new InventoryItemData
                                 {
                                     id = item.id,
@@ -343,7 +321,11 @@ namespace UnityEngine.GameFoundation.DefaultLayers
                                 // iterate to grant desired count of items
                                 for (var i = 0; i < exchange.amount; i++)
                                 {
-                                    var item = m_InventoryDataLayer.CreateItem(key);
+                                    var item = CreateItem(key, rejectable);
+                                    if (!rejectable.isActive)
+                                    {
+                                        return default;
+                                    }
 
                                     var itemData = new InventoryItemData
                                     {
@@ -359,19 +341,26 @@ namespace UnityEngine.GameFoundation.DefaultLayers
                             break;
                         }
 
+                        case null:
+                        {
+                            var message = $"The payout item #{exchangeIndex.ToString()} for the transaction \"{transaction.key}\" is null.";
+                            rejectable.Reject(new NullReferenceException(message));
+
+                            return default;
+                        }
+
                         default:
-                            throw new ArgumentOutOfRangeException();
+                        {
+                            var message = $"The payout item #{exchangeIndex.ToString()} for the transaction \"{transaction.key}\" isn't supported.";
+                            rejectable.Reject(new NotSupportedException(message));
+
+                            return default;
+                        }
                     }
                 }
 
                 result.items = itemDataList.ToArray();
                 result.currencies = currencyDataList.ToArray();
-            }
-            finally
-            {
-                itemDataListHandle.Release();
-                currencyDataListHandle.Release();
-                exchangeListHandle.Release();
             }
 
             return result;
@@ -390,18 +379,16 @@ namespace UnityEngine.GameFoundation.DefaultLayers
         {
             try
             {
-                // TODO: this should use a runtime definition instead of an asset
-                var transaction =
-                    CatalogSettings.catalogAsset.FindItem(key) as IAPTransactionAsset;
-
-                if (transaction is null)
+                if (!(m_CatalogAsset.FindItem(key) is IAPTransactionAsset transaction))
                 {
-                    throw new KeyNotFoundException
-                    ($"{nameof(BaseMemoryDataLayer)}_TransactionDataLayer: Cannot redeem IAP because" +
-                        $" no {nameof(IAPTransactionAsset)} with key {key} was found.");
+                    var message = $"{nameof(BaseMemoryDataLayer)}_TransactionDataLayer: Cannot redeem IAP because" +
+                        $" no {nameof(IAPTransactionAsset)} with key {key} was found.";
+                    completer.Reject(new KeyNotFoundException(message));
+
+                    return;
                 }
 
-                var result = ApplyTransactionPayout(transaction);
+                var result = ApplyTransactionPayout(transaction, completer);
                 completer.Resolve(result);
             }
             catch (Exception e)
@@ -420,32 +407,27 @@ namespace UnityEngine.GameFoundation.DefaultLayers
             {
                 // [1] I get the transaction description form its key.
 
-                // TODO: this should use a runtime definition instead of an asset
-                var transaction =
-                    CatalogSettings.catalogAsset.FindItem(key) as VirtualTransactionAsset;
-
-                if (transaction is null)
+                if (!(m_CatalogAsset.FindItem(key) is VirtualTransactionAsset transaction))
                 {
-                    throw new KeyNotFoundException
-                    ($"{nameof(BaseMemoryDataLayer)}_TransactionDataLayer: Cannot complete virtual " +
-                        $"transaction because {nameof(VirtualTransactionAsset)} {key} was not found.");
+                    var message = $"{nameof(BaseMemoryDataLayer)}_TransactionDataLayer: Cannot complete virtual " +
+                        $"transaction because {nameof(VirtualTransactionAsset)} {key} was not found.";
+                    completer.Reject(new KeyNotFoundException(message));
+
+                    return;
                 }
 
                 // [2] I check the cost of this transaction to be sure that the
                 //     player fulfills its requirements.
 
-                var currencyExchangesHandle = s_DictionaryStringLongPool.Get(out var currencyExchanges);
-                var itemExchangesHandle = s_DictionaryStringLongPool.Get(out var itemExchanges);
-                var consumedHandle = s_ItemDataListPool.Get(out var consumed);
-
-                try
+                using (k_DictionaryStringLongPool.Get(out var currencyExchanges))
+                using (k_DictionaryStringLongPool.Get(out var itemExchanges))
+                using (k_ItemDataListPool.Get(out var consumed))
                 {
                     // [2a] I'm consolidating the costs in a dictionary so I'm
                     //      sure that I have only one amount for each currency
                     //      and each inventory item definition.
 
-                    ConsolidateTransactionExchange
-                        (transaction.costs, currencyExchanges, itemExchanges);
+                    ConsolidateTransactionExchange(transaction.costs, currencyExchanges, itemExchanges);
 
                     // [2b] Now I need to validate that the player fulfills the
                     //      requirements of this transaction.
@@ -456,13 +438,11 @@ namespace UnityEngine.GameFoundation.DefaultLayers
                     //        existence in the player inventory, and their match
                     //        with the requirement of the transaction.
 
-                    using (s_ExceptionListPool.Get(out var exceptions))
+                    using (k_ExceptionListPool.Get(out var exceptions))
                     {
-                        VerifyCost
-                            (currencyExchanges, itemExchanges, exceptions);
+                        VerifyCost(currencyExchanges, itemExchanges, exceptions);
 
-                        VerifyItemPayload
-                            (counterparts, itemExchanges, consumed, exceptions);
+                        VerifyItemPayload(counterparts, itemExchanges, consumed, key, exceptions);
 
                         // If I found some errors while checking the transaction
                         // requirements, I reject the completer with this list
@@ -470,14 +450,16 @@ namespace UnityEngine.GameFoundation.DefaultLayers
 
                         if (exceptions.Count > 0)
                         {
-                            throw new AggregateException(exceptions);
+                            completer.Reject(new AggregateException(exceptions));
+
+                            return;
                         }
                     }
 
                     // [3] Perform the transaction:
                     //     a. Consuming the currencies
                     //     b. Consuming the items
-                    //     c. Apply rexards
+                    //     c. Apply payouts
                     //     d. Complete the promise
 
                     var result = new VirtualTransactionExchangeData();
@@ -492,7 +474,11 @@ namespace UnityEngine.GameFoundation.DefaultLayers
                         {
                             var currencyKey = exchange.Key;
                             var balance = -exchange.Value;
-                            m_WalletDataLayer.AdjustBalance(currencyKey, balance);
+                            AdjustBalance(currencyKey, balance, completer);
+                            if (!completer.isActive)
+                            {
+                                return;
+                            }
 
                             result.cost.currencies[index++] = new CurrencyExchangeData
                             {
@@ -508,11 +494,11 @@ namespace UnityEngine.GameFoundation.DefaultLayers
                         {
                             if (itemData.quantity <= 0)
                             {
-                                m_InventoryDataLayer.DeleteItem(itemData.id);
+                                DeleteItem(itemData.id);
                             }
                             else
                             {
-                                m_InventoryDataLayer.SetQuantity(itemData.id, itemData.quantity);
+                                SetQuantity(itemData.id, itemData.quantity, completer);
                             }
                         }
 
@@ -520,16 +506,10 @@ namespace UnityEngine.GameFoundation.DefaultLayers
                     }
 
                     // [3c] Applying the payouts
-                    result.payout = ApplyTransactionPayout(transaction);
+                    result.payout = ApplyTransactionPayout(transaction, completer);
 
                     // [3d] Resolving the promise
                     completer.Resolve(result);
-                }
-                finally
-                {
-                    itemExchangesHandle.Release();
-                    currencyExchangesHandle.Release();
-                    consumedHandle.Release();
                 }
             }
             catch (Exception e)

@@ -1,5 +1,16 @@
 # Game Foundation: Known issues/limitations
 
+## 0.7.1 - (2020-11-18)
+
+* The ChilliConnect Adapters for Game Foundation do not support the Reward system.
+* If using Unity IAP version 2.2.1, processing IAP transactions on Android may initially fail, triggering a OnPurchaseFailed callback, however the purchase should get processed again immediately and that one should complete and items should still get paid out. No workaround should be necessary.
+* With IAP, background purchases processed automatically by Game Foundation will currently not be fulfilled in the data layer (the purchased items or currencies will not be granted). To handle things like automatic purchase restoration, for now you should uncheck "Process Background Purchases" in Game Foundation's runtime settings and process background purchases yourself.
+* When using the ChilliConnect data layer, the player's inventory is sometimes not synced to the game on startup. Workaround: Relaunch the app or reinitialize Game Foundation.
+* While creating a new item in a Game Foundation editor window, if you click on an existing item in the left column, GUI errors will show in the console.
+* While creating a new item in a Game Foundation editor window, if you enter an invalid key in the key field, future changes to the display name field will no longer auto-generate a new key.
+* Initial Allocation can be set to a greater amount than Max Allocation. If it is, it will cause Transactions to fail if that item is either a cost or a payout. Ensure that initial allocation is never set higher than max allocation.
+* In Reward editor, if "Reset if Expired" is checked, and then Expiration is set to 0, the Reset if Expired checkbox will be unchecked and disabled, but the reward may still have unexpected resetting behavior. Workaround is to uncheck Reset if Expired before setting Expiration to 0.
+
 ## 0.7.0 - (2020-10-13)
 
 * The ChilliConnect Adapters for Game Foundation do not support the Reward system.
@@ -45,3 +56,6 @@ Simply delete your Assets/GameFoundation folder from Project window and reopen W
 To work around this, you can delete your local persistent runtime data.
 * Debug Window: Removing an inventory in the middle of the inventories list causes new inventories to add themselves in the middle.
 * Debug Window: Adding or Removing Items may change the foldouts state of other items that should be unaffected.
+
+## 
+< [_table of contents_](TableOfContents.md)

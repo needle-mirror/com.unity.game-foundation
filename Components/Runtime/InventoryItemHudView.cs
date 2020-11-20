@@ -4,7 +4,6 @@ using UnityEngine.UI;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.GameFoundation.DefaultCatalog;
-
 #endif
 
 namespace UnityEngine.GameFoundation.Components
@@ -71,6 +70,11 @@ namespace UnityEngine.GameFoundation.Components
         ///     Specifies whether the debug logs is visible.
         /// </summary>
         bool m_ShowDebugLogs = false;
+        
+        /// <summary>
+        ///     Instance of the GameFoundationDebug class to use for logging.
+        /// </summary>
+        static readonly GameFoundationDebug k_GFLogger = GameFoundationDebug.Get<InventoryItemHudView>();
 
         /// <summary>
         ///     Adds listeners, if the application is playing.
@@ -85,7 +89,7 @@ namespace UnityEngine.GameFoundation.Components
                 RegisterEvents();
             }
 
-            if (!ReferenceEquals(m_ItemDefinition, null))
+            if (!(m_ItemDefinition is null))
             {
                 UpdateContent();
             }
@@ -132,7 +136,7 @@ namespace UnityEngine.GameFoundation.Components
         {
             if (Application.isPlaying)
             {
-                ThrowIfNotInitialized();
+                ThrowIfNotInitialized(nameof(Start));
 
                 m_ItemDefinition = GetItemDefinition(m_ItemDefinitionKey);
                 UpdateContent();
@@ -147,7 +151,7 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         public void SetItemDefinition(InventoryItemDefinition itemDefinition)
         {
-            ThrowIfNotInitialized();
+            ThrowIfNotInitialized(nameof(SetItemDefinition));
 
             m_ItemDefinition = itemDefinition;
             m_ItemDefinitionKey = itemDefinition?.key;
@@ -186,7 +190,7 @@ namespace UnityEngine.GameFoundation.Components
             var inventoryItemDefinition = GameFoundationSdk.catalog?.Find<InventoryItemDefinition>(itemDefinitionKey);
             if (inventoryItemDefinition != null || !m_ShowDebugLogs) return inventoryItemDefinition;
 
-            Debug.LogWarning($"{nameof(InventoryItemHudView)} - InventoryItemDefinition \"{itemDefinitionKey}\" doesn't exist in Inventory catalog.");
+            k_GFLogger.LogWarning($"InventoryItemDefinition \"{itemDefinitionKey}\" doesn't exist in Inventory catalog.");
             return null;
         }
 
@@ -280,7 +284,7 @@ namespace UnityEngine.GameFoundation.Components
                 else
                 {
                     var itemAsset = CatalogSettings.catalogAsset.FindItem(m_ItemDefinitionKey) as InventoryItemDefinitionAsset;
-                    if (!ReferenceEquals(itemAsset, null) && itemAsset.TryGetStaticProperty(m_IconSpritePropertyKey, out var spriteProperty))
+                    if (!(itemAsset is null) && itemAsset.TryGetStaticProperty(m_IconSpritePropertyKey, out var spriteProperty))
                     {
                         sprite = spriteProperty.AsAsset<Sprite>();
                     }
@@ -301,14 +305,14 @@ namespace UnityEngine.GameFoundation.Components
         {
             if (m_IconImageField == null)
             {
-                Debug.LogWarning($"{nameof(CurrencyHudView)} - Icon Image field is not defined.");
+                k_GFLogger.LogWarning("Icon Image field is not defined.");
                 return;
             }
 
             if (m_IconImageField.sprite != icon)
             {
                 m_IconImageField.sprite = icon;
-                if (!ReferenceEquals(icon, null)) m_IconImageField.SetNativeSize();
+                if (!(icon is null)) m_IconImageField.SetNativeSize();
 #if UNITY_EDITOR
                 EditorUtility.SetDirty(m_IconImageField);
 #endif
@@ -346,7 +350,7 @@ namespace UnityEngine.GameFoundation.Components
         {
             if (m_QuantityTextField == null)
             {
-                Debug.LogWarning($"{nameof(InventoryItemHudView)} - Item Quantity Text field is not defined.");
+                k_GFLogger.LogWarning("Item Quantity Text field is not defined.");
                 return;
             }
 
@@ -362,12 +366,15 @@ namespace UnityEngine.GameFoundation.Components
         /// <summary>
         ///     Throws an Invalid Operation Exception if GameFoundation has not been initialized before this view is used.
         /// </summary>
-        /// <exception cref="InvalidOperationException"></exception>
-        void ThrowIfNotInitialized()
+        /// <param name="callingMethod">
+        ///     Calling method name.
+        /// </param>
+        void ThrowIfNotInitialized(string callingMethod)
         {
             if (!GameFoundationSdk.IsInitialized)
             {
-                throw new InvalidOperationException($"Error: GameFoundation.Initialize() must be called before the {nameof(InventoryItemHudView)} is used.");
+                var message = $"GameFoundationSdk.Initialize() must be called before {callingMethod} is used.";
+                k_GFLogger.LogException(message, new InvalidOperationException(message));
             }
         }
 

@@ -1,27 +1,38 @@
 # Welcome to Game Foundation
 
-Game Foundation delivers off-the-shelf common game systems to help you build games with Unity.
-We aim to make these systems flexible and extensible.
+Game Foundation delivers off-the-shelf common game systems to help you build games with Unity. Whether or not you’ve built games with Unity before, take advantage of the many flexible and extensible Game Foundation systems available to boost your game development process. Leverage these systems so you can spend less time setting up the foundations of your game, and instead focus on driving your game further in other areas. To access these features, the [GameFoundationSdk] provides managers for each game system, including:
 
-Currently Game Foundation includes these game systems:
+* An **inventory** system for defining and managing game resources that are inventoriable.
+* A **wallet** system for defining and managing virtual currencies.
+* A **transaction** system for handling virtual purchases / crafting mechanics and IAP purchases.
+* A **reward** system for periodically granting players a small gift.
 
-* An inventory system for defining and managing game resources that are inventoriable.
-* A property system for defining and managing mutable fields that are commonly used in gameplay.
-* A wallet system for defining and managing virtual currencies.
-* A reward system for periodically granting players a small gift.
-* A transaction system for handling virtual purchases / crafting mechanics and IAP purchases.
-* A storefront system (with pre-made prefab UIs) for implementing a common in-game store.
-* A data layer that helps with data persistence locally and remotely (coming soon).
+[GameFoundationSdk] also maintains a Catalog of all items available, including the following item types:
 
-We're working on adding more such pre-built common game systems over time to help developers spend less time on building these basic systems.
+* **Currencies** which track total quantities of simple items purchased or obtained by the player, for example coins, gems, etc.
+* **Inventory items** which represent objects owned by the player.  These can be complex items with static as well as mutable properties.
+* **Transactions** which describe what items/currencies are consumed to grant specific items and/or currencies.
+* **Rewards** can be granted to the player on an interval or through game play to engage the player and improve his or her overall experience.
+* **Storefronts** hold lists of store items for sale either as virtual transactions or In App purchases.
+* **Tags** are simple strings that can be added to the above items to help filter and retrieve items in the editor and at runtime.
 
-## [Installing the Game Foundation Package]
+Catalog items, except tags, can contain **static properties** for defining and managing additional information that is commonly used in gameplay.  In addition, Inventory Items also permit **mutable properties** that can be changed and retrieved at runtime.
+
+Unity is dedicated to make your game development process as efficient as possible. That’s why Unity is working to expand the Game Foundation package with other pre-built common game systems in the future. Keep up-to-date with what’s new in the Game Foundation package by visiting the [Changelog].
+
+To get started with Game Foundation, install and initialize the Game Foundation package in your Unity Editor. Refer to this documentation understand the architecture and other back-end specifics of the Game Foundation package, and follow along with the tutorials to learn how to set up and use the various pre-built game systems in the package.
+
+For more information on individual systems, Catalogs, and other Game Foundation topics, visit the [Table of Contents].
+
+## [Installing the Game Foundation package]
 
 ## [General Architecture]
 
 ## [Game Systems Overview]
 
 ## [Catalog Overview]
+
+## [Using IExternalValueProvider at Initialization]
 
 ## Tutorials
 
@@ -43,12 +54,17 @@ We're working on adding more such pre-built common game systems over time to hel
 
 ## [Known Issues]
 
+[_table of contents_](TableOfContents.md)
 
 
 
 
 
 
+
+[GameFoundationSdk]: GameFoundationSdk.md
+
+[Table of Contents]: TableOfContents.md
 
 [Installing the Game Foundation Package]: InstallingGameFoundation.md
 
@@ -57,6 +73,8 @@ We're working on adding more such pre-built common game systems over time to hel
 [Game Systems Overview]: GameSystems.md
 
 [Catalog Overview]: Catalog.md
+
+[Using IExternalValueProvider at Initialization]: ExternalValueProvider.md
 
 [Known Issues]: KnownIssues.md
 
@@ -89,3 +107,5 @@ We're working on adding more such pre-built common game systems over time to hel
 [Working with Promotion Popup prefab]: Tutorials/14-WorkingWithPromotionPopupPrefab.md
 
 [Configure your game with parameters]: Tutorials/15-ConfigureYourGameWithParameters.md
+
+[Changelog]: CHANGELOG.md

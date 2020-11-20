@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using UnityEngine.GameFoundation.Components;
 using UnityEngine.GameFoundation.DefaultLayers;
 using UnityEngine.GameFoundation.DefaultLayers.Persistence;
 using UnityEngine.UI;
@@ -24,14 +24,14 @@ namespace UnityEngine.GameFoundation.Sample
         private readonly StringBuilder m_DisplayText = new StringBuilder();
 
         /// <summary>
+        /// Reference in the scene to the Game Foundation Init component.
+        /// </summary>
+        public GameFoundationInit gameFoundationInit;
+
+        /// <summary>
         /// We will need a reference to the main text box in the scene so we can easily modify it.
         /// </summary>
         public Text mainText;
-
-        /// <summary>
-        /// Reference to the panel to display when the wrong database is in use.
-        /// </summary>
-        public GameObject wrongDatabasePanel;
 
         /// <summary>
         /// References to the remove buttons to enable/disable when the action is not possible.
@@ -49,16 +49,6 @@ namespace UnityEngine.GameFoundation.Sample
         private Button[] m_AllButtons;
 
         /// <summary>
-        /// We need to keep a reference to the persistence data layer if we want to save data.
-        /// </summary>
-        private PersistenceDataLayer m_DataLayer;
-
-        /// <summary>
-        /// Saved local persistence data which we can reuse to permit deleting local persistence data.
-        /// </summary>
-        LocalPersistence m_LocalPersistence;
-
-        /// <summary>
         /// Flag for inventory item changed callback events to ensure they are added exactly once when
         /// Game Foundation finishes initialization or when script is enabled.
         /// </summary>
@@ -67,15 +57,8 @@ namespace UnityEngine.GameFoundation.Sample
         /// <summary>
         /// Standard starting point for Unity scripts.
         /// </summary>
-        private IEnumerator Start()
+        private void Start()
         {
-            // The database is NOT correct, show message and abort.
-            if (!SamplesHelper.VerifyDatabase())
-            {
-                wrongDatabasePanel.SetActive(true);
-                yield break;
-            }
-
             // Put all buttons into array for easy access to enable/disable as a group
             m_AllButtons = new Button[] {
                 addAppleButton,
@@ -85,49 +68,12 @@ namespace UnityEngine.GameFoundation.Sample
                 removeAllButton,
                 deleteAndReinitializeButton
             };
-
-            // Initialize Game Foundation.
-            yield return InitializeGameFoundation();
-        }
-
-        /// <summary>
-        /// Initialize Game Foundation.  
-        /// Called at startup as well as when reinitializing.
-        /// </summary>
-        private IEnumerator InitializeGameFoundation()
-        {
-            // Disable all buttons while initializing
-            EnableAllButtons(false);
-
-            // - Initialize must always be called before working with any game foundation code.
-            // - GameFoundation requires an IDataAccessLayer object that will provide and persist
-            //   the data required for the various services (Inventory, Wallet, ...).
-            m_LocalPersistence = new LocalPersistence("GF_Sample10_DataPersistence", new JsonDataSerializer());
-            m_DataLayer = new PersistenceDataLayer(m_LocalPersistence);
-
-            // Initialize Game Foundation.
-            var initDeferred = GameFoundationSdk.Initialize(m_DataLayer);
-
-            // Wait for initialization to complete, then continue
-            yield return initDeferred.Wait();
-
-            if (initDeferred.isFulfilled)
-            {
-                OnGameFoundationInitialized();
-            }
-            else
-            {
-                OnGameFoundationException(initDeferred.error);
-            }
-
-            // Release deferred promise handler.
-            initDeferred.Release();
         }
 
         /// <summary>
         /// Once Game Foundation completes initialization, we enable buttons, setup callbacks, update GUI, etc.
         /// </summary>
-        private void OnGameFoundationInitialized()
+        public void OnGameFoundationInitialized()
         {
             // Enable all buttons.  Note: some may later be disabled in RefreshUI,
             // but this ensures static buttons are all enabled.
@@ -270,7 +216,7 @@ namespace UnityEngine.GameFoundation.Sample
         }
 
         /// <summary>
-        /// Uninitializes Game Foundation, deletes persistence data, then reinitializes Game Foundation.
+        /// Uninitializes Game Foundation, deletes persistence data, then re-initializes Game Foundation.
         /// Note: Because Game Foundation is initialized again, all Initial Allocation items will be added again.
         /// </summary>
         public void DeleteAndReinitializeGameFoundation()
@@ -283,13 +229,21 @@ namespace UnityEngine.GameFoundation.Sample
                 // Stop watching item events (events reconnected after initialization completes).
                 UnsubscribeFromGameFoundationEvents();
 
+                // Get the reference to the Data Layer used to initialize Game Foundation before GameFoundationSdk gets uninitialized.
+                if (!(GameFoundationSdk.dataLayer is PersistenceDataLayer dataLayer))
+                    return;
+
+                // Using the Data Layer get the local persistence layer.
+                if (!(dataLayer.persistence is LocalPersistence localPersistence))
+                    return;
+
                 // Uninitialize GameFoundation so we can delete the local persistence data file.
-                GameFoundationSdk.Uninitialize();
+                gameFoundationInit.Uninitialize();
 
                 // Delete local persistence data file.  Once finished, we will ReInitializeGameFoundation.
                 // Note: if we fail to delete for any reason, exception will be sent to 
-                //       OnGameFoundationInitialzeException method for logging and buttons will remain disabled.
-                m_LocalPersistence.Delete( () => StartCoroutine(InitializeGameFoundation()),
+                //       OnGameFoundationInitializeException method for logging and buttons will remain disabled.
+                localPersistence.Delete( () => gameFoundationInit.Initialize(),
                     OnGameFoundationException);
             }
             catch (Exception exception)
@@ -333,6 +287,11 @@ namespace UnityEngine.GameFoundation.Sample
             var apple = GameFoundationSdk.catalog.Find<InventoryItemDefinition>("apple");
             var orange = GameFoundationSdk.catalog.Find<InventoryItemDefinition>("orange");
 
+            if (apple is null || orange is null)
+            {
+                return;
+            }
+
             // FindItems will return a count of the number of items found no matter if you pass in a list or null
             // Since we don't actually care about the list, only the account, we'll save the allocation and just pass null
             var appleCount = GameFoundationSdk.inventory.FindItems(apple);
@@ -363,6 +322,9 @@ namespace UnityEngine.GameFoundation.Sample
         /// </param>
         private void EnableAllButtons(bool enableFlag = true)
         {
+            if (m_AllButtons is null)
+                return;
+
             foreach (var button in m_AllButtons)
             {
                 button.interactable = enableFlag;
@@ -375,7 +337,7 @@ namespace UnityEngine.GameFoundation.Sample
         /// <param name="exception">
         /// Exception thrown by GameFoundation.
         /// </param>
-        private void OnGameFoundationException(Exception exception)
+        public void OnGameFoundationException(Exception exception)
         {
             Debug.LogError($"GameFoundation exception: {exception}");
         }

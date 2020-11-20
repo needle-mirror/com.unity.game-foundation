@@ -60,7 +60,8 @@ Let’s create 7 reward items to have the daily rewards progress over the course
 
 To see your progressive reward in action, click ahead to check out the [Reward Prefab] tutorial.
 
-
+## 
+< [_table of contents_](../TableOfContents.md)
 
 
 

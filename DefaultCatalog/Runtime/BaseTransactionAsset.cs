@@ -4,7 +4,7 @@ using UnityEngine.Serialization;
 namespace UnityEngine.GameFoundation.DefaultCatalog
 {
     /// <summary>
-    ///     Description for <see cref="BaseTransactionAsset"/>
+    ///     Base asset to contain <see cref="BaseTransaction"/> data.
     /// </summary>
     public abstract partial class BaseTransactionAsset : CatalogItemAsset
     {
@@ -33,7 +33,19 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         ///     Overriden by inherited classes to initialize specific members.
         /// </summary>
         protected virtual void AwakeTransaction() { }
+    }
 
+    /// <inheritdoc/>
+    /// <typeparam name="TTransaction">
+    ///     The type of <see cref="BaseTransaction"/> data contained by this asset.
+    /// </typeparam>
+    /// <typeparam name="TConfig">
+    ///     The type of <see cref="BaseTransactionConfig{TTransaction}"/> created by this asset.
+    /// </typeparam>
+    public abstract class BaseTransactionAsset<TTransaction, TConfig> : BaseTransactionAsset
+        where TTransaction : BaseTransaction
+        where TConfig : BaseTransactionConfig<TTransaction>
+    {
         /// <inheritdoc/>
         protected sealed override CatalogItemConfig ConfigureItem(
             CatalogBuilder builder, IExternalValueProvider valueProvider)
@@ -58,7 +70,6 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         /// <returns>
         ///     The config object.
         /// </returns>
-        protected abstract BaseTransactionConfig ConfigureTransaction(
-            CatalogBuilder builder, IExternalValueProvider valueProvider);
+        protected abstract TConfig ConfigureTransaction(CatalogBuilder builder, IExternalValueProvider valueProvider);
     }
 }

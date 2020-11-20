@@ -16,8 +16,7 @@ namespace UnityEngine.GameFoundation
     [Serializable]
     public partial struct Property : IEquatable<Property>,
         IEqualityComparer<Property>,
-        IComparable<Property>,
-        IDictionaryConvertible
+        IComparable<Property>
     {
         /// <summary>
         ///     Stored value's type.
@@ -445,53 +444,10 @@ namespace UnityEngine.GameFoundation
 
                 case PropertyType.String:
                 case PropertyType.ResourcesAsset:
-                    return m_StringValue.CompareTo(other.m_StringValue);
+                    return string.Compare(m_StringValue, other.m_StringValue, StringComparison.Ordinal);
 
                 default:
                     throw new NotSupportedException(GetUnsupportedTypeErrorMessage(type));
-            }
-        }
-
-        /// <inheritdoc cref="IDictionaryConvertible.ToDictionary"/>
-        public Dictionary<string, object> ToDictionary()
-        {
-            var dataDictionary = new Dictionary<string, object>(2)
-            {
-                [nameof(type)] = (int)type
-            };
-
-            if (type == PropertyType.String
-                || type == PropertyType.ResourcesAsset)
-                dataDictionary.Add(nameof(m_StringValue), m_StringValue);
-            else
-            {
-                //We only need to serialize the greatest value.
-                dataDictionary.Add(nameof(m_ValueType), longValue);
-            }
-
-            return dataDictionary;
-        }
-
-        /// <inheritdoc cref="IDictionaryConvertible.FillFromDictionary"/>
-        public void FillFromDictionary(Dictionary<string, object> rawDictionary)
-        {
-            type = default;
-            m_ValueType = default;
-            m_StringValue = default;
-
-            if (rawDictionary.TryGetValue(nameof(type), out var rawType))
-            {
-                type = (PropertyType)Convert.ToInt32(rawType);
-            }
-
-            if (rawDictionary.TryGetValue(nameof(m_ValueType), out var rawValueType))
-            {
-                m_ValueType = Convert.ToInt64(rawValueType);
-            }
-
-            if (rawDictionary.TryGetValue(nameof(m_StringValue), out var rawString))
-            {
-                m_StringValue = Convert.ToString(rawString);
             }
         }
 

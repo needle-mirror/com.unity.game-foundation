@@ -55,6 +55,9 @@ ChilliConnect is a reference backend solution that Game Foundation provides. We'
 
 You can find the implementation of ChilliConnect Adapters for Game Foundation in the sample files attached to this package.
 
+## 
+< [_table of contents_](TableOfContents.md)
+
 
 
 

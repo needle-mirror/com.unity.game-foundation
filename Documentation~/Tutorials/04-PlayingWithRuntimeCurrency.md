@@ -105,7 +105,8 @@ The [WalletManager] is a very simple API, but a lot of games, especially on mobi
 `Debug.Log`-ging your balance and items may be a bit intrusive in your code.
 You may need a better way to monitor the player profile, and that's what we'll see in the [next tutorial].
 
-
+## 
+< [_table of contents_](../TableOfContents.md)
 
 
 

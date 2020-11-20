@@ -18,7 +18,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
         static readonly GUIContent k_EmptyMutableCollectionLabel
             = new GUIContent("No mutable properties configured");
 
-        protected override Dictionary<string, Property> GetAssetProperties()
+        protected override Dictionary<string, ExternalizableValue<Property>> GetAssetProperties()
             => m_Asset.mutableProperties;
 
         protected override GUIContent GetValueLabel()

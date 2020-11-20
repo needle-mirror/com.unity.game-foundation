@@ -1,7 +1,8 @@
 {
     "name": "Unity.GameFoundation",
     "references": [
-        "Unity.Promise"
+        "Unity.Promise",
+        "UnityEngine.Purchasing"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [],

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using UnityEngine.GameFoundation.DefaultCatalog;
 #if CHILLICONNECT_ENABLED
 using ChilliConnect;
 using UnityEngine.GameFoundation.ChilliConnect;
@@ -156,7 +157,7 @@ namespace UnityEngine.GameFoundation.Sample
             dataLayer = new ChilliConnectCloudSync(sdk);
 #else
             // The database has been properly setup.
-            m_WrongDatabase = !SamplesHelper.VerifyDatabase();
+            m_WrongDatabase = !VerifyDatabase();
             if (m_WrongDatabase)
             {
                 wrongDatabasePanel.SetActive(true);
@@ -166,17 +167,15 @@ namespace UnityEngine.GameFoundation.Sample
             dataLayer = new MemoryDataLayer();
 #endif
 
-            // Initialize must always be called before working with any game foundation code.
-            var deferred = GameFoundationSdk.Initialize(dataLayer);
-            try
+            // We use a using block to automatically release the deferred promise handler.
+            using (var deferred = GameFoundationSdk.Initialize(dataLayer))
             {
                 yield return deferred.Wait();
+
                 if (!deferred.isFulfilled)
+                {
                     yield break;
-            }
-            finally
-            {
-                deferred.Release();
+                }
             }
 
             var catalog = GameFoundationSdk.catalog;
@@ -308,56 +307,49 @@ namespace UnityEngine.GameFoundation.Sample
         {
             Debug.Log($"Now processing purchase: {transaction.displayName}");
 
-            Deferred<TransactionResult> deferred = default;
-
-            var counterparts = new List<string>();
-
-            if (transaction is VirtualTransaction virtualTransaction)
+            // We use a using block to automatically release the deferred promise handler.
+            using (Deferred<TransactionResult> deferred = GameFoundationSdk.transactions.BeginTransaction(transaction))
             {
-                virtualTransaction.AutoFillCostItemIds(counterparts);
-            }
+                // wait for the transaction to be processed
+                int currentStep = 0;
 
-            deferred = GameFoundationSdk.transactions.BeginTransaction(transaction, counterparts);
-
-            // wait for the transaction to be processed
-            int currentStep = 0;
-
-            while (!deferred.isDone)
-            {
-                // keep track of the current step and possibly show a progress UI
-                if (deferred.currentStep != currentStep)
+                while (!deferred.isDone)
                 {
-                    currentStep = deferred.currentStep;
+                    // keep track of the current step and possibly show a progress UI
+                    if (deferred.currentStep != currentStep)
+                    {
+                        currentStep = deferred.currentStep;
 
-                    Debug.Log($"Transaction is now on step {currentStep} of {deferred.totalSteps}");
+                        Debug.Log($"Transaction is now on step {currentStep} of {deferred.totalSteps}");
+                    }
+
+                    yield return null;
                 }
 
-                yield return null;
+                // now that the transaction has been processed, check for an error
+                if (!deferred.isFulfilled)
+                {
+                    Debug.LogError($"Transaction Id:  {transaction.key} - Error Message: {deferred.error}");
+
+                    yield break;
+                }
+
+                // here we can assume success
+                Debug.Log("The purchase was successful in both the platform store and the data layer!");
+
+                foreach (var exchange in deferred.result.payout.products)
+                {
+                    // the log will depend on the type of the received tradable.
+                    if (exchange is CurrencyExchange currencyExchange)
+                    {
+                        Debug.Log($"Player was awarded {currencyExchange.amount} of currency '{currencyExchange.currency.displayName}'");
+                    }
+                    else if (exchange is InventoryItem item)
+                    {
+                        Debug.Log($"Player was awarded an item made from '{item.definition.displayName}'");
+                    }
+                }
             }
-
-            // now that the transaction has been processed, check for an error
-            if (!deferred.isFulfilled)
-            {
-                Debug.LogError($"Transaction Id:  {transaction.key} - Error Message: {deferred.error}");
-
-                deferred.Release();
-                yield break;
-            }
-
-            // here we can assume success
-            Debug.Log("The purchase was successful in both the platform store and the data layer!");
-
-            foreach (var exchange in deferred.result.payout.products)
-            {
-                // the log will depend on the type of the received tradable.
-                if (exchange is CurrencyExchange currencyExchange)
-                    Debug.Log($"Player was awarded {currencyExchange.amount} of currency '{currencyExchange.currency.displayName}'");
-                else if (exchange is InventoryItem item)
-                    Debug.Log($"Player was awarded an item made from '{item.definition.displayName}'");
-            }
-
-            // all done
-            deferred.Release();
         }
 
         /// <summary>
@@ -432,6 +424,36 @@ namespace UnityEngine.GameFoundation.Sample
 
             var carrotCost = m_CarrotIngredientTransaction?.costs?.GetExchange(0);
             carrotIngredientButton.interactable = GameFoundationSdk.wallet.Get(coin) > carrotCost?.amount;
+        }
+        
+        /// <summary>
+        ///     This method verifies that the database in use is correct.
+        ///     It also handles any situations where the settings were not setup correctly and may result in errors.
+        /// </summary>
+        /// <returns>
+        ///     If the database in use is the sample catalog.
+        /// </returns>
+        bool VerifyDatabase()
+        {
+            try
+            {
+                if (CatalogSettings.catalogAsset is null)
+                {
+                    return false;
+                }
+
+                var catalogAssetName = CatalogSettings.catalogAsset.name;
+                if (catalogAssetName == "ChilliConnectCatalog")
+                {
+                    return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+
+            return false;
         }
 
         /// <summary>

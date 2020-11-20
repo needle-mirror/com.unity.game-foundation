@@ -31,7 +31,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
             {
                 using (var checkScope = new EditorGUI.ChangeCheckScope())
                 {
-                    var appleId = TextField(new GUIContent("Apple Identifier"), iapTransaction.m_AppleId);
+                    var appleId = TextField(new GUIContent("Apple Identifier"), iapTransaction.appleId);
                     if (checkScope.changed)
                     {
                         iapTransaction.Editor_SetAppleId(appleId);
@@ -40,7 +40,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
 
                 using (var checkScope = new EditorGUI.ChangeCheckScope())
                 {
-                    var googleId = TextField(new GUIContent("Google Product ID"), iapTransaction.m_GoogleId);
+                    var googleId = TextField(new GUIContent("Google Product ID"), iapTransaction.googleId);
 
                     if (checkScope.changed)
                     {

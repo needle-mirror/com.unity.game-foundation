@@ -126,9 +126,7 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
                     $"{nameof(BaseTransactionAsset)}: The {nameof(CatalogItemAsset)} target parameter cannot be null.");
             }
 
-            var baseTransactionTarget = target as BaseTransactionAsset;
-
-            if (baseTransactionTarget == null)
+            if (!(target is BaseTransactionAsset baseTransactionTarget))
             {
                 throw new InvalidCastException(
                     $"{nameof(BaseTransactionAsset)}: The target object {target.displayName} of type " +

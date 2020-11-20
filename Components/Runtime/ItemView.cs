@@ -59,11 +59,11 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         public void SetIcon(Sprite icon)
         {
-            if (ReferenceEquals(m_ImageField, null) || m_ImageField.sprite == icon)
+            if (m_ImageField is null || m_ImageField.sprite == icon)
                 return;
 
             m_ImageField.sprite = icon;
-            if (!ReferenceEquals(icon, null)) m_ImageField.SetNativeSize();
+            if (!(icon is null)) m_ImageField.SetNativeSize();
 #if UNITY_EDITOR
             EditorUtility.SetDirty(m_ImageField);
 #endif
@@ -77,7 +77,7 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         public void SetDisplayName(string displayName)
         {
-            if (ReferenceEquals(m_DisplayNameTextField, null) || m_DisplayNameTextField.text == displayName)
+            if (m_DisplayNameTextField is null || m_DisplayNameTextField.text == displayName)
                 return;
 
             m_DisplayNameTextField.text = displayName;
@@ -94,7 +94,7 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         public void SetDescription(string description)
         {
-            if (ReferenceEquals(m_DescriptionTextField, null) || m_DescriptionTextField.text == description)
+            if (m_DescriptionTextField is null || m_DescriptionTextField.text == description)
                 return;
 
             m_DescriptionTextField.text = description;

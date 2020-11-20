@@ -33,7 +33,8 @@ That means when an item instance is created from this [item definition], its val
 We can now configure an [item definition] with mutable properties.
 [The next step] is to manipulate this mutable property at runtime.
 
-
+## 
+< [_table of contents_](../TableOfContents.md)
 
 
 

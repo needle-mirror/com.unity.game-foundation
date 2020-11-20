@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEngine.GameFoundation.DefaultCatalog;
-
 #endif
 
 namespace UnityEngine.GameFoundation.Components
@@ -72,6 +71,11 @@ namespace UnityEngine.GameFoundation.Components
         ///     Specifies whether the debug logs is visible.
         /// </summary>
         bool m_ShowDebugLogs = false;
+        
+        /// <summary>
+        ///     Instance of the GameFoundationDebug class to use for logging.
+        /// </summary>
+        static readonly GameFoundationDebug k_GFLogger = GameFoundationDebug.Get<RewardItemView>();
 
         /// <summary>
         ///     Initializes RewardItemView with needed info.
@@ -110,7 +114,7 @@ namespace UnityEngine.GameFoundation.Components
             if (!Application.isPlaying)
                 return;
 
-            ThrowIfNotInitialized();
+            ThrowIfNotInitialized(nameof(Start));
 
             m_RewardItemDefinition = GetRewardItemDefinition(m_RewardDefinitionKey, m_RewardItemDefinitionKey);
 
@@ -118,14 +122,14 @@ namespace UnityEngine.GameFoundation.Components
         }
 
         /// <summary>
-        ///     Sets the key of the Reward displayed in this Reward Popup
+        ///     Sets the key of the Reward displayed in this Reward Item
         /// </summary>
         /// <param name="definition">
         ///     A reference to a Reward Item definition.
         /// </param>
         public void SetRewardItemDefinition(RewardItemDefinition definition)
         {
-            ThrowIfNotInitialized();
+            ThrowIfNotInitialized(nameof(SetRewardItemDefinition));
 
             if (ReferenceEquals(definition, m_RewardItemDefinition))
             {
@@ -140,7 +144,7 @@ namespace UnityEngine.GameFoundation.Components
         }
 
         /// <summary>
-        ///     Sets the key of the Reward displayed in this Reward Popup
+        ///     Sets the key of the Reward displayed in this Reward Item
         /// </summary>
         /// <param name="rewardDefinitionKey">
         ///     The definition key of the Reward the RewardItem belongs to.
@@ -179,7 +183,7 @@ namespace UnityEngine.GameFoundation.Components
             {
                 if (m_ShowDebugLogs)
                 {
-                    Debug.LogWarning($"{nameof(RewardItemView)} - Reward \"{rewardDefinitionKey}\" doesn't exist in Reward catalog.");
+                    k_GFLogger.LogWarning($"Reward \"{rewardDefinitionKey}\" doesn't exist in Reward catalog.");
                 }
 
                 return null;
@@ -188,7 +192,7 @@ namespace UnityEngine.GameFoundation.Components
             var rewardItemDefinition = rewardDefinition.FindRewardItem(rewardItemDefinitionKey);
             if (rewardItemDefinition == null && m_ShowDebugLogs)
             {
-                Debug.LogWarning($"{nameof(RewardItemView)} - No Reward Item with the key \" {rewardItemDefinitionKey}\" can be found in the Reward catalog.");
+                k_GFLogger.LogWarning($"No Reward Item with the key \" {rewardItemDefinitionKey}\" can be found in the Reward catalog.");
             }
 
             return rewardItemDefinition;
@@ -273,7 +277,7 @@ namespace UnityEngine.GameFoundation.Components
                 string title = string.IsNullOrEmpty(m_TitleDisplayFormat) ? string.Empty : string.Format(m_TitleDisplayFormat, rewardDefinition.IndexOf(m_RewardItemDefinition) + 1);
                 if (m_ShowDebugLogs && string.IsNullOrEmpty(m_TitleDisplayFormat))
                 {
-                    Debug.LogWarning($"{nameof(RewardItemView)} - Reward Item's title is not defined on the Reward as a static property.");
+                    k_GFLogger.LogWarning("Reward Item's title is not defined on the Reward as a static property.");
                 }
                 
                 GetPayoutIconAndDescription(m_RewardItemDefinition, out var icon, out var description);
@@ -316,25 +320,24 @@ namespace UnityEngine.GameFoundation.Components
                     {
                         icon = iconProperty.AsAsset<Sprite>();
                     
-                        if (ReferenceEquals(icon, null))
+                        if (icon is null)
                         {
-                            Debug.LogWarning(
-                                $"{nameof(RewardItemView)} - One of the Exchange Items in the Reward \"{rewardItemDefinition.rewardDefinition.key}\" does not have a Resources Asset Static Property with the key \"{m_PayoutItemIconSpritePropertyKey}\" so it will not be shown in the Reward Popup.");
+                            k_GFLogger.LogWarning($"One of the Exchange Items in the Reward \"{rewardItemDefinition.rewardDefinition.key}\" does not have a Resources Asset Static Property with the key \"{m_PayoutItemIconSpritePropertyKey}\" so it will not be shown in the Reward Popup.");
                         }
                     }    
                 }
                 else if (m_ShowDebugLogs)
                 {
-                    Debug.LogWarning(
-                        $"{nameof(RewardItemView)} - Payout Item Icon Property key of Reward \"{rewardItemDefinition.rewardDefinition.key}\" is null.");
+                    k_GFLogger.LogWarning(
+                        $"Payout Item Icon Property key of Reward \"{rewardItemDefinition.rewardDefinition.key}\" is null.");
                 }
 
                 description = (m_PayoutCountPrefix ?? "") + exchangeObject.amount;
 
                 if (exchangeObjects.Count > 1)
                 {
-                    Debug.LogWarning(
-                        $"{nameof(RewardItemView)} - Reward \"{rewardItemDefinition.rewardDefinition.key}\" has multiple Exchange Items in a Payout. {nameof(RewardItemView)} can only show the first Exchange Item on UI.");
+                    k_GFLogger.LogWarning(
+                        $"Reward \"{rewardItemDefinition.rewardDefinition.key}\" has multiple Exchange Items in a Payout. {nameof(RewardItemView)} can only show the first Exchange Item on UI.");
                 }
             }
         }
@@ -359,7 +362,7 @@ namespace UnityEngine.GameFoundation.Components
                     title = string.IsNullOrEmpty(m_TitleDisplayFormat) ? string.Empty : string.Format(m_TitleDisplayFormat, rewardAsset.IndexOf(rewardItemAsset) + 1);
                     if (m_ShowDebugLogs && string.IsNullOrEmpty(m_TitleDisplayFormat))
                     {
-                        Debug.LogWarning($"{nameof(RewardItemView)} - Reward Item's title is not defined on the Reward as a static property.");
+                        k_GFLogger.LogWarning("Reward Item's title is not defined on the Reward as a static property.");
                     }
                     
                     GetPayoutIconAndDescription(rewardItemAsset, out icon, out description);
@@ -401,25 +404,22 @@ namespace UnityEngine.GameFoundation.Components
                     {
                         icon = iconProperty.AsAsset<Sprite>();
                     
-                        if (ReferenceEquals(icon, null) && !string.IsNullOrEmpty(definitionKey))
+                        if (icon is null && !string.IsNullOrEmpty(definitionKey))
                         {
-                            Debug.LogWarning(
-                                $"{nameof(RewardItemView)} - One of the Exchange Items in the Reward \"{definitionKey}\" does not have a Resources Asset Static Property with the key \"{m_PayoutItemIconSpritePropertyKey}\" so it will not be shown in the Reward Popup.");
+                            k_GFLogger.LogWarning($"One of the Exchange Items in the Reward \"{definitionKey}\" does not have a Resources Asset Static Property with the key \"{m_PayoutItemIconSpritePropertyKey}\" so it will not be shown in the Reward Popup.");
                         }
                     }   
                 }
                 else if (m_ShowDebugLogs && !string.IsNullOrEmpty(definitionKey))
                 {
-                    Debug.LogWarning(
-                        $"{nameof(RewardItemView)} - Payout Item Icon Property key of Reward \"{definitionKey}\" is null.");
+                    k_GFLogger.LogWarning($"Payout Item Icon Property key of Reward \"{definitionKey}\" is null.");
                 }
 
                 description = (m_PayoutCountPrefix ?? "") + exchangeObject.amount;
 
                 if (exchangeObjects.Count > 1 && !string.IsNullOrEmpty(definitionKey))
                 {
-                    Debug.LogWarning(
-                        $"{nameof(RewardItemView)} - Reward \"{definitionKey}\" has multiple Exchange Items in a Payout. {nameof(RewardItemView)} can only show the first Exchange Item on UI.");
+                    k_GFLogger.LogWarning($"Reward \"{definitionKey}\" has multiple Exchange Items in a Payout. {nameof(RewardItemView)} can only show the first Exchange Item on UI.");
                 }
             }
         }
@@ -441,12 +441,15 @@ namespace UnityEngine.GameFoundation.Components
         /// <summary>
         ///     Throws an Invalid Operation Exception if GameFoundation has not been initialized before this view is used.
         /// </summary>
-        /// <exception cref="InvalidOperationException"></exception>
-        void ThrowIfNotInitialized()
+        /// <param name="callingMethod">
+        ///     Calling method name.
+        /// </param>
+        void ThrowIfNotInitialized(string callingMethod)
         {
             if (!GameFoundationSdk.IsInitialized)
             {
-                throw new InvalidOperationException($"Error: GameFoundation.Initialize() must be called before the {nameof(RewardItemView)} is used.");
+                var message = $"GameFoundationSdk.Initialize() must be called before {callingMethod} is used.";
+                k_GFLogger.LogException(message, new InvalidOperationException(message));
             }
         }
     }

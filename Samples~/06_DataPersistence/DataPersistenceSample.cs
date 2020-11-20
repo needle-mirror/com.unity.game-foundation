@@ -2,8 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using UnityEngine.GameFoundation.Components;
 using UnityEngine.GameFoundation.DefaultLayers;
-using UnityEngine.GameFoundation.DefaultLayers.Persistence;
 using UnityEngine.Promise;
 using UnityEngine.UI;
 
@@ -18,12 +18,7 @@ namespace UnityEngine.GameFoundation.Sample
         /// Flag for whether the Inventory has changes in it that have not yet been updated in the UI.
         /// </summary>
         private bool m_InventoryChanged;
-        
-        /// <summary>
-        /// We need to keep a reference to the persistence data layer if we want to save data.
-        /// </summary>
-        private PersistenceDataLayer m_DataLayer;
-        
+
         /// <summary>
         /// Reference to a list of InventoryItems in the GameFoundationSdk.inventory.
         /// </summary>
@@ -35,9 +30,9 @@ namespace UnityEngine.GameFoundation.Sample
         private readonly StringBuilder m_DisplayText = new StringBuilder();
 
         /// <summary>
-        /// Reference to the panel to display when the wrong database is in use.
+        /// Reference in the scene to the Game Foundation Init component.
         /// </summary>
-        public GameObject wrongDatabasePanel;
+        public GameFoundationInit gameFoundationInit;
 
         /// <summary>
         /// We will need a reference to the main text box in the scene so we can easily modify it.
@@ -51,73 +46,9 @@ namespace UnityEngine.GameFoundation.Sample
         bool m_SubscribedFlag = false;
 
         /// <summary>
-        /// Standard starting point for Unity scripts.
-        /// </summary>
-        private IEnumerator Start()
-        {
-            // The database has been properly setup.
-            if (!SamplesHelper.VerifyDatabase())
-            {
-                wrongDatabasePanel.SetActive(true);
-                yield break;
-            }
-
-            // Initialize Game Foundation.
-            yield return InitializeGameFoundation();
-        }
-
-        /// <summary>
-        /// Initialize Game Foundation.  
-        /// Called at startup as well as when reinitializing.
-        /// </summary>
-        private IEnumerator InitializeGameFoundation()
-        {
-            // - Initialize must always be called before working with any game foundation code.
-            // - GameFoundation requires an IDataAccessLayer object that will provide and persist
-            //   the data required for the various services (Inventory, Wallet, ...).
-            // - For this sample we will persist GameFoundation's data using a PersistenceDataLayer.
-            //   We create it with a LocalPersistence setup to save/load these data in a JSON file
-            //   named "DataPersistenceSampleV2" stored on the device.  Note: 'V2' appended
-            //   to the filename to ensure old persistence from previous version of Game Foundation
-            //   isn't used, causing Sample to throw at initialization.  This is only needed during
-            //   the 'preview' phase of Game Foundation while the structure of persistent data is
-            //   changing.
-            var persistence = new LocalPersistence("DataPersistenceSampleV2", new JsonDataSerializer());
-            m_DataLayer = new PersistenceDataLayer(persistence);
-
-            // Initialize Game Foundation.
-            var initDeferred = GameFoundationSdk.Initialize(m_DataLayer);
-
-            return WaitForInitialization(initDeferred);
-        }
-
-        /// <summary>
-        /// This private method will wait on the deferred Game Foundation initialization object until
-        /// initialization completes, then trigger OnGameFoundationInitialized method to finish setup.
-        /// </summary>
-        /// <param name="deferred">
-        /// Deferred object returned from Game Foundation Sdk Initialize method.
-        /// </param>
-        private IEnumerator WaitForInitialization(Deferred deferred)
-        {
-            yield return deferred.Wait();
-
-            if (deferred.isFulfilled)
-            {
-                OnGameFoundationInitialized();
-            }
-            else
-            {
-                OnGameFoundationException(deferred.error);
-            }
-
-            deferred.Release();
-        }
-
-        /// <summary>
         /// Once Game Foundation completes initialization, we enable buttons, setup callbacks, update GUI, etc.
         /// </summary>
-        private void OnGameFoundationInitialized()
+        public void OnGameFoundationInitialized()
         {
             // Show list of inventory items.
             RefreshUI();
@@ -246,21 +177,24 @@ namespace UnityEngine.GameFoundation.Sample
         /// </summary>
         public void Save()
         {
-            // Deferred is a struct that helps you track the progress of an asynchronous operation of Game Foundation.
-            Deferred saveOperation = m_DataLayer.Save();
+            // Get the persistence data layer used during Game Foundation initialization.
+            if (!(GameFoundationSdk.dataLayer is PersistenceDataLayer dataLayer))
+                return;
 
-            // Check if the operation is already done.
-            if (saveOperation.isDone)
+            // - Deferred is a struct that helps you track the progress of an asynchronous operation of Game Foundation.
+            // - We use a using block to automatically release the deferred promise handler.
+            using (Deferred saveOperation = dataLayer.Save())
             {
-                LogSaveOperationCompletion(saveOperation);
+                // Check if the operation is already done.
+                if (saveOperation.isDone)
+                {
+                    LogSaveOperationCompletion(saveOperation);
+                }
+                else
+                {
+                    StartCoroutine(WaitForSaveCompletion(saveOperation));
+                }
             }
-            else
-            {
-                StartCoroutine(WaitForSaveCompletion(saveOperation));
-            }
-
-            // Release deferred promise handler.
-            saveOperation.Release();
         }
 
         /// <summary>
@@ -273,13 +207,10 @@ namespace UnityEngine.GameFoundation.Sample
             UnsubscribeFromGameFoundationEvents();
 
             // Reset and reinitialize Game Foundation
-            GameFoundationSdk.Uninitialize();
+            gameFoundationInit.Uninitialize();
 
             // Begin Game Foundation initialization process
-            var deferred = GameFoundationSdk.Initialize(m_DataLayer);
-
-            // Wait for initialization 
-            StartCoroutine(WaitForInitialization(deferred));
+            gameFoundationInit.Initialize();
         }
 
         /// <summary>
@@ -345,7 +276,7 @@ namespace UnityEngine.GameFoundation.Sample
         /// <param name="exception">
         /// Exception thrown by GameFoundation.
         /// </param>
-        private void OnGameFoundationException(Exception exception)
+        public void OnGameFoundationException(Exception exception)
         {
             Debug.LogError($"GameFoundation exception: {exception}");
         }

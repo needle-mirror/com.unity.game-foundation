@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine.GameFoundation.Configs;
 using UnityEngine.GameFoundation.Data;
@@ -11,32 +10,34 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
     /// </summary>
     public sealed partial class InventoryItemDefinitionAsset : TradableDefinitionAsset
     {
-        /// <summary>
-        ///     Determines how many of this <see cref="InventoryItemDefinition"/>
-        ///     to automatically add to player's inventory.
-        /// </summary>
+        /// <inheritdoc cref="initialAllocation"/>
+        [Min(0)]
         [SerializeField]
         int m_InitialAllocation;
 
         /// <summary>
-        ///     External override for <see cref="m_InitialAllocation"/>.
+        ///     Wrapper for <see cref="m_InitialAllocation"/>.
         /// </summary>
-        [NonSerialized]
-        int? m_ExternalInitialAllocation;
+        ExternalizableValue<int> m_InitialAllocationWrapper;
 
         /// <summary>
         ///     Determines how many of this <see cref="InventoryItemDefinition"/>
         ///     to automatically add to player's inventory.
         /// </summary>
-        public int initialAllocation
+        public ExternalizableValue<int> initialAllocation
         {
-            get => m_ExternalInitialAllocation ?? m_InitialAllocation;
-            internal set => m_InitialAllocation = value;
+            get
+            {
+                if (m_InitialAllocationWrapper is null)
+                {
+                    m_InitialAllocationWrapper = new ExternalizableValue<int>(m_InitialAllocation);
+                }
+
+                return m_InitialAllocationWrapper;
+            }
         }
 
-        /// <summary>
-        ///     Is this <see cref="InventoryItemDefinition"/> stackable?
-        /// </summary>
+        /// <inheritdoc cref="isStackableFlag"/>
         [SerializeField]
         bool m_IsStackableFlag;
 
@@ -49,21 +50,31 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
             internal set => m_IsStackableFlag = value;
         }
 
-        /// <summary>
-        ///     If this <see cref="InventoryItemDefinition"/> is stackable, how many
-        ///     items should be initialized in each initial stack?
-        /// </summary>
+        /// <inheritdoc cref="initialQuantityPerStack"/>
+        [Min(0)]
         [SerializeField]
         long m_InitialQuantityPerStack = 1;
+
+        /// <summary>
+        ///     Wrapper for <see cref="m_InitialQuantityPerStack"/>.
+        /// </summary>
+        ExternalizableValue<long> m_InitialQuantityPerStackWrapper;
 
         /// <summary>
         ///     If this <see cref="InventoryItemDefinition"/> is stackable, how many
         ///     items (quantity) should be initialized in each initial stack?
         /// </summary>
-        public long initialQuantityPerStack
+        public ExternalizableValue<long> initialQuantityPerStack
         {
-            get => m_InitialQuantityPerStack;
-            internal set => m_InitialQuantityPerStack = value;
+            get
+            {
+                if (m_InitialQuantityPerStackWrapper is null)
+                {
+                    m_InitialQuantityPerStackWrapper = new ExternalizableValue<long>(m_InitialQuantityPerStack);
+                }
+
+                return m_InitialQuantityPerStackWrapper;
+            }
         }
 
         [FormerlySerializedAs("m_PropertyKeys")]
@@ -79,8 +90,8 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         ///     Key: Property's key.
         ///     Value: Property's type & default value.
         /// </summary>
-        internal Dictionary<string, Property> mutableProperties { get; }
-            = new Dictionary<string, Property>();
+        internal Dictionary<string, ExternalizableValue<Property>> mutableProperties { get; }
+            = new Dictionary<string, ExternalizableValue<Property>>();
 
         /// <summary>
         ///     Get all default properties stored in this definition.
@@ -110,7 +121,6 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         protected override CatalogItemConfig ConfigureItem(CatalogBuilder builder, IExternalValueProvider valueProvider)
         {
             InventoryItemDefinitionConfig item;
-
             if (isStackableFlag)
             {
                 item = builder.Create<StackableInventoryItemDefinitionConfig>(key);
@@ -120,46 +130,83 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
                 item = builder.Create<InventoryItemDefinitionConfig>(key);
             }
 
-            foreach (var property in mutableProperties)
+            var hasValueProvider = !(valueProvider is null);
+            var mutablePropertiesKeys = new List<string>(mutableProperties.Keys);
+
+            //We can't do a foreach loop on the dictionary since we modify the entry.
+            foreach (var propertyKey in mutablePropertiesKeys)
             {
-                var propertyName = ExternalValueProviderNames.GetMutablePropertyName(property.Key);
-                if (valueProvider == null
-                    || !valueProvider.TryGetValue(propertyName, key, out var propertyValue))
+                var propertyName = ExternalValueProviderNames.GetMutablePropertyName(propertyKey);
+                if (hasValueProvider
+                    && valueProvider.TryGetValue(propertyName, key, out var externalPropertyValue))
                 {
-                    propertyValue = property.Value;
+                    mutableProperties[propertyKey].SetExternalValue(externalPropertyValue);
+                }
+                else
+                {
+                    mutableProperties[propertyKey].ResetExternalValue();
                 }
 
-                item.properties.Add(property.Key, propertyValue);
+                item.properties.Add(propertyKey, mutableProperties[propertyKey]);
             }
 
             return item;
         }
 
         /// <inheritdoc/>
-        internal override void OverrideNonConfiguredData(IExternalValueProvider valueProvider)
+        internal override void OverridePreConfigurationData(IExternalValueProvider valueProvider)
         {
-            if (valueProvider != null
-                && valueProvider.TryGetValue(
-                    ExternalValueProviderNames.initialAllocation, key, out var externalInitialBalance))
+            if (valueProvider is null)
             {
-                m_ExternalInitialAllocation = externalInitialBalance;
+                initialAllocation.ResetExternalValue();
+                initialQuantityPerStack.ResetExternalValue();
+
+                return;
+            }
+
+            if (valueProvider.TryGetValue(
+                ExternalValueProviderNames.initialAllocation, key, out var externalInitialBalance))
+            {
+                initialAllocation.SetExternalValue(externalInitialBalance);
             }
             else
             {
-                m_ExternalInitialAllocation = null;
+                initialAllocation.ResetExternalValue();
+            }
+
+            if (isStackableFlag
+                && valueProvider.TryGetValue(
+                    ExternalValueProviderNames.initialQuantityPerStack, key, out var externalInitialStack))
+            {
+                initialQuantityPerStack.SetExternalValue(externalInitialStack);
+            }
+            else
+            {
+                initialQuantityPerStack.ResetExternalValue();
             }
         }
 
         /// <inheritdoc/>
         protected override void OnBeforeItemSerialize()
         {
+            base.OnBeforeItemSerialize();
+
             m_MutablePropertyKeys = new List<string>(mutableProperties.Keys);
-            m_MutablePropertyDefaultValues = new List<Property>(mutableProperties.Values);
+            m_MutablePropertyDefaultValues = new List<Property>(mutableProperties.Values.Count);
+            foreach (var mutablePropertiesValue in mutableProperties.Values)
+            {
+                m_MutablePropertyDefaultValues.Add(mutablePropertiesValue);
+            }
         }
 
         /// <inheritdoc/>
         protected override void OnAfterItemDeserialize()
         {
+            base.OnAfterItemDeserialize();
+
+            m_InitialAllocationWrapper = new ExternalizableValue<int>(m_InitialAllocation);
+            m_InitialQuantityPerStackWrapper = new ExternalizableValue<long>(m_InitialQuantityPerStack);
+
             DeserializeListsToDictionary(m_MutablePropertyKeys, m_MutablePropertyDefaultValues, mutableProperties);
         }
     }

@@ -68,7 +68,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
 
         const string k_LongPropertyDisplayName = "Integer number";
 
-        const string k_DoublePropertyDisplayName = "Real number";
+        const string k_DoublePropertyDisplayName = "Double";
 
         const string k_ResourcesAssetPropertyDisplayName = "Resources Asset";
 
@@ -138,7 +138,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
             DrawPropertyCreation(properties);
         }
 
-        void DrawExistingProperties(Dictionary<string, Property> properties)
+        void DrawExistingProperties(Dictionary<string, ExternalizableValue<Property>> properties)
         {
             //Draw list header.
             using (new GUILayout.HorizontalScope(GameFoundationEditorStyles.tableViewToolbarStyle))
@@ -178,7 +178,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
                 {
                     GUILayout.Label(propertyKey, GUILayout.Width(k_KeyWidth));
 
-                    var property = properties[propertyKey];
+                    Property property = properties[propertyKey];
                     var propertyLabel = GetLabelFor(property.type);
                     GUILayout.Label(propertyLabel, GUILayout.Width(k_TypeWidth));
 
@@ -232,7 +232,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
                             }
 
                             default:
-                                throw new Exception(
+                                throw new NotSupportedException(
                                     $"{nameof(PropertiesEditor)}: Cannot draw field for {nameof(property)} " +
                                     $"because it is of unsupported type: {property.type}");
                         }
@@ -263,7 +263,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
             }
         }
 
-        void DrawPropertyCreation(IDictionary<string, Property> properties)
+        void DrawPropertyCreation(IDictionary<string, ExternalizableValue<Property>> properties)
         {
             using (new GUILayout.HorizontalScope())
             {
@@ -308,7 +308,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
             }
         }
 
-        protected virtual Dictionary<string, Property> GetAssetProperties()
+        protected virtual Dictionary<string, ExternalizableValue<Property>> GetAssetProperties()
             => m_Asset.staticProperties;
 
         protected virtual GUIContent GetValueLabel()

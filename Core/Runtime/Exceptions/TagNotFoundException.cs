@@ -8,7 +8,7 @@
         /// <summary>
         ///     The id of the tag not found.
         /// </summary>
-        public readonly string tagId;
+        public string tagId { get; }
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="TagNotFoundException"/> class.
@@ -17,11 +17,23 @@
         ///     The id of the <see cref="Tag"/> not found.
         /// </param>
         public TagNotFoundException(string id)
+            : base(BuildMessage(id))
         {
             tagId = id;
         }
 
-        /// <inheritdoc/>
-        public override string Message => $"{nameof(Tag)} {tagId} not found";
+        /// <summary>
+        ///     Get the error message for the given <paramref name="tagId"/>.
+        /// </summary>
+        /// <param name="tagId">
+        ///     The id of the <see cref="Tag"/> not found.
+        /// </param>
+        static string BuildMessage(string tagId)
+        {
+            k_MessageBuilder.Clear()
+                .Append($"{nameof(Tag)} {tagId} not found");
+
+            return k_MessageBuilder.ToString();
+        }
     }
 }

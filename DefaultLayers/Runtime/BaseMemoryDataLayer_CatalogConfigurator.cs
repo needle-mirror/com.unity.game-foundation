@@ -7,7 +7,7 @@ namespace UnityEngine.GameFoundation.DefaultLayers
         /// <summary>
         ///     The static data of the data layer.
         /// </summary>
-        internal CatalogAsset catalogAsset;
+        protected readonly CatalogAsset m_CatalogAsset;
 
         /// <summary>
         ///     Create a data layer using the given <paramref name="catalogAsset"/> for static data.
@@ -22,11 +22,11 @@ namespace UnityEngine.GameFoundation.DefaultLayers
                 catalogAsset = CatalogSettings.catalogAsset;
             }
 
-            this.catalogAsset = catalogAsset;
+            m_CatalogAsset = catalogAsset;
         }
 
         /// <inheritdoc/>
         void ICatalogConfigurator.Configure(CatalogBuilder builder)
-            => (catalogAsset as ICatalogConfigurator).Configure(builder);
+            => (m_CatalogAsset as ICatalogConfigurator).Configure(builder);
     }
 }

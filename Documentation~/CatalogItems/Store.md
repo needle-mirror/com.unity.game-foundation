@@ -2,9 +2,9 @@
 
 ## Overview
 
-A __Store__ is a [catalog item] providing a subset of the [transaction catalog]. 
+Each __Store__ maintains a list of available transactions (IAP, Virtual or both) that are returned when the store is queried.  A Store is a [catalog item] providing a subset of the [transaction catalog]. 
 
-If your game uses multiple stores each with a different list of products, this [catalog item] is the one you'll use to create those lists.
+If your game uses multiple stores each can contain a different list of products, and the [catalog item] is the one you'll use to create those lists.
 
 You can define multiple stores to display a different set of products, depending on the types of purchase. For example, you can create a 'in-game shop' with virtual purchases, or an 'IAP store' with in-app purchase items. 
 
@@ -26,6 +26,9 @@ The interface is similar to the other [catalog items editor].
   In other words, it is a soft way to remove a product.\
 
 (2) Use the __Other Available Transactions__ section to populate the Store Transactions list with the transactions defined in the [Virtual Transactions] and [IAP Transactions].
+
+## 
+< [_table of contents_](../TableOfContents.md)
 
 
 

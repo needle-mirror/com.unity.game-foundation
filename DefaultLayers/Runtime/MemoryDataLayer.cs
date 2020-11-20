@@ -26,7 +26,7 @@ namespace UnityEngine.GameFoundation.DefaultLayers
         public MemoryDataLayer(CatalogAsset database = null)
             : base(database)
         {
-            m_Data = catalogAsset.CreateDefaultData();
+            m_Data = m_CatalogAsset.CreateDefaultData();
         }
 
         /// <summary>
@@ -45,23 +45,29 @@ namespace UnityEngine.GameFoundation.DefaultLayers
         public MemoryDataLayer(GameFoundationData data, CatalogAsset database = null)
             : base(database)
         {
-            if (data.inventoryManagerData.items == null)
+            if (data.inventoryManagerData.items is null)
+            {
                 throw new ArgumentNullException(
                     $"{nameof(MemoryDataLayer)}: {nameof(InventoryManagerData)}'s " +
                     $"{nameof(InventoryManagerData.items)} mustn't be null when instantiating {nameof(MemoryDataLayer)}.",
                     new NullReferenceException());
+            }
 
-            if (data.walletData.balances == null)
+            if (data.walletData.balances is null)
+            {
                 throw new ArgumentNullException(
                     $"{nameof(MemoryDataLayer)}: {nameof(WalletData)}'s {nameof(WalletData.balances)} mustn't " +
                     $"be null when instantiating {nameof(MemoryDataLayer)}.",
                     new NullReferenceException());
+            }
 
-            if (data.rewardManagerData.rewards == null)
+            if (data.rewardManagerData.rewards is null)
+            {
                 throw new ArgumentNullException(
                     $"{nameof(MemoryDataLayer)}: {nameof(RewardManagerData)}'s {nameof(RewardManagerData.rewards)} " +
                     $"mustn't be null when instantiating {nameof(MemoryDataLayer)}.",
                     new NullReferenceException());
+            }
 
             m_Data = data;
         }
@@ -77,20 +83,27 @@ namespace UnityEngine.GameFoundation.DefaultLayers
                 return;
             }
 
-            InitializeInventoryDataLayer(m_Data.inventoryManagerData, catalogAsset);
-            InitializeWalletDataLayer(m_Data.walletData, catalogAsset);
+            try
+            {
+                InitializeInventoryDataLayer(m_Data.inventoryManagerData);
+                InitializeWalletDataLayer(m_Data.walletData);
 
-            // this must be called *after* inventory and wallet
-            InitializeRewardDataLayer(m_Data.rewardManagerData, catalogAsset);
+                // this must be called *after* inventory and wallet
+                InitializeRewardDataLayer(m_Data.rewardManagerData);
 
-            m_Version = m_Data.version;
+                m_Version = m_Data.version;
 
-            m_IsInitialized = true;
+                m_IsInitialized = true;
 
-            // Reset data to loose references to the child objects.
-            m_Data = new GameFoundationData();
+                // Reset data to loose references to the child objects.
+                m_Data = new GameFoundationData();
 
-            completer.Resolve();
+                completer.Resolve();
+            }
+            catch (Exception e)
+            {
+                completer.Reject(e);
+            }
         }
 
         /// <inheritdoc cref="BaseMemoryDataLayer.GetData"/>

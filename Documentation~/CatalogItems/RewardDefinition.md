@@ -2,7 +2,7 @@
 
 ## Overview
 
-A __Reward Definition__ is a [catalog item] used to give players an item or currency based on conditions that you define. If a player satisfies them, they're eligible to receive an in-game reward.
+A __Reward Definition__ describes what rewards a player will receive from the [Reward Manager](../GameSystems/RewardManager.md) whenever a specific reward is to be granted.  Rewards can include Inventory Items and/or Currencies, as desired.  Each Reward Definition is a [catalog item] used to give players an item or currency based on conditions that you define. If a player satisfies them, they're eligible to receive an in-game reward.
 
 The conditions for a Reward Definition are defined in the __Reward__ window. To open the __Reward__ window, in your Unity project, go to __Window__ > __Game Foundation__ > __Reward__. Select a Reward Item from the __Reward__ window (for example, Daily Coins) to see all the possible fields to configure for a reward. 
 ![Reward Editor Overview](../images/reward-editor-window-overview.png)
@@ -20,6 +20,10 @@ To begin creating a Reward Definition, [follow the tutorial to create a simple d
 ## Reward Item Definitions
 
 A Reward Definition also keeps an ordered collection of Reward Item Definitions. Each Reward Item Definition describes a payout. If the validaton conditions of the Reward Definition indicate that the Reward Item at a certain index in the collection is valid, then the player may claim that payout.
+
+## 
+< [_table of contents_](../TableOfContents.md)
+
 
 [Follow the tutorial to create a simple daily reward or progressive daily reward]: ../Tutorials/17-CreatingRewards.md
 

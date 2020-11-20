@@ -74,6 +74,8 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         bool m_ShowDebugLogs = false;
 
+        static readonly GameFoundationDebug k_GFLogger = GameFoundationDebug.Get<RewardClaimManager>();
+
         /// <summary>
         ///     Adds listeners to the RewardManager's claim success, failure and state changed events, if the application is
         ///     playing.
@@ -202,66 +204,63 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         IEnumerator InitiateClaim(RewardItemDefinition rewardItem)
         {
-            var deferred = GameFoundationSdk.rewards.Claim(rewardItem.rewardDefinition, rewardItem.key);
-
-            if (m_ShowDebugLogs)
-            {
-                Debug.Log($"{nameof(RewardClaimButton)} - Now processing claim for: {rewardItem.key}");
-            }
-
-            int currentStep = 0;
-
-            // wait for the reward to be processed
-            while (!deferred.isDone)
-            {
-                // keep track of the current step and possibly show a progress UI
-                if (deferred.currentStep != currentStep)
-                {
-                    currentStep = deferred.currentStep;
-
-                    if (m_ShowDebugLogs)
-                    {
-                        Debug.Log($"{nameof(RewardClaimButton)} - Reward is now on step {currentStep} of {deferred.totalSteps}");
-                    }
-                }
-
-                yield return null;
-            }
-
-            // now that the claim has been processed, check for an error
-            if (!deferred.isFulfilled)
+            using (var deferred = GameFoundationSdk.rewards.Claim(rewardItem.rewardDefinition, rewardItem.key))
             {
                 if (m_ShowDebugLogs)
                 {
-                    Debug.LogError($"{nameof(RewardClaimButton)} - Reward Item Key: \"{rewardItem.key}\" - Error Message: {deferred.error}");
+                    k_GFLogger.Log($"Now processing claim for: {rewardItem.key}");
                 }
 
-                deferred.Release();
-                yield break;
-            }
+                int currentStep = 0;
 
-            // here we can assume success
-            if (m_ShowDebugLogs)
-            {
-                Debug.Log("The reward item was claimed successfully in both the platform and the data layer!");
-
-                foreach (var tradable in deferred.result.products)
+                // wait for the reward to be processed
+                while (!deferred.isDone)
                 {
-                    if (tradable is CurrencyExchange currencyExchange)
+                    // keep track of the current step and possibly show a progress UI
+                    if (deferred.currentStep != currentStep)
                     {
-                        Debug.Log($"Player was awarded {currencyExchange.amount} of currency '{{currencyExchange.currency.displayName}}'");
+                        currentStep = deferred.currentStep;
+
+                        if (m_ShowDebugLogs)
+                        {
+                            k_GFLogger.Log($"Reward is now on step {currentStep} of {deferred.totalSteps}");
+                        }
                     }
-                    else if (tradable is InventoryItem inventoryItem)
+
+                    yield return null;
+                }
+
+                // now that the claim has been processed, check for an error
+                if (!deferred.isFulfilled)
+                {
+                    if (m_ShowDebugLogs)
                     {
-                        Debug.Log($"Player was awarded 1 of Inventory Item '{inventoryItem.definition.displayName}'");
+                        k_GFLogger.LogError($"Reward Item Key: \"{rewardItem.key}\" - Error Message: {deferred.error}");
+                    }
+
+                    yield break;
+                }
+
+                // here we can assume success
+                if (m_ShowDebugLogs)
+                {
+                    k_GFLogger.Log("The reward item was claimed successfully in both the platform and the data layer!");
+
+                    foreach (var tradable in deferred.result.products)
+                    {
+                        if (tradable is CurrencyExchange currencyExchange)
+                        {
+                            k_GFLogger.Log($"Player was awarded {currencyExchange.amount} of currency '{{currencyExchange.currency.displayName}}'");
+                        }
+                        else if (tradable is InventoryItem inventoryItem)
+                        {
+                            k_GFLogger.Log($"Player was awarded 1 of Inventory Item '{inventoryItem.definition.displayName}'");
+                        }
                     }
                 }
+
+                m_CurrentRewardItem = null;
             }
-
-            // all done
-            deferred.Release();
-
-            m_CurrentRewardItem = null;
         }
 
         /// <summary>

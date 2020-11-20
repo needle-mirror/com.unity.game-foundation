@@ -198,7 +198,7 @@ namespace UnityEngine.Promise
         ///     Defines if the check throws an exception in case the token is not validated.
         /// </param>
         /// <returns>
-        ///     <c>true</c> if the token is validm, <c>false</c> otherwise.
+        ///     <c>true</c> if the token is valid, <c>false</c> otherwise.
         /// </returns>
         protected bool ValidateToken(ulong tokenValue, bool throwError = true)
         {

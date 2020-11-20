@@ -1,0 +1,421 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6d6d794703b5406883240f543e5b084, type: 3}
+  m_Name: TransactionsCatalog
+  m_EditorClassIdentifier: 
+  m_TagCatalog: {fileID: 114608161626123994}
+  m_Items:
+  - {fileID: 114111288034979372}
+  - {fileID: 114532053198895066}
+  - {fileID: 114674835862245226}
+  - {fileID: 114136775103787426}
+  - {fileID: 114074766923664790}
+  - {fileID: 114141986699463882}
+  - {fileID: 114267310922593840}
+  - {fileID: 114576005736459526}
+  - {fileID: 114799983886057584}
+  - {fileID: 114798237291745272}
+  - {fileID: 114292006653059874}
+  - {fileID: 114125457658351640}
+  - {fileID: 114339078838686224}
+  - {fileID: 114851398262591066}
+  - {fileID: 114642307150274470}
+--- !u!114 &114074766923664790
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcbd052539327467295d2009d33aa660, type: 3}
+  m_Name: Item_broccoli
+  m_EditorClassIdentifier: 
+  m_DisplayName: Broccoli
+  m_Key: broccoli
+  m_Tags: []
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_InitialAllocation: 0
+  m_IsStackableFlag: 0
+  m_InitialQuantityPerStack: 1
+  m_MutablePropertyKeys: []
+  m_MutablePropertyDefaultValues: []
+--- !u!114 &114111288034979372
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b81b157322addcd439104bd3c59b830b, type: 3}
+  m_Name: Store_main
+  m_EditorClassIdentifier: 
+  m_DisplayName: Main
+  m_Key: main
+  m_Tags: []
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_StoreItems: []
+--- !u!114 &114125457658351640
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_carrotIngredient
+  m_EditorClassIdentifier: 
+  m_DisplayName: Carrot Ingredient
+  m_Key: carrotIngredient
+  m_Tags: []
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114141986699463882}
+      m_Amount: 3
+  m_Costs:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114532053198895066}
+      m_Amount: 3
+--- !u!114 &114136775103787426
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcbd052539327467295d2009d33aa660, type: 3}
+  m_Name: Item_banana
+  m_EditorClassIdentifier: 
+  m_DisplayName: Banana
+  m_Key: banana
+  m_Tags: []
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_InitialAllocation: 0
+  m_IsStackableFlag: 0
+  m_InitialQuantityPerStack: 1
+  m_MutablePropertyKeys: []
+  m_MutablePropertyDefaultValues: []
+--- !u!114 &114141986699463882
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcbd052539327467295d2009d33aa660, type: 3}
+  m_Name: Item_carrot
+  m_EditorClassIdentifier: 
+  m_DisplayName: Carrot
+  m_Key: carrot
+  m_Tags: []
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_InitialAllocation: 0
+  m_IsStackableFlag: 0
+  m_InitialQuantityPerStack: 1
+  m_MutablePropertyKeys: []
+  m_MutablePropertyDefaultValues: []
+--- !u!114 &114267310922593840
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcbd052539327467295d2009d33aa660, type: 3}
+  m_Name: Item_orange
+  m_EditorClassIdentifier: 
+  m_DisplayName: Orange
+  m_Key: orange
+  m_Tags: []
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_InitialAllocation: 1
+  m_IsStackableFlag: 0
+  m_InitialQuantityPerStack: 1
+  m_MutablePropertyKeys: []
+  m_MutablePropertyDefaultValues: []
+--- !u!114 &114292006653059874
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_broccoliIngredient
+  m_EditorClassIdentifier: 
+  m_DisplayName: Broccoli Ingredient
+  m_Key: broccoliIngredient
+  m_Tags: []
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114074766923664790}
+      m_Amount: 1
+  m_Costs:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114532053198895066}
+      m_Amount: 5
+--- !u!114 &114339078838686224
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_fruitSmoothie
+  m_EditorClassIdentifier: 
+  m_DisplayName: Fruit Smoothie
+  m_Key: fruitSmoothie
+  m_Tags: []
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114576005736459526}
+      m_Amount: 1
+  m_Costs:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114674835862245226}
+      m_Amount: 1
+    - m_CatalogItem: {fileID: 114267310922593840}
+      m_Amount: 1
+    - m_CatalogItem: {fileID: 114136775103787426}
+      m_Amount: 1
+--- !u!114 &114532053198895066
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6736b79f77dc474c8bc820c305c2c2e, type: 3}
+  m_Name: Currency_coin
+  m_EditorClassIdentifier: 
+  m_DisplayName: Coin
+  m_Key: coin
+  m_Tags: []
+  m_StaticPropertyKeys:
+  - item_icon
+  - hud_icon
+  - purchase_button_icon
+  - promotion_icon
+  - reward_icon
+  m_StaticPropertyValues:
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/coin_icon
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/coin_hud_icon
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/coin_purchase_button_icon
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/coin_promotion_icon
+  - <type>k__BackingField: 4
+    m_ValueType:
+      longValue: 0
+    m_StringValue: Sprites/coin_icon_daily_reward
+  m_InitialBalance: 500
+  m_MaximumBalance: 0
+  m_Type: 0
+--- !u!114 &114576005736459526
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcbd052539327467295d2009d33aa660, type: 3}
+  m_Name: Item_smoothie
+  m_EditorClassIdentifier: 
+  m_DisplayName: Smoothie
+  m_Key: smoothie
+  m_Tags: []
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_InitialAllocation: 0
+  m_IsStackableFlag: 0
+  m_InitialQuantityPerStack: 1
+  m_MutablePropertyKeys: []
+  m_MutablePropertyDefaultValues: []
+--- !u!114 &114608161626123994
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9190a04da29ae24ab35e05133ebf087, type: 3}
+  m_Name: _Catalog_Tags
+  m_EditorClassIdentifier: 
+  m_Tags: []
+  m_CatalogAsset: {fileID: 11400000}
+--- !u!114 &114642307150274470
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_veggieSmoothie
+  m_EditorClassIdentifier: 
+  m_DisplayName: Veggie Ingredient
+  m_Key: veggieSmoothie
+  m_Tags: []
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114576005736459526}
+      m_Amount: 1
+  m_Costs:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114141986699463882}
+      m_Amount: 1
+    - m_CatalogItem: {fileID: 114074766923664790}
+      m_Amount: 1
+--- !u!114 &114674835862245226
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcbd052539327467295d2009d33aa660, type: 3}
+  m_Name: Item_apple
+  m_EditorClassIdentifier: 
+  m_DisplayName: Apple
+  m_Key: apple
+  m_Tags: []
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_InitialAllocation: 2
+  m_IsStackableFlag: 0
+  m_InitialQuantityPerStack: 1
+  m_MutablePropertyKeys: []
+  m_MutablePropertyDefaultValues: []
+--- !u!114 &114798237291745272
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_bananaIngredient
+  m_EditorClassIdentifier: 
+  m_DisplayName: Banana Ingredient
+  m_Key: bananaIngredient
+  m_Tags: []
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114136775103787426}
+      m_Amount: 3
+  m_Costs:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114532053198895066}
+      m_Amount: 7
+--- !u!114 &114799983886057584
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_appleIngredient
+  m_EditorClassIdentifier: 
+  m_DisplayName: Apple Ingredient
+  m_Key: appleIngredient
+  m_Tags: []
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114674835862245226}
+      m_Amount: 1
+  m_Costs:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114532053198895066}
+      m_Amount: 5
+--- !u!114 &114851398262591066
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188049432bcf74f78b314dc2b03ee516, type: 3}
+  m_Name: VirtualTransaction_orangeIngredient
+  m_EditorClassIdentifier: 
+  m_DisplayName: Orange Ingredient
+  m_Key: orangeIngredient
+  m_Tags: []
+  m_StaticPropertyKeys: []
+  m_StaticPropertyValues: []
+  m_Payout:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114267310922593840}
+      m_Amount: 1
+  m_Costs:
+    m_Exchanges:
+    - m_CatalogItem: {fileID: 114532053198895066}
+      m_Amount: 5

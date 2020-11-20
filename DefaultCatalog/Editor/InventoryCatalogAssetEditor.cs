@@ -112,8 +112,8 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
         protected override void HandleCreateNewItemClassSpecificProcessing(
             InventoryItemDefinitionAsset catalogItemAsset)
         {
-            catalogItemAsset.isStackableFlag = m_NewItemIsStackable;
-            catalogItemAsset.initialQuantityPerStack = m_NewItemQuantityPerInitialStack;
+            catalogItemAsset.Editor_SetIsStackableFlag(m_NewItemIsStackable);
+            catalogItemAsset.Editor_SetInitialQuantityPerStack(m_NewItemQuantityPerInitialStack);
             m_NewItemQuantityPerInitialStack = 1;
         }
 
@@ -134,7 +134,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
 
                 using (var checkScope = new EditorGUI.ChangeCheckScope())
                 {
-                    var displayName = inventoryItemDefinition.displayName;
+                    string displayName = inventoryItemDefinition.displayName;
                     m_ReadableNameKeyEditor.DrawReadableNameKeyFields(ref m_CurrentItemKey, ref displayName);
 
                     if (checkScope.changed)

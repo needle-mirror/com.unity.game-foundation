@@ -5,7 +5,6 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 #if UNITY_PURCHASING && UNITY_PURCHASING_FOR_GAME_FOUNDATION
 using UnityEngine.Purchasing;
-
 #endif
 
 namespace UnityEngine.GameFoundation.Components
@@ -167,6 +166,11 @@ namespace UnityEngine.GameFoundation.Components
         ///     Specifies whether the debug logs is visible.
         /// </summary>
         bool m_ShowDebugLogs = false;
+        
+        /// <summary>
+        ///     Instance of the GameFoundationDebug class to use for logging.
+        /// </summary>
+        static readonly GameFoundationDebug k_GFLogger = GameFoundationDebug.Get<StoreView>();
 
         /// <summary>
         ///     Adds listeners, if the application is playing.
@@ -181,7 +185,7 @@ namespace UnityEngine.GameFoundation.Components
                 RegisterEvents();
             }
 
-            if (!ReferenceEquals(m_Store, null))
+            if (!(m_Store is null))
             {
                 UpdateContent();
             }
@@ -255,7 +259,7 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         void Start()
         {
-            ThrowIfNotInitialized();
+            ThrowIfNotInitialized(nameof(Start));
 
             m_Store = GetStore(m_StoreKey);
             m_Tag = GetTag(m_TagKey);
@@ -310,7 +314,7 @@ namespace UnityEngine.GameFoundation.Components
         /// </remarks>
         public void SetStore(Store store, Tag tag = null)
         {
-            ThrowIfNotInitialized();
+            ThrowIfNotInitialized(nameof(SetStore));
 
             m_Store = store;
             m_StoreKey = store?.key;
@@ -321,7 +325,7 @@ namespace UnityEngine.GameFoundation.Components
             {
                 if (m_Store == null)
                 {
-                    Debug.LogError($"{nameof(StoreView)} Requested store \"{storeKey}\" doesn't exist in Store Catalog.");
+                    k_GFLogger.LogError($"Requested store \"{storeKey}\" doesn't exist in Store Catalog.");
                     return;
                 }
 
@@ -346,7 +350,7 @@ namespace UnityEngine.GameFoundation.Components
             var storeDefinition = GameFoundationSdk.catalog?.Find<Store>(definitionKey);
             if (storeDefinition != null || !m_ShowDebugLogs) return storeDefinition;
 
-            Debug.LogWarning($"{nameof(StoreView)} - Store \"{definitionKey}\" doesn't exist in Store catalog.");
+            k_GFLogger.LogWarning($"Store \"{definitionKey}\" doesn't exist in Store catalog.");
             return null;
         }
 
@@ -394,7 +398,7 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         public void SetTag(Tag tag)
         {
-            ThrowIfNotInitialized();
+            ThrowIfNotInitialized(nameof(SetTag));
 
             m_Tag = tag;
             m_TagKey = tag?.key;
@@ -527,13 +531,13 @@ namespace UnityEngine.GameFoundation.Components
 
             RemoveAllItems();
 
-            if (ReferenceEquals(m_Store, null) || ReferenceEquals(m_TransactionItemPrefab, null))
+            if (m_Store is null || m_TransactionItemPrefab is null)
             {
                 return;
             }
 
             var transactions = new List<BaseTransaction>();
-            if (ReferenceEquals(m_Tag, null))
+            if (m_Tag is null)
             {
                 m_Store.GetStoreItems(transactions);
             }
@@ -577,12 +581,12 @@ namespace UnityEngine.GameFoundation.Components
         {
             yield return new WaitForEndOfFrame();
 
-            if (!ReferenceEquals(m_ScrollRect, null))
+            if (!(m_ScrollRect is null))
             {
                 var scrollTransform = m_ScrollRect.GetComponent<RectTransform>();
                 var containerTransform = itemParentTransform.GetComponent<RectTransform>();
 
-                if (!ReferenceEquals(scrollTransform, null) && !ReferenceEquals(containerTransform, null))
+                if (!(scrollTransform is null) && !(containerTransform is null))
                 {
                     var scrollRect = scrollTransform.rect;
                     var containerRect = containerTransform.rect;
@@ -626,7 +630,7 @@ namespace UnityEngine.GameFoundation.Components
 #if UNITY_PURCHASING && UNITY_PURCHASING_FOR_GAME_FOUNDATION
             if (iapTransaction.product == null || iapTransaction.product.definition == null) 
             {
-                Debug.LogWarning($"{nameof(StoreView)} - Store \"{m_StoreKey}\" has an IAP Transaction with a Product Id that can't be found by the Unity IAP system. Please verify that the IAP Transaction is set up correctly in both Game Foundation and the IAP Catalog. Product Id: {iapTransaction.productId}");
+                k_GFLogger.LogWarning($"Store \"{m_StoreKey}\" has an IAP Transaction with a Product Id that can't be found by the Unity IAP system. Please verify that the IAP Transaction is set up correctly in both Game Foundation and the IAP Catalog. Product Id: {iapTransaction.productId}");
                 return false;
             }
 
@@ -641,12 +645,15 @@ namespace UnityEngine.GameFoundation.Components
         /// <summary>
         ///     Throws an Invalid Operation Exception if GameFoundation has not been initialized before this view is used.
         /// </summary>
-        /// <exception cref="InvalidOperationException"></exception>
-        void ThrowIfNotInitialized()
+        /// <param name="callingMethod">
+        ///     Calling method name.
+        /// </param>
+        void ThrowIfNotInitialized(string callingMethod)
         {
             if (!GameFoundationSdk.IsInitialized)
             {
-                throw new InvalidOperationException($"Error: GameFoundation.Initialize() must be called before the {nameof(StoreView)} is used.");
+                var message = $"GameFoundationSdk.Initialize() must be called before {callingMethod} is used.";
+                k_GFLogger.LogException(message, new InvalidOperationException(message));
             }
         }
 

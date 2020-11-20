@@ -126,15 +126,10 @@ namespace UnityEditor.GameFoundation
             var isPickerPressed = currentEvent.type == EventType.MouseDown
                 && currentEvent.button == 0
                 && iconRect.Contains(currentEvent.mousePosition);
-            var isEnterKeyPressed = currentEvent.type == EventType.KeyDown
-                && currentEvent.isKey
-                && (currentEvent.keyCode == KeyCode.KeypadEnter
-                    || currentEvent.keyCode == KeyCode.Return);
 
             if (isPickerPressed
                 || isDragging
-                || isDropping
-                || isEnterKeyPressed)
+                || isDropping)
             {
                 // To override ObjectField's default behavior
                 currentEvent.Use();
@@ -158,8 +153,7 @@ namespace UnityEditor.GameFoundation
                 EditorGUI.ObjectField(position, null, typeof(Object), false);
             }
 
-            if (isPickerPressed
-                || isEnterKeyPressed)
+            if (isPickerPressed)
             {
                 PopupWindow.Show(position, new ResourcesAssetPopup(position, this));
             }

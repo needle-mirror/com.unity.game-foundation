@@ -55,6 +55,8 @@ namespace UnityEditor.GameFoundation.Debugging
 
         IWalletManager m_SubscribedWallet;
 
+        IRewardManager m_SubscribedRewards;
+
         /// <summary>
         ///     Instance of the GameFoundationDebug class to use for logging.
         /// </summary>
@@ -280,6 +282,10 @@ namespace UnityEditor.GameFoundation.Debugging
                     }
                     catch (Exception e)
                     {
+                        if (GFTools.ShouldRethrowException(e))
+                        {
+                            throw;
+                        }
                         string errorMessage = "The debugger encountered a problem while trying to display a property.";
                         k_GFLogger.LogException(errorMessage, e);
                     }
@@ -312,6 +318,7 @@ namespace UnityEditor.GameFoundation.Debugging
                     }
 
                     break;
+
                 case InventoryItemView itemView when itemView.inventoryItem is StackableInventoryItem stackableItem:
                     try
                     {
@@ -328,6 +335,32 @@ namespace UnityEditor.GameFoundation.Debugging
                         k_GFLogger.LogException(errorMessage, e);
                     }
 
+                    break;
+                
+                case RewardView rewardView:
+                    string rewardState;
+                    if (rewardView.reward.IsInCooldown())
+                    {
+                        rewardState = "Cooldown";
+                    }
+                    else if (rewardView.reward.claimTimestamps?.Count <= 0)
+                    {
+                        rewardState = "Ready";
+                    }
+                    else if (rewardView.reward.rewardDefinition.expirationSeconds > 0)
+                    {
+                        rewardState = "Expiring";
+                    }
+                    else
+                    {
+                        rewardState = "Claimable";
+                    }
+
+                    EditorGUI.LabelField(cellRect, rewardState);
+                    break;
+
+                case RewardItemView rewardItemView:
+                    EditorGUI.LabelField(cellRect, rewardItemView.rewardItem.value.ToString());
                     break;
             }
         }
@@ -480,7 +513,7 @@ namespace UnityEditor.GameFoundation.Debugging
                 foreach (var currency in currencies)
                 {
                     var currencyView = new CurrencyView(id++, 1, $"{currency.displayName}", currency);
-
+                    m_AllTreeViewItems.Add(currencyView);
                     currenciesView.AddChild(currencyView);
                 }
             }
@@ -534,6 +567,43 @@ namespace UnityEditor.GameFoundation.Debugging
                     m_AllTreeViewItems.Add(propertyView);
                 }
             }
+            
+            var rewardDefinitionsView = new TreeViewItem(id++, 0, "Rewards");
+            using (GFTools.Pools.rewardList.Get(out var rewards))
+            {
+                GameFoundationSdk.rewards.GetRewards(rewards);
+                if (rewards.Count > 0)
+                {
+                    rootView.AddChild(rewardDefinitionsView);
+                }
+
+                foreach (var reward in rewards)
+                {
+                    var rewardView = new RewardView(id++, 1, $"{reward.rewardDefinition.displayName}", reward);
+
+                    using (GFTools.Pools.rewardItemsList.Get(out var rewardItemDefinitions))
+                    {
+                        using (GFTools.Pools.rewardItemStateDictionary.Get(out var rewardItems))
+                        {
+                            reward.rewardDefinition.GetRewardItems(rewardItemDefinitions);
+                            rewardItems = reward.rewardItemStates;
+                            int count = 0;
+
+                            foreach (var rewardItemDefinition in rewardItemDefinitions)
+                            {
+                                count++;
+                                var rewardItemView = new RewardItemView(id++, rewardDefinitionsView.depth + 1, 
+                                    $"Reward Item {count}", reward, (rewardItemDefinition.key, rewardItems[rewardItemDefinition.key]));
+                                m_AllTreeViewItems.Add(rewardItemView);
+                                rewardView.AddChild(rewardItemView);
+                            }
+                        }
+                    }
+
+                    m_AllTreeViewItems.Add(rewardView);
+                    rewardDefinitionsView.AddChild(rewardView);
+                }
+            }
 
             return rootView;
         }
@@ -566,6 +636,7 @@ namespace UnityEditor.GameFoundation.Debugging
                 GameFoundationSdk.inventory.itemAdded += OnItemAddedOrRemoved;
                 GameFoundationSdk.inventory.itemDeleted += OnItemAddedOrRemoved;
                 GameFoundationSdk.inventory.itemQuantityChanged += OnQuantifiableChanged;
+                GameFoundationSdk.inventory.itemMutablePropertyChanged += OnPropertyChanged;
                 m_SubscribedInventory = GameFoundationSdk.inventory;
             }
 
@@ -578,6 +649,18 @@ namespace UnityEditor.GameFoundation.Debugging
                 GameFoundationSdk.wallet.balanceChanged += OnQuantifiableChanged;
                 m_SubscribedWallet = GameFoundationSdk.wallet;
             }
+
+            if (GameFoundationSdk.rewards is null)
+            {
+                m_SubscribedRewards = null;
+            }
+            else if (!ReferenceEquals(GameFoundationSdk.rewards, m_SubscribedRewards))
+            {
+                GameFoundationSdk.rewards.rewardItemClaimFailed += OnRewardClaimFailed;
+                GameFoundationSdk.rewards.rewardItemClaimSucceeded += OnRewardClaimSucceeded;
+                Reward.rewardStateChanged += OnRewardStateChanged;
+                m_SubscribedRewards = GameFoundationSdk.rewards;
+            }
         }
 
         void UnsubscribeIfNecessary()
@@ -587,12 +670,21 @@ namespace UnityEditor.GameFoundation.Debugging
                 m_SubscribedInventory.itemAdded -= OnItemAddedOrRemoved;
                 m_SubscribedInventory.itemDeleted -= OnItemAddedOrRemoved;
                 m_SubscribedInventory.itemQuantityChanged -= OnQuantifiableChanged;
+                m_SubscribedInventory.itemMutablePropertyChanged -= OnPropertyChanged;
                 m_SubscribedInventory = null;
             }
             if (!(m_SubscribedWallet is null))
             {
                 m_SubscribedWallet.balanceChanged -= OnQuantifiableChanged;
                 m_SubscribedWallet = null;
+            }
+
+            if (!(m_SubscribedRewards is null))
+            {
+                m_SubscribedRewards.rewardItemClaimFailed -= OnRewardClaimFailed;
+                m_SubscribedRewards.rewardItemClaimSucceeded -= OnRewardClaimSucceeded;
+                Reward.rewardStateChanged -= OnRewardStateChanged;
+                m_SubscribedRewards = null;
             }
         }
 
@@ -612,6 +704,30 @@ namespace UnityEditor.GameFoundation.Debugging
         ///     Reload this tree.
         /// </summary>
         void OnQuantifiableChanged(IQuantifiable _, long __)
+        {
+            //Calls BuildRoot and RowGUI in order.
+            Reload();
+        }
+
+        void OnPropertyChanged(PropertyChangedEventArgs _)
+        {
+            //Calls BuildRoot and RowGUI in order.
+            Reload();
+        }
+
+        void OnRewardClaimSucceeded(Reward _, string __, Payout ___)
+        {
+            //Calls BuildRoot and RowGUI in order.
+            Reload();
+        }
+
+        void OnRewardClaimFailed(string _, string __, Exception ___)
+        {
+            //Calls BuildRoot and RowGUI in order.
+            Reload();
+        }
+
+        void OnRewardStateChanged(Reward _)
         {
             //Calls BuildRoot and RowGUI in order.
             Reload();
@@ -638,6 +754,21 @@ namespace UnityEditor.GameFoundation.Debugging
                 case PropertyView propertyView:
                 {
                     return propertyView.property.key;
+                }
+
+                case CurrencyView currencyView:
+                {
+                    return currencyView.displayName;
+                }
+
+                case RewardView rewardView:
+                {
+                    return rewardView.displayName;
+                }
+
+                case RewardItemView rewardItemView:
+                {
+                    return $"{rewardItemView.displayName} {rewardItemView.reward.rewardDefinition.displayName}";
                 }
 
                 default:

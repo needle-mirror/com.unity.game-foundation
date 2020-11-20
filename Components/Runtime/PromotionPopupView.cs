@@ -5,7 +5,6 @@ using UnityEngine.UI;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.GameFoundation.DefaultCatalog;
-
 #endif
 
 namespace UnityEngine.GameFoundation.Components
@@ -265,6 +264,11 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         [SerializeField]
         internal bool showButtonEditorFields = true;
+        
+        /// <summary>
+        ///     Instance of the GameFoundationDebug class to use for logging.
+        /// </summary>
+        static readonly GameFoundationDebug k_GFLogger = GameFoundationDebug.Get<PromotionPopupView>();
 
         /// <summary>
         ///     Adds listeners, if the application is playing.
@@ -279,7 +283,7 @@ namespace UnityEngine.GameFoundation.Components
                 RegisterEvents();
             }
 
-            if (!ReferenceEquals(m_Transaction, null))
+            if (!(m_Transaction is null))
             {
                 UpdateContent();
             }
@@ -328,7 +332,7 @@ namespace UnityEngine.GameFoundation.Components
                 return;
             }
 
-            ThrowIfNotInitialized();
+            ThrowIfNotInitialized(nameof(Start));
 
             m_Transaction = GetTransaction(m_TransactionKey);
 
@@ -357,7 +361,7 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         public void SetTransaction(BaseTransaction transaction)
         {
-            ThrowIfNotInitialized();
+            ThrowIfNotInitialized(nameof(SetTransaction));
 
             m_Transaction = transaction;
             m_TransactionKey = transaction?.key;
@@ -382,7 +386,7 @@ namespace UnityEngine.GameFoundation.Components
             var transactionItem = GameFoundationSdk.catalog?.Find<BaseTransaction>(definitionKey);
             if (transactionItem != null || !m_ShowDebugLogs) return transactionItem;
 
-            Debug.LogWarning($"{nameof(TransactionItemView)} - TransactionItem \"{definitionKey}\" doesn't exist in Transaction catalog.");
+            k_GFLogger.LogWarning($"TransactionItem \"{definitionKey}\" doesn't exist in Transaction catalog.");
             return null;
         }
 
@@ -392,6 +396,8 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         public void Open()
         {
+            ThrowIfNotInitialized(nameof(Open));
+            
             Open(m_Transaction ?? GetTransaction(m_TransactionKey), m_AutoGeneratePromoImage);
         }
 
@@ -420,7 +426,7 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         public void Open(BaseTransaction transaction, bool autoGeneratePromoImage)
         {
-            ThrowIfNotInitialized();
+            ThrowIfNotInitialized(nameof(Open));
 
             if (gameObject.activeInHierarchy)
             {
@@ -429,7 +435,7 @@ namespace UnityEngine.GameFoundation.Components
             
             if (transaction == null)
             {
-                Debug.LogWarning($"{nameof(PromotionPopupView)} - Transaction is null.");
+                k_GFLogger.LogWarning("Transaction is null.");
             }
 
             m_Transaction = transaction;
@@ -493,7 +499,7 @@ namespace UnityEngine.GameFoundation.Components
         {
             if (!m_AutoGeneratePromoImage && m_ShowDebugLogs)
             {
-                Debug.Log($"{nameof(PromotionPopupView)} - Auto-Generated Image is enabled");
+                k_GFLogger.Log("Auto-Generated Image is enabled");
             }
 
             m_AutoGeneratePromoImage = true;
@@ -515,7 +521,7 @@ namespace UnityEngine.GameFoundation.Components
         {
             if (m_AutoGeneratePromoImage && m_ShowDebugLogs)
             {
-                Debug.Log($"{nameof(PromotionPopupView)} - Auto-Generated Image is disabled");
+                k_GFLogger.Log("Auto-Generated Image is disabled");
             }
 
             m_AutoGeneratePromoImage = false;
@@ -739,7 +745,7 @@ namespace UnityEngine.GameFoundation.Components
             string descriptionText = null;
             string badgeText = null;
 
-            if (!ReferenceEquals(m_Transaction, null))
+            if (!(m_Transaction is null))
             {
                 displayName = m_Transaction.displayName;
 
@@ -749,8 +755,7 @@ namespace UnityEngine.GameFoundation.Components
                 }
                 else if (m_ShowDebugLogs)
                 {
-                    Debug.LogWarning(
-                        $"{nameof(PromotionPopupView)} - \"{m_Transaction.displayName}\" transaction doesn't have Static Property called \"{m_descriptionPropertyKey}\"");
+                    k_GFLogger.LogWarning($"\"{m_Transaction.displayName}\" transaction doesn't have Static Property called \"{m_descriptionPropertyKey}\"");
                 }
 
                 if (m_Transaction.TryGetStaticProperty(m_BadgeTextPropertyKey, out var badgeProperty))
@@ -759,8 +764,7 @@ namespace UnityEngine.GameFoundation.Components
                 }
                 else if (m_ShowDebugLogs)
                 {
-                    Debug.LogWarning(
-                        $"{nameof(PromotionPopupView)} - \"{m_Transaction.displayName}\" transaction doesn't have Static Property called \"{m_BadgeTextPropertyKey}\"");
+                    k_GFLogger.LogWarning($"\"{m_Transaction.displayName}\" transaction doesn't have Static Property called \"{m_BadgeTextPropertyKey}\"");
                 }
             }
 
@@ -771,7 +775,7 @@ namespace UnityEngine.GameFoundation.Components
             else
             {
                 Sprite promotionImage = null;
-                if (!ReferenceEquals(m_Transaction, null))
+                if (!(m_Transaction is null))
                 {
                     if (m_Transaction.TryGetStaticProperty(m_PromoImageSpritePropertyKey, out var promotionProperty))
                     {
@@ -780,8 +784,7 @@ namespace UnityEngine.GameFoundation.Components
 
                     if (promotionImage == null)
                     {
-                        Debug.LogWarning(
-                            $"{nameof(PromotionPopupView)} - \"{m_Transaction.displayName}\" doesn't have Promotion Image sprite called \"{m_PromoImageSpritePropertyKey}\"");
+                        k_GFLogger.LogWarning($"\"{m_Transaction.displayName}\" doesn't have Promotion Image sprite called \"{m_PromoImageSpritePropertyKey}\"");
                     }
                 }
 
@@ -798,7 +801,7 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         List<Tuple<Sprite, string>> GetPayoutIcons(BaseTransaction transaction)
         {
-            if (ReferenceEquals(transaction, null))
+            if (transaction is null)
             {
                 return null;
             }
@@ -834,7 +837,7 @@ namespace UnityEngine.GameFoundation.Components
                 }
                 else
                 {
-                    Debug.LogWarning($"{nameof(PromotionPopupView)} - The \"{transaction.displayName}\" transaction's \"{exchange.tradableDefinition.displayName}\" payout does not have an asset with the name \"{m_PayoutItemIconSpritePropertyKey}\" so it will not be showed in the promotion");
+                    k_GFLogger.LogWarning($"The \"{transaction.displayName}\" transaction's \"{exchange.tradableDefinition.displayName}\" payout does not have an asset with the name \"{m_PayoutItemIconSpritePropertyKey}\" so it will not be showed in the promotion");
                 }
             }
 
@@ -859,7 +862,7 @@ namespace UnityEngine.GameFoundation.Components
             string badgeText = null;
 
             var transaction = CatalogSettings.catalogAsset.FindItem(m_TransactionKey) as BaseTransactionAsset;
-            if (!ReferenceEquals(transaction, null))
+            if (!(transaction is null))
             {
                 displayName = transaction.displayName;
                 var properties = transaction.GetStaticProperties();
@@ -873,8 +876,7 @@ namespace UnityEngine.GameFoundation.Components
                     }
                     else if (m_ShowDebugLogs)
                     {
-                        Debug.LogWarning(
-                            $"{nameof(PromotionPopupView)} - \"{transaction.displayName}\" transaction doesn't have Static Property called \"{m_descriptionPropertyKey}\"");
+                        k_GFLogger.LogWarning($"\"{transaction.displayName}\" transaction doesn't have Static Property called \"{m_descriptionPropertyKey}\"");
                     }
                 }
 
@@ -887,8 +889,7 @@ namespace UnityEngine.GameFoundation.Components
                     }
                     else if (m_ShowDebugLogs)
                     {
-                        Debug.LogWarning(
-                            $"{nameof(PromotionPopupView)} - \"{transaction.displayName}\" transaction doesn't have Static Property called \"{m_BadgeTextPropertyKey}\"");
+                        k_GFLogger.LogWarning($"\"{transaction.displayName}\" transaction doesn't have Static Property called \"{m_BadgeTextPropertyKey}\"");
                     }
                 }
             }
@@ -900,7 +901,7 @@ namespace UnityEngine.GameFoundation.Components
             else
             {
                 Sprite promotionImage = null;
-                if (!ReferenceEquals(transaction, null))
+                if (!(transaction is null))
                 {
                     if (transaction.TryGetStaticProperty(m_PromoImageSpritePropertyKey, out var imageProperty))
                     {
@@ -909,8 +910,7 @@ namespace UnityEngine.GameFoundation.Components
 
                     if (promotionImage == null)
                     {
-                        Debug.LogWarning(
-                            $"{nameof(PromotionPopupView)} - \"{transaction.displayName}\" doesn't have sprite called \"{m_PromoImageSpritePropertyKey}\"");
+                        k_GFLogger.LogWarning($"\"{transaction.displayName}\" doesn't have sprite called \"{m_PromoImageSpritePropertyKey}\"");
                     }
                 }
 
@@ -927,7 +927,7 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         List<Tuple<Sprite, string>> GetPayoutIcons(BaseTransactionAsset transactionAsset)
         {
-            if (ReferenceEquals(transactionAsset, null))
+            if (transactionAsset is null)
             {
                 return null;
             }
@@ -963,7 +963,7 @@ namespace UnityEngine.GameFoundation.Components
                 }
                 else
                 {
-                    Debug.LogWarning($"{nameof(PromotionPopupView)} - The \"{transactionAsset.displayName}\" transaction's \"{exchangeObject.catalogItem.displayName}\" payout does not have an asset with the name \"{m_PayoutItemIconSpritePropertyKey}\" so it will not be showed in the promotion");
+                    k_GFLogger.LogWarning($"The \"{transactionAsset.displayName}\" transaction's \"{exchangeObject.catalogItem.displayName}\" payout does not have an asset with the name \"{m_PayoutItemIconSpritePropertyKey}\" so it will not be showed in the promotion");
                 }
             }
 
@@ -998,7 +998,7 @@ namespace UnityEngine.GameFoundation.Components
 
             m_AutoGeneratedImageContainer?.gameObject.SetActive(false);
 
-            if (!ReferenceEquals(m_PromoImageField, null))
+            if (!(m_PromoImageField is null))
             {
                 if (promotionImage != null)
                 {
@@ -1006,7 +1006,7 @@ namespace UnityEngine.GameFoundation.Components
                 }
                 else
                 {
-                    Debug.LogWarning($"{nameof(PromotionPopupView)} - Promotion Image Field is not defined.");
+                    k_GFLogger.LogWarning("Promotion Image Field is not defined.");
                 }
 
                 if (m_PromoImageField.sprite != promotionImage)
@@ -1059,12 +1059,12 @@ namespace UnityEngine.GameFoundation.Components
             }
             else
             {
-                Debug.LogWarning($"{nameof(PromotionPopupView)} - Auto-Generated Image Container should be defined to generate Promo Image");
+                k_GFLogger.LogWarning("Auto-Generated Image Container should be defined to generate Promo Image");
             }
 
             if (payoutItemPrefab == null)
             {
-                Debug.LogWarning($"{nameof(PromotionPopupView)} - PayoutItem Prefab should be defined to generate Promo Image, ");
+                k_GFLogger.LogWarning("PayoutItem Prefab should be defined to generate Promo Image, ");
             }
             else if (m_AutoGeneratedImageContainer != null && payouts != null)
             {
@@ -1184,19 +1184,22 @@ namespace UnityEngine.GameFoundation.Components
             }
             else
             {
-                Debug.LogWarning($"{nameof(PromotionPopupView)} - {nameof(PurchaseButton)} is not defined.");
+                k_GFLogger.LogWarning($"{nameof(PurchaseButton)} is not defined.");
             }
         }
 
         /// <summary>
         ///     Throws an Invalid Operation Exception if GameFoundation has not been initialized before this view is used.
         /// </summary>
-        /// <exception cref="InvalidOperationException"></exception>
-        void ThrowIfNotInitialized()
+        /// <param name="callingMethod">
+        ///     Calling method name.
+        /// </param>
+        void ThrowIfNotInitialized(string callingMethod)
         {
             if (!GameFoundationSdk.IsInitialized)
             {
-                throw new InvalidOperationException($"Error: GameFoundation.Initialize() must be called before the {nameof(PromotionPopupView)} is used.");
+                var message = $"GameFoundationSdk.Initialize() must be called before {callingMethod} is used.";
+                k_GFLogger.LogException(message, new InvalidOperationException(message));
             }
         }
 

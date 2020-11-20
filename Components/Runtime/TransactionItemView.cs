@@ -4,7 +4,6 @@ using UnityEngine.UI;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine.GameFoundation.DefaultCatalog;
-
 #endif
 
 namespace UnityEngine.GameFoundation.Components
@@ -137,6 +136,11 @@ namespace UnityEngine.GameFoundation.Components
         ///     Specifies whether the debug logs is visible.
         /// </summary>
         bool m_ShowDebugLogs = false;
+        
+        /// <summary>
+        ///     Instance of the GameFoundationDebug class to use for logging.
+        /// </summary>
+        static readonly GameFoundationDebug k_GFLogger = GameFoundationDebug.Get<TransactionItemView>();
 
         /// <summary>
         ///     Adds listeners, if the application is playing.
@@ -151,7 +155,7 @@ namespace UnityEngine.GameFoundation.Components
                 RegisterEvents();
             }
 
-            if (!ReferenceEquals(m_Transaction, null) && !m_IsDrivenByOtherComponent)
+            if (!(m_Transaction is null) && !m_IsDrivenByOtherComponent)
             {
                 UpdateContent();
             }
@@ -243,7 +247,7 @@ namespace UnityEngine.GameFoundation.Components
                 return;
             }
 
-            ThrowIfNotInitialized();
+            ThrowIfNotInitialized(nameof(Start));
 
             if (!m_IsDrivenByOtherComponent)
             {
@@ -274,7 +278,7 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         public void SetTransaction(BaseTransaction transaction)
         {
-            ThrowIfNotInitialized();
+            ThrowIfNotInitialized(nameof(SetTransaction));
 
             m_Transaction = transaction;
             m_TransactionKey = transaction?.key;
@@ -299,7 +303,7 @@ namespace UnityEngine.GameFoundation.Components
             var transactionItem = GameFoundationSdk.catalog?.Find<BaseTransaction>(definitionKey);
             if (transactionItem != null || !m_ShowDebugLogs) return transactionItem;
 
-            Debug.LogWarning($"{nameof(TransactionItemView)} - TransactionItem \"{definitionKey}\" doesn't exist in Transaction catalog.");
+            k_GFLogger.LogWarning($"TransactionItem \"{definitionKey}\" doesn't exist in Transaction catalog.");
             return null;
         }
 
@@ -465,7 +469,7 @@ namespace UnityEngine.GameFoundation.Components
             }
             else
             {
-                Debug.LogWarning($"{nameof(TransactionItemView)} - Purchase Button is not defined.");
+                k_GFLogger.LogWarning("Purchase Button is not defined.");
             }
         }
 
@@ -502,7 +506,7 @@ namespace UnityEngine.GameFoundation.Components
             }
             else
             {
-                Debug.LogWarning($"{nameof(TransactionItemView)} - Purchase Button is not defined.");
+                k_GFLogger.LogWarning("Purchase Button is not defined.");
             }
         }
 #endif
@@ -511,7 +515,7 @@ namespace UnityEngine.GameFoundation.Components
         {
             if (m_ItemIconImageField == null)
             {
-                Debug.LogWarning($"{nameof(TransactionItemView)} - Item Icon Image Field is not defined.");
+                k_GFLogger.LogWarning("Item Icon Image Field is not defined.");
             }
             else if (m_ItemIconImageField.sprite != itemSprite)
             {
@@ -524,7 +528,7 @@ namespace UnityEngine.GameFoundation.Components
 
             if (m_ItemNameTextField == null)
             {
-                Debug.LogWarning($"{nameof(TransactionItemView)} - Item Name Text Field is not defined.");
+                k_GFLogger.LogWarning("Item Name Text Field is not defined.");
             }
             else if (m_ItemNameTextField.text != itemDisplayName)
             {
@@ -536,15 +540,17 @@ namespace UnityEngine.GameFoundation.Components
         }
 
         /// <summary>
-        ///     Throws an Invalid Operation Exception if GameFoundation has not been initialized before the promotion popup view is
-        ///     used.
+        ///     Throws an Invalid Operation Exception if GameFoundation has not been initialized before this view is used.
         /// </summary>
-        /// <exception cref="InvalidOperationException"></exception>
-        void ThrowIfNotInitialized()
+        /// <param name="callingMethod">
+        ///     Calling method name.
+        /// </param>
+        void ThrowIfNotInitialized(string callingMethod)
         {
             if (!GameFoundationSdk.IsInitialized)
             {
-                throw new InvalidOperationException($"Error: GameFoundation.Initialize() must be called before the {nameof(TransactionItemView)} is used.");
+                var message = $"GameFoundationSdk.Initialize() must be called before {callingMethod} is used.";
+                k_GFLogger.LogException(message, new InvalidOperationException(message));
             }
         }
 

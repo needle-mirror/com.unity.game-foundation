@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 using UnityEngine.GameFoundation.Data;
 using UnityEngine.GameFoundation.DataAccessLayers;
+using UnityEngine.GameFoundation.Exceptions;
 using UnityEngine.Internal;
 using UnityEngine.Promise;
 #if UNITY_PURCHASING && UNITY_PURCHASING_FOR_GAME_FOUNDATION
@@ -47,7 +48,7 @@ namespace UnityEngine.GameFoundation
 
     /// <inheritdoc cref="ITransactionManager"/>
     [ExcludeFromDocs]
-    partial class TransactionManagerImpl
+    partial class TransactionManagerImpl : ManagerImplementation
     {
         /// <summary>
         ///     Simple wrapper for list of IAP Product Id strings.
@@ -117,18 +118,6 @@ namespace UnityEngine.GameFoundation
         /// </summary>
         static ITransactionDataLayer dataLayer => GameFoundationSdk.dataLayer;
 
-        VirtualTransaction m_CurrentVirtualTransaction;
-
-        /// <summary>
-        ///     List of all successfully-purchased IAP product ids.
-        /// </summary>
-        internal List<string> m_PurchasedIapProducts;
-
-        /// <summary>
-        ///     The In-App purchase process data.
-        /// </summary>
-        (IAPTransaction transaction, bool isSuccessful, string failureMessage) m_CurrentIap;
-
         /// <inheritdoc cref="ITransactionManager.transactionInitiated"/>
         public event Action<BaseTransaction> transactionInitiated;
 
@@ -141,16 +130,28 @@ namespace UnityEngine.GameFoundation
         /// <inheritdoc cref="ITransactionManager.transactionFailed"/>
         public event Action<BaseTransaction, Exception> transactionFailed;
 
+#pragma warning disable 0067
         /// <inheritdoc cref="ITransactionManager.purchasingAdapterInitializeSucceeded"/>
         public event Action purchasingAdapterInitializeSucceeded;
 
         /// <inheritdoc cref="ITransactionManager.purchasingAdapterInitializeFailed"/>
         public event Action<Exception> purchasingAdapterInitializeFailed;
 
-#pragma warning disable 0067
         /// <inheritdoc cref="ITransactionManager.purchaseSucceededInIAPSDK"/>
         public event Action<PurchaseEventArgs> purchaseSucceededInIAPSDK;
 #pragma warning restore 0067
+
+        VirtualTransaction m_CurrentVirtualTransaction;
+
+        /// <summary>
+        ///     List of all successfully-purchased IAP product ids.
+        /// </summary>
+        internal List<string> m_PurchasedIapProducts;
+
+        /// <summary>
+        ///     The In-App purchase process data.
+        /// </summary>
+        (IAPTransaction transaction, bool isSuccessful, string failureMessage) m_CurrentIap;
 
         /// <inheritdoc cref="ITransactionManager.currentIap"/>
         public IAPTransaction currentIap => m_CurrentIap.transaction;
@@ -158,30 +159,100 @@ namespace UnityEngine.GameFoundation
         /// <inheritdoc cref="ITransactionManager.purchasingAdapterInitializeFailed"/>
         public bool purchasingAdapterIsInitialized { get; private set; }
 
-        /// <summary>
-        ///     Initializes the transaction manager.
-        /// </summary>
-        public void Initialize()
+        /// <inheritdoc/>
+        protected override void InitializeData(Completer completer)
         {
-            // read the purchased iap products list
+            // Read the purchased iap products list. It is important to always call this method
+            // even if we don't have any IAPs because it properly sets m_PurchasedIapProducts.
             DeserializePurchasedIapProducts();
 
 #if UNITY_PURCHASING && UNITY_PURCHASING_FOR_GAME_FOUNDATION
-
-            // you should only ever construct one UnityPurchasingAdapter per session
-            if (m_PurchasingAdapter == null)
+            var iapCount = GameFoundationSdk.catalog.GetItems<IAPTransaction>();
+            if (iapCount <= 0)
             {
-                m_PurchasingAdapter = new UnityPurchasingAdapter();
+                completer.Resolve();
+
+                return;
             }
 
-            m_PurchasingAdapter.Initialize();
+            //Make sure auto initialization is disable to avoid potential concurrence on IAP SDK initialization.
+            var iapSdkCatalog = ProductCatalog.LoadDefaultCatalog();
+            if (iapSdkCatalog.enableCodelessAutoInitialization)
+            {
+                const string message = "You have to disable auto IAP initialization if you want to use GameFoundation with the IAP SDK.";
+                completer.Reject(new GameFoundationException(message));
+
+                return;
+            }
+
+            // you should only ever construct one UnityPurchasingAdapter per session
+            if (s_PurchasingAdapter is null)
+            {
+                s_PurchasingAdapter = new UnityPurchasingAdapter();
+            }
+
+            void OnPurchasingAdapterSuccess()
+            {
+                purchasingAdapterIsInitialized = true;
+
+                completer.Resolve();
+
+                purchasingAdapterInitializeSucceeded?.Invoke();
+            }
+
+            void OnPurchasingAdapterFailure(Exception reason)
+            {
+                purchasingAdapterIsInitialized = false;
+
+                completer.Reject(reason);
+
+                purchasingAdapterInitializeFailed?.Invoke(reason);
+            }
+
+            IEnumerator WaitForIapSdk()
+            {
+                //Waiting for 30 seconds max (arbitrary).
+                const float maxWaitDuration = 30.0f;
+                var hasLoggedWaitingMessage = false;
+                var elapsedTime = 0.0f;
+                while (completer.isActive
+                    && elapsedTime < maxWaitDuration)
+                {
+                    yield return null;
+
+                    elapsedTime += Time.deltaTime;
+
+                    if (!hasLoggedWaitingMessage
+                        && elapsedTime >= 1)
+                    {
+                        k_GFLogger.Log("Game Foundation is waiting for Unity Purchasing to be initialized...");
+                        hasLoggedWaitingMessage = true;
+                    }
+                }
+
+                if (completer.isActive)
+                {
+                    const string message = "No answer from the IAP SDK. Initialization has been canceled.";
+                    completer.Reject(new GameFoundationException(message));
+                }
+            }
+
+            //This call is synchronous in editor but asynchronous on device.
+            //There are known cases where none of these callbacks are called if
+            //other calls to UnityPurchasing.Initialized happened later in the same frame.
+            s_PurchasingAdapter.Initialize(OnPurchasingAdapterSuccess, OnPurchasingAdapterFailure);
+
+            if (completer.isActive)
+            {
+                GameFoundationSdk.updater.StartCoroutine(WaitForIapSdk());
+            }
+#else
+            completer.Resolve();
 #endif
         }
 
-        /// <summary>
-        ///     Resets the transaction manager.
-        /// </summary>
-        public void Uninitialize()
+        /// <inheritdoc/>
+        internal override void Uninitialize()
         {
             if (m_CurrentIap.transaction != null)
             {
@@ -191,7 +262,7 @@ namespace UnityEngine.GameFoundation
             }
 
 #if UNITY_PURCHASING && UNITY_PURCHASING_FOR_GAME_FOUNDATION
-            m_PurchasingAdapter?.Uninitialize();
+            s_PurchasingAdapter?.Uninitialize();
 
             // don't nullify this; you should only ever construct one UnityPurchasingAdapter per session
             // s_PurchasingAdapter = null;
@@ -315,31 +386,10 @@ namespace UnityEngine.GameFoundation
         internal LocalizedProductMetadata GetLocalizedIAPProductInfo(string productId)
         {
 #if UNITY_PURCHASING && UNITY_PURCHASING_FOR_GAME_FOUNDATION
-            return m_PurchasingAdapter.GetLocalizedProductInfo(productId);
+            return s_PurchasingAdapter.GetLocalizedProductInfo(productId);
 #else
             return default;
 #endif
-        }
-
-        /// <summary>
-        ///     The in-app purchasing adapter should call this method after it's successfully initialized.
-        /// </summary>
-        internal void PurchasingAdapterInitializationSucceeded()
-        {
-            purchasingAdapterIsInitialized = true;
-            purchasingAdapterInitializeSucceeded?.Invoke();
-        }
-
-        /// <summary>
-        ///     The in-app purchasing adapter should call this if it fails to initialize.
-        /// </summary>
-        /// <param name="exception">
-        ///     The reason for the failure.
-        /// </param>
-        internal void PurchasingAdapterInitializationFailed(Exception exception)
-        {
-            purchasingAdapterIsInitialized = false;
-            purchasingAdapterInitializeFailed?.Invoke(exception);
         }
 
         /// <summary>
@@ -387,46 +437,48 @@ namespace UnityEngine.GameFoundation
 
             Promises.GetHandles<VirtualTransactionExchangeData>(out var dalDeferred, out var dalCompleter);
 
-            // if there are item costs, but no instance ids are supplied,
-            // then we infer that we should go find some instances automatically
-            var itemCost = transaction.costs.GetDefinitionCount<InventoryItemDefinition>();
-            if (itemCost > 0 && costItemIds.Count <= 0)
+            using (dalDeferred)
             {
-                transaction.AutoFillCostItemIds(costItemIds);
+                // if there are item costs, but no instance ids are supplied,
+                // then we infer that we should go find some instances automatically
+                var itemCost = transaction.costs.GetDefinitionCount<InventoryItemDefinition>();
+                if (itemCost > 0 && costItemIds.Count <= 0)
+                {
+                    transaction.AutoFillCostItemIds(costItemIds);
+                }
+
+                dataLayer.MakeVirtualTransaction(transaction.key, costItemIds, dalCompleter);
+
+                while (!dalDeferred.isDone)
+                {
+                    yield return null;
+                }
+
+                completer.SetProgression(2, 3);
+                transactionProgressed?.Invoke(transaction, 2, 3);
+
+                // handle the response from the DAL
+                // even if the pre-validation succeeded,
+                // the data layer could still fail or reject it
+
+                if (dalDeferred.isFulfilled)
+                {
+                    var costs = ProcessCostsInternally(dalDeferred.result.cost);
+                    var payout = ApplyPayoutInternally(dalDeferred.result.payout);
+
+                    var result = new TransactionResult(costs, payout);
+
+                    completer.Resolve(result);
+                    transactionSucceeded?.Invoke(transaction, result);
+                }
+                else
+                {
+                    completer.Reject(dalDeferred.error);
+                    transactionFailed?.Invoke(transaction, dalDeferred.error);
+                }
+
+                m_CurrentVirtualTransaction = null;
             }
-
-            dataLayer.MakeVirtualTransaction(transaction.key, costItemIds, dalCompleter);
-
-            while (!dalDeferred.isDone)
-            {
-                yield return null;
-            }
-
-            completer.SetProgression(2, 3);
-            transactionProgressed?.Invoke(transaction, 2, 3);
-
-            // handle the response from the DAL
-            // even if the pre-validation succeeded,
-            // the data layer could still fail or reject it
-
-            if (dalDeferred.isFulfilled)
-            {
-                var costs = ProcessCostsInternally(dalDeferred.result.cost);
-                var payout = ApplyPayoutInternally(dalDeferred.result.payout);
-
-                var result = new TransactionResult(costs, payout);
-
-                completer.Resolve(result);
-                transactionSucceeded?.Invoke(transaction, result);
-            }
-            else
-            {
-                completer.Reject(dalDeferred.error);
-                transactionFailed?.Invoke(transaction, dalDeferred.error);
-            }
-
-            dalDeferred.Release();
-            m_CurrentVirtualTransaction = null;
         }
 
         /// <summary>
@@ -543,9 +595,9 @@ namespace UnityEngine.GameFoundation
         void RestoreIAPPurchases()
         {
 #if UNITY_PURCHASING && UNITY_PURCHASING_FOR_GAME_FOUNDATION
-            if (m_PurchasingAdapter.isAppleIOS)
+            if (s_PurchasingAdapter.isAppleIOS)
             {
-                m_PurchasingAdapter.RestorePurchases();
+                s_PurchasingAdapter.RestorePurchases();
             }
             else
             {
@@ -695,7 +747,7 @@ namespace UnityEngine.GameFoundation
 
                 // if json was empty or formatted incorrectly recreate empty list to avoid later null 
                 // ref errors and permit future purchasing
-                if (m_PurchasedIapProducts == null)
+                if (m_PurchasedIapProducts is null)
                 {
                     m_PurchasedIapProducts = new List<string>();
                 }
@@ -715,7 +767,7 @@ namespace UnityEngine.GameFoundation
         internal void SetIAPValidator(CrossPlatformValidator validator)
         {
 #if UNITY_PURCHASING && UNITY_PURCHASING_FOR_GAME_FOUNDATION
-            m_PurchasingAdapter.validator = validator;
+            s_PurchasingAdapter.validator = validator;
 #else
             throw new NotSupportedException(
                 $"{nameof(TransactionManagerImpl)}: Tried to set an IAP Validator, but IAP support is not enabled.");
@@ -736,7 +788,7 @@ namespace UnityEngine.GameFoundation
             get
             {
 #if UNITY_PURCHASING && UNITY_PURCHASING_FOR_GAME_FOUNDATION
-                return m_PurchasingAdapter?.unprocessedPurchases;
+                return s_PurchasingAdapter?.unprocessedPurchases;
 #else
                 throw new NotSupportedException(
                     $"{nameof(TransactionManagerImpl)}: Tried to access the unprocessed purchase collection, but IAP support is not enabled.");
@@ -745,7 +797,7 @@ namespace UnityEngine.GameFoundation
             set
             {
 #if UNITY_PURCHASING && UNITY_PURCHASING_FOR_GAME_FOUNDATION
-                m_PurchasingAdapter.unprocessedPurchases = value;
+                s_PurchasingAdapter.unprocessedPurchases = value;
 #else
                 throw new NotSupportedException(
                     $"{nameof(TransactionManagerImpl)}: Tried to access the unprocessed purchase collection, but IAP support is not enabled.");
@@ -776,7 +828,7 @@ namespace UnityEngine.GameFoundation
             Promises.GetHandles<TransactionResult>(out var deferred, out var completer);
 
             GameFoundationSdk.updater.StartCoroutine(
-                m_PurchasingAdapter.ValidateAndProcessSuccessfulPurchase(
+                s_PurchasingAdapter.ValidateAndProcessSuccessfulPurchase(
                     purchaseEventArgs, completer));
 
             return deferred;
@@ -791,7 +843,7 @@ namespace UnityEngine.GameFoundation
         /// <summary>
         ///     An instance of the optional in-app purchasing adapter.
         /// </summary>
-        UnityPurchasingAdapter m_PurchasingAdapter;
+        static UnityPurchasingAdapter s_PurchasingAdapter;
 
         /// <summary>
         ///     Indicates whether we are expecting a response from UnityPurchasingAdapter.
@@ -824,9 +876,9 @@ namespace UnityEngine.GameFoundation
                 transactionProgressed?.Invoke(transaction, 0, 4);
             }
 
-            if (m_PurchasingAdapter == null)
+            if (s_PurchasingAdapter is null)
             {
-                var exception = new Exception(
+                var exception = new GameFoundationException(
                     $"{nameof(TransactionManagerImpl)}: Tried to process an in-app purchase transaction " +
                     $"{transaction?.displayName} with no platform purchase handler configured.");
 
@@ -844,7 +896,7 @@ namespace UnityEngine.GameFoundation
 
             if (hasTransaction && string.IsNullOrEmpty(transaction.productId))
             {
-                var exception = new Exception(
+                var exception = new GameFoundationException(
                     $"{nameof(TransactionManagerImpl)}: Transaction definition with key {transaction.key} doesn't have a product id.");
 
                 completer.Reject(exception);
@@ -863,7 +915,7 @@ namespace UnityEngine.GameFoundation
 
                 m_WaitingForPurchaseResponse = true;
 
-                m_PurchasingAdapter.BeginPurchase(transaction.productId);
+                s_PurchasingAdapter.BeginPurchase(transaction.productId);
             }
 
             completer.SetProgression(1, 4);
@@ -881,7 +933,7 @@ namespace UnityEngine.GameFoundation
 
             if (!string.IsNullOrEmpty(m_CurrentIap.failureMessage))
             {
-                var exception = new Exception
+                var exception = new GameFoundationException
                     ($"{nameof(TransactionManagerImpl)}: Purchasing manager failed to complete purchase: {m_CurrentIap.failureMessage}");
 
                 completer.Reject(exception);
@@ -907,7 +959,7 @@ namespace UnityEngine.GameFoundation
 
             // now send it all to the data layer
 
-            var confirmation = m_PurchasingAdapter.GetCurrentPurchaseData();
+            var confirmation = s_PurchasingAdapter.GetCurrentPurchaseData();
 
             yield return SuccessfulPurchaseToDataLayer(confirmation, completer, transaction);
         }
@@ -933,128 +985,146 @@ namespace UnityEngine.GameFoundation
         {
             Promises.GetHandles<TransactionExchangeData>(out var dalDeferred, out var dalCompleter);
 
-            if (transaction == null)
+            using (dalDeferred)
             {
-                m_CurrentIap.transaction = GameFoundationSdk.catalog
-                    .FindIAPTransactionByProductId(confirmation.productId);
-                if (m_CurrentIap.transaction == null)
+                if (transaction == null)
                 {
-                    completer.Reject(new Exception(
-                        $"{nameof(TransactionManagerImpl)}: Could not find a transaction using product id " +
-                        $"'{confirmation.productId}'."));
-                    dalDeferred.Release();
-                    m_CurrentIap.transaction = null;
-                    yield break;
+                    m_CurrentIap.transaction = GameFoundationSdk.catalog
+                        .FindIAPTransactionByProductId(confirmation.productId);
+                    if (m_CurrentIap.transaction == null)
+                    {
+                        completer.Reject(new GameFoundationException(
+                            $"{nameof(TransactionManagerImpl)}: Could not find a transaction using product id " +
+                            $"'{confirmation.productId}'."));
+                        m_CurrentIap.transaction = null;
+
+                        yield break;
+                    }
                 }
-            }
 
-            if (m_PurchasingAdapter.isAppleIOS)
-            {
-                dataLayer.RedeemAppleIap(
-                    key: m_CurrentIap.transaction.key,
-                    receipt: confirmation.receiptParts[0],
-                    completer: dalCompleter);
-            }
-            else if (m_PurchasingAdapter.isGooglePlay)
-            {
-                dataLayer.RedeemGoogleIap(
-                    key: m_CurrentIap.transaction.key,
-                    purchaseData: confirmation.receiptParts[0],
-                    purchaseDataSignature: confirmation.receiptParts[1],
-                    completer: dalCompleter);
-            }
-            else if (m_PurchasingAdapter.isFakeStore)
-            {
-                // TODO: fake a result based on the transaction asset values
-                // TODO: something like s_DataLayer.RedeemTestIap() maybe ?
-                // for now, just pretend we're trying with apple
-                dataLayer.RedeemAppleIap(
-                    key: m_CurrentIap.transaction.key,
-                    receipt: "",
-                    completer: dalCompleter);
-            }
-            else
-            {
-                completer.Reject(new Exception(
-                    $"{nameof(TransactionManagerImpl)}: Game Foundation currently cannot redeem IAP for platforms other than Apple iOS or Google Play."));
-            }
-
-            if (!dalDeferred.isDone) yield return dalDeferred.Wait();
-
-            completer.SetProgression(3, 4);
-
-            if (transaction != null)
-            {
-                transactionProgressed?.Invoke(transaction, 3, 4);
-            }
-
-            // now handle the response from the DAL
-            // even if the platform purchase succeeded,
-            // the data layer could still fail or reject it
-
-            if (dalDeferred.isFulfilled)
-            {
-                TransactionCosts costs = default; // an IAP transaction should never have virtual costs
-                var payout = ApplyPayoutInternally(dalDeferred.result);
-                var result = new TransactionResult(costs, payout);
-
-                // tell the purchasing adapter that redemption worked and it
-                // can stop asking TransactionManager to fulfill the purchase
-
-                m_PurchasingAdapter.CompletePendingPurchase(confirmation.productId);
-
-                // tell the caller that the purchase and redemption are successfully finished
-
-                completer.Resolve(result);
-
-                // check for product definition in purchased product and in transaction
-
-                ProductDefinition productDefinition = null;
-
-                var purchasedProduct = m_PurchasingAdapter.FindProduct(confirmation.productId);
-                if (purchasedProduct?.definition != null)
+                if (s_PurchasingAdapter.isAppleIOS)
                 {
-                    productDefinition = purchasedProduct.definition;
+                    dataLayer.RedeemAppleIap(
+                        key: m_CurrentIap.transaction.key,
+                        receipt: confirmation.receiptParts[0],
+                        completer: dalCompleter);
                 }
-                else if (transaction?.product?.definition != null)
+                else if (s_PurchasingAdapter.isGooglePlay)
                 {
-                    productDefinition = transaction.product.definition;
+                    dataLayer.RedeemGoogleIap(
+                        key: m_CurrentIap.transaction.key,
+                        purchaseData: confirmation.receiptParts[0],
+                        purchaseDataSignature: confirmation.receiptParts[1],
+                        completer: dalCompleter);
+                }
+                else if (s_PurchasingAdapter.isFakeStore)
+                {
+                    // TODO: fake a result based on the transaction asset values
+                    // TODO: something like s_DataLayer.RedeemTestIap() maybe ?
+                    // for now, just pretend we're trying with apple
+                    dataLayer.RedeemAppleIap(
+                        key: m_CurrentIap.transaction.key,
+                        receipt: "{\"Store\":\"fake\",\"TransactionID\":\"0\",\"Payload\":\"{ \\\"this\\\" : \\\"is a fake receipt\\\" }\"}",
+                        completer: dalCompleter);
                 }
                 else
                 {
-                    // TODO: a way to add non-fatal warnings to a successful promise
-
-                    string message = $"Processed a purchase for a product id ({confirmation.productId} that cannot " +
-                        "be found in the currently loaded IAP catalog.";
-                    k_GFLogger.LogError(message);
+                    completer.Reject(new GameFoundationException(
+                        $"{nameof(TransactionManagerImpl)}: Game Foundation currently cannot redeem IAP for platforms other than Apple iOS or Google Play."));
                 }
 
-                // if non-consumable, add the purchase to list of successfully purchased IAP products
-                if (productDefinition?.type == ProductType.NonConsumable)
+                if (!dalDeferred.isDone)
                 {
-                    AddPurchasedIapProduct(confirmation.productId);
+                    yield return dalDeferred.Wait();
                 }
+
+                completer.SetProgression(3, 4);
 
                 if (transaction != null)
                 {
-                    transactionProgressed?.Invoke(transaction, 4, 4);
-                    transactionSucceeded?.Invoke(transaction, result);
+                    transactionProgressed?.Invoke(transaction, 3, 4);
                 }
 
-                // TODO: should we invoke a different event for a background purchase?
-            }
-            else
-            {
-                completer.Reject(dalDeferred.error);
+                // now handle the response from the DAL
+                // even if the platform purchase succeeded,
+                // the data layer could still fail or reject it
 
-                if (transaction != null)
+                if (dalDeferred.isFulfilled)
                 {
-                    transactionFailed?.Invoke(transaction, dalDeferred.error);
-                }
-            }
+                    TransactionCosts costs = default; // an IAP transaction should never have virtual costs
+                    var payout = ApplyPayoutInternally(dalDeferred.result);
+                    var result = new TransactionResult(costs, payout);
 
-            m_CurrentIap = (null, false, null);
-            dalDeferred.Release();
+                    // tell the purchasing adapter that redemption worked and it
+                    // can stop asking TransactionManager to fulfill the purchase
+
+                    k_GFLogger.Log($"Game Foundation is confirming purchase of product '{confirmation.productId}' with the purchasing adapter.");
+                    s_PurchasingAdapter.CompletePendingPurchase(confirmation.productId);
+
+                    // tell the caller that the purchase and redemption are successfully finished
+
+                    completer.Resolve(result);
+
+                    // check for product definition in purchased product and in transaction
+
+                    ProductDefinition productDefinition = null;
+
+                    var purchasedProduct = s_PurchasingAdapter.FindProduct(confirmation.productId);
+                    if (purchasedProduct?.definition != null)
+                    {
+                        productDefinition = purchasedProduct.definition;
+                    }
+                    else if (transaction?.product?.definition != null)
+                    {
+                        productDefinition = transaction.product.definition;
+                    }
+                    else
+                    {
+                        // TODO: a way to add non-fatal warnings to a successful promise
+
+                        var message = $"Processed a purchase for a product '{confirmation.productId}' that cannot " +
+                            "be found in the currently loaded IAP catalog.";
+                        k_GFLogger.LogError(message);
+                    }
+
+                    // if non-consumable, add the purchase to list of successfully purchased IAP products
+                    if (productDefinition?.type == ProductType.NonConsumable)
+                    {
+                        AddPurchasedIapProduct(confirmation.productId);
+                    }
+
+                    if (transaction != null)
+                    {
+                        transactionProgressed?.Invoke(transaction, 4, 4);
+                        transactionSucceeded?.Invoke(transaction, result);
+                    }
+
+                    // TODO: should we invoke a different event for a background purchase?
+                }
+                else
+                {
+                    completer.Reject(dalDeferred.error);
+
+                    // with certain ChilliConnect responses,
+                    // we should still confirm the purchase in the purchasing adapter
+                    if (dalDeferred.error.Message.Contains("Valid")
+                        || dalDeferred.error.Message.Contains("InvalidRedeemed")
+                        || dalDeferred.error.Message.Contains("InvalidVerificationFailed")
+                        || dalDeferred.error.Message.Contains("InvalidVerifiedForAnotherPlayer"))
+                    {
+                        k_GFLogger.Log($"Confirming purchase of product '{confirmation.productId}' with the purchasing adapter.");
+
+                        s_PurchasingAdapter.CompletePendingPurchase(confirmation.productId);
+                    }
+
+                    if (transaction != null)
+                    {
+                        transactionFailed?.Invoke(transaction, dalDeferred.error);
+                    }
+                }
+
+                m_CurrentIap = (null, false, null);
+            }
         }
 
         /// <summary>
@@ -1140,7 +1210,7 @@ namespace UnityEngine.GameFoundation
 
             transactionFailed?.Invoke(
                 m_CurrentIap.transaction,
-                new Exception(
+                new GameFoundationException(
                     $"{nameof(TransactionManagerImpl)}: received an unexpected platform purchase failure " +
                     $"for product id '{productId}' with message: {message}"));
         }
@@ -1172,7 +1242,7 @@ namespace UnityEngine.GameFoundation
         {
             if (string.IsNullOrEmpty(productId)) return null;
 
-            return m_PurchasingAdapter.FindProduct(productId);
+            return s_PurchasingAdapter.FindProduct(productId);
         }
 
 #endif

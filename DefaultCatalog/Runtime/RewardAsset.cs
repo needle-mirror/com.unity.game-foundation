@@ -9,19 +9,34 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
     /// </summary>
     public sealed partial class RewardAsset : CatalogItemAsset
     {
+        /// <inheritdoc cref="cooldownSeconds"/>
+        [Min(0)]
         [SerializeField]
         int m_CooldownSeconds;
+
+        /// <summary>
+        ///     Wrapper for <see cref="m_CooldownSeconds"/>.
+        /// </summary>
+        ExternalizableValue<int> m_CooldownWrapper = new ExternalizableValue<int>();
 
         /// <summary>
         ///     The amount of time, in seconds, between when a RewardItem is claimed
         ///     and when the next one will become available.
         /// </summary>
-        public int cooldownSeconds
+        public ExternalizableValue<int> cooldownSeconds
         {
-            get => m_CooldownSeconds;
-            set => m_CooldownSeconds = value;
+            get
+            {
+                if (m_CooldownWrapper is null)
+                {
+                    m_CooldownWrapper = new ExternalizableValue<int>(m_CooldownSeconds);
+                }
+
+                return m_CooldownWrapper;
+            }
         }
 
+        /// <inheritdoc cref="cooldownDisplayUnits"/>
         [SerializeField]
         TimeUnit m_CooldownDisplayUnits = TimeUnit.Days;
 
@@ -34,19 +49,34 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
             set => m_CooldownDisplayUnits = value;
         }
 
+        /// <inheritdoc cref="expirationSeconds"/>
+        [Min(0)]
         [SerializeField]
         int m_ExpirationSeconds;
+
+        /// <summary>
+        ///     Wrapper for <see cref="m_ExpirationSeconds"/>.
+        /// </summary>
+        ExternalizableValue<int> m_ExpirationWrapper;
 
         /// <summary>
         ///     The amount of time, in seconds, that a RewardItem will be claimable before either
         ///     moving on to the next RewardItem, or resetting back to the first RewardItem.
         /// </summary>
-        public int expirationSeconds
+        public ExternalizableValue<int> expirationSeconds
         {
-            get => m_ExpirationSeconds;
-            set => m_ExpirationSeconds = value;
+            get
+            {
+                if (m_ExpirationWrapper is null)
+                {
+                    m_ExpirationWrapper = new ExternalizableValue<int>(m_ExpirationSeconds);
+                }
+
+                return m_ExpirationWrapper;
+            }
         }
 
+        /// <inheritdoc cref="expirationDisplayUnits"/>
         [SerializeField]
         TimeUnit m_ExpirationDisplayUnits = TimeUnit.Days;
 
@@ -59,17 +89,30 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
             set => m_ExpirationDisplayUnits = value;
         }
 
+        /// <inheritdoc cref="resetIfExpired"/>
         [SerializeField]
         bool m_ResetIfExpired;
+
+        /// <summary>
+        ///     Wrapper for <see cref="m_ResetIfExpired"/>.
+        /// </summary>
+        ExternalizableValue<bool> m_ResetIfExpiredWrapper;
 
         /// <summary>
         ///     If a RewardItem expires, this determines whether the next RewardItem will become available,
         ///     or if the Reward is reset back to the first RewardItem.
         /// </summary>
-        public bool resetIfExpired
+        public ExternalizableValue<bool> resetIfExpired
         {
-            get => m_ResetIfExpired;
-            set => m_ResetIfExpired = value;
+            get
+            {
+                if (m_ResetIfExpiredWrapper is null)
+                {
+                    m_ResetIfExpiredWrapper = new ExternalizableValue<bool>(m_ResetIfExpired);
+                }
+
+                return m_ResetIfExpiredWrapper;
+            }
         }
 
         /// <summary>
@@ -188,38 +231,54 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
             GFTools.ThrowIfArgNull(builder, nameof(builder));
 
             var rewardConfig = builder.Create<RewardConfig>(key);
+            var hasValueProvider = !(valueProvider is null);
 
-            if (valueProvider == null
-                || !valueProvider.TryGetValue(
-                    ExternalValueProviderNames.cooldownSeconds, key, out var externalCooldownSeconds))
+            // Cooldown.
             {
-                rewardConfig.cooldownSeconds = m_CooldownSeconds;
-            }
-            else
-            {
-                rewardConfig.cooldownSeconds = externalCooldownSeconds.AsInt();
-            }
+                if (hasValueProvider
+                    && valueProvider.TryGetValue(
+                        ExternalValueProviderNames.cooldownSeconds, key, out var externalCooldownSeconds))
+                {
+                    cooldownSeconds.SetExternalValue(externalCooldownSeconds);
+                }
+                else
+                {
+                    cooldownSeconds.ResetExternalValue();
+                }
 
-            if (valueProvider == null
-                || !valueProvider.TryGetValue(
-                    ExternalValueProviderNames.expirationSeconds, key, out var externalExpirationSeconds))
-            {
-                rewardConfig.expirationSeconds = m_ExpirationSeconds;
-            }
-            else
-            {
-                rewardConfig.expirationSeconds = externalExpirationSeconds.AsInt();
+                rewardConfig.cooldownSeconds = cooldownSeconds;
             }
 
-            if (valueProvider == null
-                || !valueProvider.TryGetValue(
-                    ExternalValueProviderNames.resetIfExpired, key, out var externalResetIfExpired))
+            // Expiration.
             {
-                rewardConfig.resetIfExpired = m_ResetIfExpired;
+                if (hasValueProvider
+                    && valueProvider.TryGetValue(
+                        ExternalValueProviderNames.expirationSeconds, key, out var externalExpirationSeconds))
+                {
+                    expirationSeconds.SetExternalValue(externalExpirationSeconds);
+                }
+                else
+                {
+                    expirationSeconds.ResetExternalValue();
+                }
+
+                rewardConfig.expirationSeconds = expirationSeconds;
             }
-            else
+
+            // Reset if expired.
             {
-                rewardConfig.resetIfExpired = externalResetIfExpired.AsBool();
+                if (hasValueProvider
+                    && valueProvider.TryGetValue(
+                        ExternalValueProviderNames.resetIfExpired, key, out var externalResetIfExpired))
+                {
+                    resetIfExpired.SetExternalValue(externalResetIfExpired);
+                }
+                else
+                {
+                    resetIfExpired.ResetExternalValue();
+                }
+
+                rewardConfig.resetIfExpired = resetIfExpired;
             }
 
             for (var i = 0; i < m_RewardItems.Count; i++)
@@ -233,14 +292,14 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
                     continue;
                 }
 
-                if (rewardItem.m_Payout == null)
+                if (rewardItem.m_Payout is null)
                 {
                     k_GFLogger.LogWarning($"Null value in m_Payout for RewardItem at index {i} in Reward " +
                         $"{m_Key} during item configuration.");
                     continue;
                 }
 
-                if (rewardItem.m_Payout.m_Exchanges == null)
+                if (rewardItem.m_Payout.m_Exchanges is null)
                 {
                     k_GFLogger.LogWarning($"Null value in m_Exchanges in payout in RewardItem at index {i} in " +
                         $"Reward {m_Key} during item configuration.");
@@ -257,6 +316,16 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
             }
 
             return rewardConfig;
+        }
+
+        /// <inheritdoc/>
+        protected override void OnAfterItemDeserialize()
+        {
+            base.OnAfterItemDeserialize();
+
+            m_CooldownWrapper = new ExternalizableValue<int>(m_CooldownSeconds);
+            m_ExpirationWrapper = new ExternalizableValue<int>(m_ExpirationSeconds);
+            m_ResetIfExpiredWrapper = new ExternalizableValue<bool>(m_ResetIfExpired);
         }
     }
 }

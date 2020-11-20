@@ -261,7 +261,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
 
             using (new GUILayout.VerticalScope(GameFoundationEditorStyles.boxStyle))
             {
-                var displayName = catalogItem.displayName;
+                string displayName = catalogItem.displayName;
                 m_ReadableNameKeyEditor.DrawReadableNameKeyFields(ref m_CurrentItemKey, ref displayName);
 
                 if (catalogItem.displayName != displayName)

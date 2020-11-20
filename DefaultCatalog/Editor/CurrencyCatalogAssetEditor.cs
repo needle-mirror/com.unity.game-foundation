@@ -29,30 +29,34 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
         {
             using (new EditorGUILayout.VerticalScope())
             {
-                using (var initialChanged = new EditorGUI.ChangeCheckScope())
-                {
-                    GUI.SetNextControlName("Initial allocation");
-                    var initialAllocation = EditorGUILayout.LongField(k_InitialAllocationText, currency.m_InitialBalance);
-                    if (initialChanged.changed)
-                    {
-                        currency.Editor_SetInitialBalance(initialAllocation);
-                    }
-                }
-
                 using (var maxChanged = new EditorGUI.ChangeCheckScope())
                 {
                     GUI.SetNextControlName("Maximum allocation");
-                    var maximumAllocation = EditorGUILayout.LongField(k_MaximumAllocationText, currency.m_MaximumBalance);
-                    if (maxChanged.changed)
+                    var rawMaximumAllocation = EditorGUILayout.DelayedTextField(
+                        k_MaximumAllocationText, currency.maximumBalance.currentValue.ToString());
+                    if (maxChanged.changed
+                        && long.TryParse(rawMaximumAllocation, out var maximumAllocation))
                     {
                         currency.Editor_SetMaximumBalance(maximumAllocation);
+                    }
+                }
+
+                using (var initialChanged = new EditorGUI.ChangeCheckScope())
+                {
+                    GUI.SetNextControlName("Initial allocation");
+                    var rawInitialAllocation = EditorGUILayout.DelayedTextField(
+                        k_InitialAllocationText, currency.initialBalance.currentValue.ToString());
+                    if (initialChanged.changed
+                        && long.TryParse(rawInitialAllocation, out var initialAllocation))
+                    {
+                        currency.Editor_SetInitialBalance(initialAllocation);
                     }
                 }
 
                 using (var typeChanged = new EditorGUI.ChangeCheckScope())
                 {
                     GUI.SetNextControlName("Type");
-                    var type = EditorGUILayout.EnumPopup(k_TypeText, currency.m_Type);
+                    var type = EditorGUILayout.EnumPopup(k_TypeText, currency.type);
                     if (typeChanged.changed)
                     {
                         currency.Editor_SetType((CurrencyType)type);

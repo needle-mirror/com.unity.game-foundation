@@ -2,6 +2,7 @@
 
 using System;
 using UnityEditor;
+using UnityEngine.GameFoundation.Exceptions;
 using GFTools = UnityEngine.GameFoundation.Tools;
 
 namespace UnityEngine.GameFoundation.DefaultCatalog
@@ -26,7 +27,7 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
 
             if (Contains(transaction))
             {
-                throw new Exception($"{nameof(StoreAsset)}: {nameof(BaseTransactionAsset)} " +
+                throw new GameFoundationException($"{nameof(StoreAsset)}: {nameof(BaseTransactionAsset)} " +
                     $"'{transaction.displayName}' cannot be added because it already exists in this store.");
             }
 
@@ -144,9 +145,7 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
                     $"{nameof(StoreAsset)}: The {nameof(CatalogItemAsset)} target parameter cannot be null.");
             }
 
-            var storeTarget = target as StoreAsset;
-
-            if (storeTarget == null)
+            if (!(target is StoreAsset storeTarget))
             {
                 throw new InvalidCastException(
                     $"{nameof(StoreAsset)}: The target object {target.displayName} of type '{target.GetType()}' " +
@@ -155,7 +154,7 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
 
             foreach (var storeItem in m_StoreItems)
             {
-                storeTarget.m_StoreItems.Add(storeItem.Clone());
+                storeTarget.Editor_AddItem(storeItem.transaction, storeItem.enabled);
             }
 
             base.CopyValues(storeTarget);

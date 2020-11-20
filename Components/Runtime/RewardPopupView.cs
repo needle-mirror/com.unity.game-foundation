@@ -5,7 +5,6 @@ using UnityEngine.GameFoundation.DefaultCatalog;
 using UnityEngine.UI;
 #if UNITY_EDITOR
 using UnityEditor;
-
 #endif
 
 namespace UnityEngine.GameFoundation.Components
@@ -297,6 +296,11 @@ namespace UnityEngine.GameFoundation.Components
         ///     The default format to display the countdown time in.
         /// </summary>
         const string kDisplayFormat = "hh\\:mm\\:ss";
+        
+        /// <summary>
+        ///     Instance of the GameFoundationDebug class to use for logging.
+        /// </summary>
+        static readonly GameFoundationDebug k_GFLogger = GameFoundationDebug.Get<RewardPopupView>();
 
         /// <summary>
         ///     Adds listeners to the RewardManager's claim success, failure and state changed events, if the application is
@@ -312,7 +316,7 @@ namespace UnityEngine.GameFoundation.Components
                 RegisterEvents();
             }
 
-            if (!ReferenceEquals(m_Reward, null))
+            if (!(m_Reward is null))
             {
                 UpdateContent();
             }
@@ -362,7 +366,7 @@ namespace UnityEngine.GameFoundation.Components
                 return;
             }
 
-            ThrowIfNotInitialized();
+            ThrowIfNotInitialized(nameof(Start));
 
             m_Reward = GetReward(m_RewardKey);
 
@@ -396,7 +400,7 @@ namespace UnityEngine.GameFoundation.Components
             var reward = GameFoundationSdk.rewards.FindReward(rewardKey);
             if (reward == null)
             {
-                Debug.LogWarning($"{nameof(RewardPopupView)} - No Reward with the key \"{rewardKey}\" can be found in the reward manager.");
+                k_GFLogger.LogWarning($"No Reward with the key \"{rewardKey}\" can be found in the reward manager.");
             }
 
             return reward;
@@ -422,7 +426,7 @@ namespace UnityEngine.GameFoundation.Components
             var rewardItemDefinition = reward.rewardDefinition?.FindRewardItem(rewardItemDefinitionKey);
             if (rewardItemDefinition == null && m_ShowDebugLogs)
             {
-                Debug.LogWarning($"{nameof(RewardPopupView)} - No Reward Item with the key \" {rewardItemDefinitionKey}\" can be found in the Reward catalog.");
+                k_GFLogger.LogWarning($"No Reward Item with the key \" {rewardItemDefinitionKey}\" can be found in the Reward catalog.");
             }
 
             return rewardItemDefinition;
@@ -436,7 +440,7 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         public void SetReward(Reward reward)
         {
-            ThrowIfNotInitialized();
+            ThrowIfNotInitialized(nameof(SetReward));
 
             if (m_RewardKey == reward?.key)
             {
@@ -458,7 +462,7 @@ namespace UnityEngine.GameFoundation.Components
             if (!Application.isPlaying)
                 return;
 
-            ThrowIfNotInitialized();
+            ThrowIfNotInitialized(nameof(Open));
 
             Open(m_Reward ?? GetReward(m_RewardKey));
         }
@@ -475,7 +479,7 @@ namespace UnityEngine.GameFoundation.Components
             if (!Application.isPlaying)
                 return;
 
-            ThrowIfNotInitialized();
+            ThrowIfNotInitialized(nameof(Open));
 
             if (gameObject.activeInHierarchy)
             {
@@ -484,7 +488,7 @@ namespace UnityEngine.GameFoundation.Components
 
             if (reward == null)
             {
-                Debug.LogWarning($"{nameof(RewardPopupView)} - Reward is null.");
+                k_GFLogger.LogWarning("Reward is null.");
             }
 
             m_Reward = reward;
@@ -853,7 +857,7 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         void UpdateClaimButton()
         {
-            if (ReferenceEquals(m_ClaimButton, null))
+            if (m_ClaimButton is null)
                 return;
 
             if (m_Reward == null || m_Reward.IsInCooldown())
@@ -936,7 +940,7 @@ namespace UnityEngine.GameFoundation.Components
                 }
                 else if (m_ShowDebugLogs)
                 {
-                    Debug.LogWarning($"{nameof(RewardPopupView)} - \"{rewardDefinition.displayName}\" Reward doesn't have Static Property called \"{m_DescriptionPropertyKey}\"");
+                    k_GFLogger.LogWarning($"\"{rewardDefinition.displayName}\" Reward doesn't have Static Property called \"{m_DescriptionPropertyKey}\"");
                 }
 
                 // Get RewardItem Title Format
@@ -946,7 +950,7 @@ namespace UnityEngine.GameFoundation.Components
                 }
                 else if (m_ShowDebugLogs)
                 {
-                    Debug.LogWarning($"{nameof(RewardPopupView)} - \"{rewardDefinition.displayName}\" Reward doesn't have Static Property called \"{m_RewardItemTitlePropertyKey}\"");
+                    k_GFLogger.LogWarning($"\"{rewardDefinition.displayName}\" Reward doesn't have Static Property called \"{m_RewardItemTitlePropertyKey}\"");
                 }
             }
 
@@ -967,7 +971,7 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         void UpdateGeneratedRewardItemsAtRuntime()
         {
-            if (ReferenceEquals(m_AutoPopulatedRewardItemContainer, null))
+            if (m_AutoPopulatedRewardItemContainer is null)
             {
                 return;
             }
@@ -1009,7 +1013,7 @@ namespace UnityEngine.GameFoundation.Components
                     ? CatalogSettings.catalogAsset.FindItem(m_RewardKey) as RewardAsset
                     : null;
 
-            if (!ReferenceEquals(rewardAsset, null))
+            if (!(rewardAsset is null))
             {
                 displayName = rewardAsset.displayName;
 
@@ -1023,8 +1027,8 @@ namespace UnityEngine.GameFoundation.Components
                     }
                     else if (m_ShowDebugLogs)
                     {
-                        Debug.LogWarning(
-                            $"{nameof(RewardPopupView)} - \"{rewardAsset.displayName}\" Reward doesn't have Static Property called \"{m_DescriptionPropertyKey}\"");
+                        k_GFLogger.LogWarning(
+                            $"\"{rewardAsset.displayName}\" Reward doesn't have Static Property called \"{m_DescriptionPropertyKey}\"");
                     }
                 }
 
@@ -1050,8 +1054,8 @@ namespace UnityEngine.GameFoundation.Components
 
                         if (m_ShowDebugLogs)
                         {
-                            Debug.LogWarning(
-                                $"{nameof(RewardPopupView)} - \"{rewardAsset.displayName}\" Reward doesn't have Static Property called \"{m_RewardItemTitlePropertyKey}\"");
+                            k_GFLogger.LogWarning(
+                                $"\"{rewardAsset.displayName}\" Reward doesn't have Static Property called \"{m_RewardItemTitlePropertyKey}\"");
                         }
                     }
                 }
@@ -1100,7 +1104,7 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         void ClearRewardItemPrefabs()
         {
-            if (ReferenceEquals(m_AutoPopulatedRewardItemContainer, null))
+            if (m_AutoPopulatedRewardItemContainer is null)
                 return;
 
             var toRemove = new List<Transform>();
@@ -1138,7 +1142,7 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         void InstantiateRewardItemPrefab(string rewardItemKey, RewardItemState state)
         {
-            if (ReferenceEquals(m_AutoPopulatedRewardItemContainer, null))
+            if (m_AutoPopulatedRewardItemContainer is null)
                 return;
 
             RewardItemView rewardItemPrefab = null;
@@ -1146,7 +1150,7 @@ namespace UnityEngine.GameFoundation.Components
             switch (state)
             {
                 case RewardItemState.Claimable:
-                    if (!ReferenceEquals(m_ClaimableRewardItemPrefab, null))
+                    if (!(m_ClaimableRewardItemPrefab is null))
                     {
                         rewardItemPrefab = Instantiate(m_ClaimableRewardItemPrefab, m_AutoPopulatedRewardItemContainer);
                     }
@@ -1154,7 +1158,7 @@ namespace UnityEngine.GameFoundation.Components
                     break;
 
                 case RewardItemState.Claimed:
-                    if (!ReferenceEquals(m_ClaimedRewardItemPrefab, null))
+                    if (!(m_ClaimedRewardItemPrefab is null))
                     {
                         rewardItemPrefab = Instantiate(m_ClaimedRewardItemPrefab, m_AutoPopulatedRewardItemContainer);
                     }
@@ -1162,7 +1166,7 @@ namespace UnityEngine.GameFoundation.Components
                     break;
 
                 case RewardItemState.Missed:
-                    if (!ReferenceEquals(m_MissedRewardItemPrefab, null))
+                    if (!(m_MissedRewardItemPrefab is null))
                     {
                         rewardItemPrefab = Instantiate(m_MissedRewardItemPrefab, m_AutoPopulatedRewardItemContainer);
                     }
@@ -1170,15 +1174,15 @@ namespace UnityEngine.GameFoundation.Components
                     break;
             }
 
-            if (ReferenceEquals(rewardItemPrefab, null))
+            if (rewardItemPrefab is null)
             {
-                if (!ReferenceEquals(m_LockedRewardItemPrefab, null))
+                if (!(m_LockedRewardItemPrefab is null))
                 {
                     rewardItemPrefab = Instantiate(m_LockedRewardItemPrefab, m_AutoPopulatedRewardItemContainer);
                 }
             }
 
-            if (!ReferenceEquals(rewardItemPrefab, null))
+            if (!(rewardItemPrefab is null))
             {
                 rewardItemPrefab.name = kRewardItemGameObjectName;
                 rewardItemPrefab.Init(m_RewardKey, rewardItemKey, m_PayoutItemIconSpritePropertyKey, m_RewardItemTitleFormat);
@@ -1217,12 +1221,15 @@ namespace UnityEngine.GameFoundation.Components
         /// <summary>
         ///     Throws an Invalid Operation Exception if GameFoundation has not been initialized before this view is used.
         /// </summary>
-        /// <exception cref="InvalidOperationException"></exception>
-        void ThrowIfNotInitialized()
+        /// <param name="callingMethod">
+        ///     Calling method name.
+        /// </param>
+        void ThrowIfNotInitialized(string callingMethod)
         {
             if (!GameFoundationSdk.IsInitialized)
             {
-                throw new InvalidOperationException($"Error: GameFoundation.Initialize() must be called before the {nameof(RewardPopupView)} is used.");
+                var message = $"GameFoundationSdk.Initialize() must be called before {callingMethod} is used.";
+                k_GFLogger.LogException(message, new InvalidOperationException(message));
             }
         }
 
