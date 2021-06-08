@@ -1,9 +1,9 @@
 {
   "name": "com.unity.game-foundation",
   "displayName": "Game Foundation",
-  "version": "0.9.0-preview",
+  "version": "0.9.0-preview.2",
   "unity": "2019.4",
-  "description": "Game Foundation core package.\n\nThis package contains the following components: \n▪ Inventory System \n▪ Virtual Currency Wallet \n▪ Properties System \n▪ Transaction System  \n▪ Reward System  \n▪ Core Systems \n\nNote: CatalogManager now holds the reference to the catalogs at Runtime. Any runtime code that was previously written as \nGameFoundationSettings.database.xCatalog should now be written as CatalogManager.xCatalog. \nGameFoundation's Initialization changed to take an IDataAccessLayer as an argument instead of a persistence object. \n\nNote: Preview release, public API subject to change.",
+  "description": "Game Foundation core package.\n\nThis package contains the following components: \n▪ Inventory System \n▪ Virtual Currency Wallet \n▪ Properties System \n▪ Transaction System  \n▪ Reward System  \n▪ Core Systems \n\nNote: Preview release, public API subject to change.",
   "keywords": [
     "unity",
     "Game Foundation",
@@ -20,15 +20,15 @@
     "com.unity.analytics": "3.3.2"
   },
   "relatedPackages": {
-    "com.unity.game-foundation.tests": "0.9.0-preview"
+    "com.unity.game-foundation.tests": "0.9.0-preview.2"
   },
   "upmCi": {
-    "footprint": "d4ce6f25d1cd16072d487c1fbd1ccae2137271cd"
+    "footprint": "8d2ff5dd1688c126d60dab0ea3616ccdeabd4506"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/game-foundation.git",
     "type": "git",
-    "revision": "c05f52f5708608f433025b117e1b4c6218eec08f"
+    "revision": "e279b350b68f7016f90193982ac499c839f5d3a4"
   },
   "samples": [
     {
