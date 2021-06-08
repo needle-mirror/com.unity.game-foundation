@@ -1,7 +1,7 @@
 {
   "name": "com.unity.game-foundation",
   "displayName": "Game Foundation",
-  "version": "0.9.0-preview.2",
+  "version": "0.9.0-preview.3",
   "unity": "2019.4",
   "description": "Game Foundation core package.\n\nThis package contains the following components: \n▪ Inventory System \n▪ Virtual Currency Wallet \n▪ Properties System \n▪ Transaction System  \n▪ Reward System  \n▪ Core Systems \n\nNote: Preview release, public API subject to change.",
   "keywords": [
@@ -17,18 +17,19 @@
   ],
   "dependencies": {
     "com.unity.addressables": "1.16.16",
-    "com.unity.analytics": "3.3.2"
+    "com.unity.analytics": "3.3.2",
+    "com.unity.textmeshpro": "2.1.0"
   },
   "relatedPackages": {
-    "com.unity.game-foundation.tests": "0.9.0-preview.2"
+    "com.unity.game-foundation.tests": "0.9.0-preview.3"
   },
   "upmCi": {
-    "footprint": "8d2ff5dd1688c126d60dab0ea3616ccdeabd4506"
+    "footprint": "72a88c6cbb8c2c4bd0a760385fa71a7cf710bc79"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/game-foundation.git",
     "type": "git",
-    "revision": "e279b350b68f7016f90193982ac499c839f5d3a4"
+    "revision": "626fa7b2850268f29c63bce378639e57c492334c"
   },
   "samples": [
     {
