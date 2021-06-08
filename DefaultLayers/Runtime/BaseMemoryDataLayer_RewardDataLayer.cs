@@ -91,8 +91,7 @@ namespace UnityEngine.GameFoundation.DefaultLayers
                 var rewardData = new RewardData
                 {
                     key = rewardEntry.Key,
-                    claimedRewardItemKeys = rewardEntry.Value.claimedRewardItemKeys,
-                    claimedRewardItemTimestamps = rewardEntry.Value.claimedRewardItemTimestamps
+                    claimedRewards = rewardEntry.Value.claimedRewards
                 };
 
                 data.rewards[index] = rewardData;
@@ -172,14 +171,14 @@ namespace UnityEngine.GameFoundation.DefaultLayers
                     && hasCooldownFinished;
 
                 // when resetIfExpires is true and any item expires
-                var doResetAfterExpiration = rewardDefinition.resetIfExpired
+                var doResetAfterExpiration = rewardDefinition.expirationSeconds > 0
+                    && rewardDefinition.resetIfExpired
                     && metaData.ticksSinceClaim >= cooldownTicks + expirationTicks;
                 if (isClaimableOutOfRange
                     || wasLastRewardClaimed
                     || doResetAfterExpiration)
                 {
-                    rewardData.claimedRewardItemKeys.Clear();
-                    rewardData.claimedRewardItemTimestamps.Clear();
+                    rewardData.claimedRewards.Clear();
                 }
             }
         }
@@ -214,8 +213,7 @@ namespace UnityEngine.GameFoundation.DefaultLayers
                     m_Rewards[rewardKey] = new RewardData
                     {
                         key = rewardKey,
-                        claimedRewardItemKeys = new List<string>(),
-                        claimedRewardItemTimestamps = new List<long>()
+                        claimedRewards = new List<ClaimedRewardData>()
                     };
                 }
 
@@ -282,8 +280,12 @@ namespace UnityEngine.GameFoundation.DefaultLayers
                 // we have made it past the guards
                 // now flag the item as claimed in the data and apply the payout
 
-                rewardData.claimedRewardItemKeys.Add(rewardItemKey);
-                rewardData.claimedRewardItemTimestamps.Add(DateTime.UtcNow.Ticks);
+                rewardData.claimedRewards.Add(
+                    new ClaimedRewardData
+                    {
+                        rewardItemKey = rewardItemKey,
+                        timestamp = DateTime.UtcNow.Ticks
+                    });
 
                 var result = ApplyRewardItemPayout(rewardItemDefinition, completer);
 
@@ -324,17 +326,16 @@ namespace UnityEngine.GameFoundation.DefaultLayers
                 {
                     var rewardItemDefinition = rewardItems[i];
 
-                    if (!rewardData.claimedRewardItemKeys.Contains(rewardItemDefinition.key))
+                    var match = rewardData.claimedRewards
+                        .Find(claimedReward => claimedReward.rewardItemKey.Equals(rewardItemDefinition.key));
+                    if (match is null)
                     {
                         continue;
                     }
 
                     metaData.highestIndexClaimed = i;
 
-                    var claimedRewardItemIndex = rewardData.claimedRewardItemKeys.IndexOf(rewardItemDefinition.key);
-                    var claimedTimestamp = rewardData.claimedRewardItemTimestamps[claimedRewardItemIndex];
-
-                    metaData.ticksSinceClaim = nowTicks - claimedTimestamp;
+                    metaData.ticksSinceClaim = nowTicks - match.timestamp;
                 }
             }
 
@@ -353,16 +354,15 @@ namespace UnityEngine.GameFoundation.DefaultLayers
             long ticksSinceClaim,
             int potentiallyClaimableIndex)
         {
-            var indexOfClaimedTimestamp = rewardData.claimedRewardItemKeys.IndexOf(rewardItemKey);
-
-            if (indexOfClaimedTimestamp >= 0)
+            var match = rewardData.claimedRewards.Find(x => x.rewardItemKey.Equals(rewardItemKey));
+            if (!(match is null))
             {
                 // if a key exists, it's claimed, period
 
                 return RewardItemState.Claimed;
             }
 
-            if (rewardData.claimedRewardItemKeys.Count == 0)
+            if (rewardData.claimedRewards.Count == 0)
             {
                 // there have been no claims on this reward
                 // therefore only the first item is claimable

@@ -97,10 +97,6 @@ For any reward state object, you can check several aspects of its state, such as
 ### Conclusion
 We hope the Game Foundation Reward System helps you to provide the most enjoyable game experience to your players, thereby helping your retention!
 
-## 
-< [_table of contents_](../TableOfContents.md)
-
-
 
 [Reward definitions]: ../CatalogItems/RewardDefinition.md
 [creating a simple daily reward or progressive daily reward in your game]: 17-CreatingRewards.md

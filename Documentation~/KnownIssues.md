@@ -1,6 +1,18 @@
 # Game Foundation: Known issues/limitations
 
-## 0.7.1 - (2020-11-18)
+## Unreleased
+
+* Subscription IAP type not yet explicitly supported.
+* IAP refunds/returns not yet explicitly supported.
+* When using the LocalPersistence data layer, if the player has an existing save file, initial allocation of newly created currencies are not granted.
+* Addressable image assets are not loaded at editor time when using them through the provided Game Foundation prefabs (e.g. Transaction Item prefab). This produces a blank image in place of the Addressable image asset in the editor scene view. A warning is also logged for every blank image as a result of Addressables not being loaded at editor time.
+* In StoreView, if a prefab with a DetailedTransactionItemView component is used in the `Featured Item Prefab` field (as opposed to the `Featured Bundle Item Prefab` field) payout item images will not be shown.
+* If a Promotion Popup prefab is used to complete an IAP Purchase, that instance of the Promotion Popup will not be used to make a purchase again, neither for the same nor a different Transaction Id. The instance should be destroyed and a new instance of the prefab instantiated.
+* When using Auto Generate Promo Image on the Promotion Popup prefab, the payout items aren't being laid out properly. At editor time, clicking on any game object other than the top level Promotion Popup game object will show the correct layout. At runtime, if the popup is exhibiting the same layout behavior, the popup needs to be opened, closed, and reopened to show the correct layout. An alternative workaround is to not auto generate promo image, and provide a signle promotion image.
+* Claim button on Reward Popup prefab jumps around a bit when the coutdown field changes from shown to hidden or vice versa.
+* Sometimes, deleting a catalog item will not delete the item from the catalog asset. The item will still show up as a child of the catalog asset when the catalog asset is expanded/unfolded. Upon restarting the editor, the catalog item sometimes gets deleted and sometimes does not.
+
+## 0.8.0 - (2020-11-20)
 
 * The ChilliConnect Adapters for Game Foundation do not support the Reward system.
 * If using Unity IAP version 2.2.1, processing IAP transactions on Android may initially fail, triggering a OnPurchaseFailed callback, however the purchase should get processed again immediately and that one should complete and items should still get paid out. No workaround should be necessary.
@@ -57,5 +69,3 @@ To work around this, you can delete your local persistent runtime data.
 * Debug Window: Removing an inventory in the middle of the inventories list causes new inventories to add themselves in the middle.
 * Debug Window: Adding or Removing Items may change the foldouts state of other items that should be unaffected.
 
-## 
-< [_table of contents_](TableOfContents.md)

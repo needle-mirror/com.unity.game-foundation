@@ -50,6 +50,7 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
 
             catalogAsset.Editor_Save(path);
 
+            Selection.SetActiveObjectWithContext(catalogAsset, null);
             EditorUtility.FocusProjectWindow();
         }
 
@@ -271,6 +272,38 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
             EditorUtility.SetDirty(this);
 
             return true;
+        }
+
+        /// <summary>
+        ///     Deep copy this whole catalog.
+        /// </summary>
+        /// <returns>
+        ///     Return a deep copy of this instance.
+        /// </returns>
+        internal CatalogAsset Clone()
+        {
+            var clone = CreateInstance<CatalogAsset>();
+
+            clone.m_TagCatalog = m_TagCatalog.Clone();
+            clone.m_TagCatalog.RefreshReferences(clone);
+
+            clone.m_Items = new List<CatalogItemAsset>(m_Items.Count);
+            foreach (var catalogItem in m_Items)
+            {
+                var cloneCatalogItem = (CatalogItemAsset)CreateInstance(catalogItem.GetType());
+                cloneCatalogItem.Editor_Initialize(catalogItem.key, catalogItem.displayName);
+                catalogItem.CopyValues(cloneCatalogItem);
+
+                clone.m_Items.Add(cloneCatalogItem);
+            }
+
+            //Once all items and tags are created: refresh references.
+            foreach (var clonedItem in clone.m_Items)
+            {
+                clonedItem.RefreshReferences(this);
+            }
+
+            return clone;
         }
     }
 }

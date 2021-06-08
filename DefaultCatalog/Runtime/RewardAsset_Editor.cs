@@ -221,6 +221,17 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
 
             base.CopyValues(rewardTarget);
         }
+
+        /// <inheritdoc/>
+        internal override void RefreshReferences(CatalogAsset owner)
+        {
+            base.RefreshReferences(owner);
+
+            foreach (var rewardItem in m_RewardItems)
+            {
+                rewardItem.RefreshReferences(owner);
+            }
+        }
     }
 }
 

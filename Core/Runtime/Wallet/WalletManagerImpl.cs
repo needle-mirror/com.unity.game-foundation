@@ -34,7 +34,7 @@ namespace UnityEngine.GameFoundation
         ///     it gets the persisted player balance, or set it to 0.
         /// </summary>
         /// <inheritdoc/>
-        protected override void InitializeData(Completer completer)
+        protected override void InitializeData(Completer completer, GameFoundationInitOptions initOptions = null)
         {
             var data = dataLayer.GetData();
             var currencies = new List<Currency>();

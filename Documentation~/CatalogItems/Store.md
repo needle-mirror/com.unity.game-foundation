@@ -1,4 +1,4 @@
-# Stores
+# Store
 
 ## Overview
 
@@ -26,17 +26,6 @@ The interface is similar to the other [catalog items editor].
   In other words, it is a soft way to remove a product.\
 
 (2) Use the __Other Available Transactions__ section to populate the Store Transactions list with the transactions defined in the [Virtual Transactions] and [IAP Transactions].
-
-## 
-< [_table of contents_](../TableOfContents.md)
-
-
-
-
-
-
-
-
 
 
 [catalog item]: ../Catalog.md#Catalog-Items

@@ -1,4 +1,4 @@
-# Currencies
+# Currency
 
 ## Overview
 
@@ -36,17 +36,6 @@ The Currency window will let you configure Currencies.
 The interface is similar to the other [catalog items editor].
 
 (1) In addition to the shared General section, you'll find the three special fields `Initial allocation`, `Maximum allocation,` and `Type`.
-
-## 
-< [_table of contents_](../TableOfContents.md)
-
-
-
-
-
-
-
-
 
 
 [catalog item]: ../Catalog.md#Catalog-Items

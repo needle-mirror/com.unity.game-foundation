@@ -10,5 +10,6 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
         void OnWillExit();
         void ValidateSelection();
         void RefreshItems();
+        void UnsubscribeFromCatalogUpdates();
     }
 }

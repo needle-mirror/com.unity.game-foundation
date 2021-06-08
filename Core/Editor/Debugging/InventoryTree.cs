@@ -272,13 +272,33 @@ namespace UnityEditor.GameFoundation.Debugging
                                 break;
                             }
 
+                            case PropertyType.Addressables:
+                            {
+                                newValue = EditorGUI.TextField(cellRect, property, guiStyle);
+
+                                break;
+                            }
+
                             default:
                                 throw new ArgumentOutOfRangeException(
                                     $"{nameof(InventoryTree)}: {definition.value.type} of property isn't handled.");
                         }
 
                         if (newValue != property)
-                            inventoryItem.SetMutableProperty(definition.key, newValue);
+                        {
+                            if (property.type == PropertyType.Addressables)
+                            {
+                                if (property.AsString() != newValue.AsString())
+                                {
+                                    newValue = Property.CreateAddressablesProperty(newValue.AsString());
+                                    inventoryItem.SetMutableProperty(definition.key, newValue);
+                                }
+                            }
+                            else
+                            {
+                                inventoryItem.SetMutableProperty(definition.key, newValue);
+                            }
+                        }
                     }
                     catch (Exception e)
                     {
@@ -336,7 +356,7 @@ namespace UnityEditor.GameFoundation.Debugging
                     }
 
                     break;
-                
+
                 case RewardView rewardView:
                     string rewardState;
                     if (rewardView.reward.IsInCooldown())
@@ -372,7 +392,7 @@ namespace UnityEditor.GameFoundation.Debugging
             tempRect.x += GetContentIndent(viewItem);
             tempRect.width = 16f;
 
-            //Get clipping width for cell and remaining column width. 
+            //Get clipping width for cell and remaining column width.
             tempRect.width = cellRect.width - GetContentIndent(viewItem);
 
             var labelText = viewItem.displayName;
@@ -567,7 +587,7 @@ namespace UnityEditor.GameFoundation.Debugging
                     m_AllTreeViewItems.Add(propertyView);
                 }
             }
-            
+
             var rewardDefinitionsView = new TreeViewItem(id++, 0, "Rewards");
             using (GFTools.Pools.rewardList.Get(out var rewards))
             {
@@ -592,7 +612,7 @@ namespace UnityEditor.GameFoundation.Debugging
                             foreach (var rewardItemDefinition in rewardItemDefinitions)
                             {
                                 count++;
-                                var rewardItemView = new RewardItemView(id++, rewardDefinitionsView.depth + 1, 
+                                var rewardItemView = new RewardItemView(id++, rewardDefinitionsView.depth + 1,
                                     $"Reward Item {count}", reward, (rewardItemDefinition.key, rewardItems[rewardItemDefinition.key]));
                                 m_AllTreeViewItems.Add(rewardItemView);
                                 rewardView.AddChild(rewardItemView);

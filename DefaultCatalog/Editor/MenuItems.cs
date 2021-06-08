@@ -83,5 +83,23 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
         {
             Selection.SetActiveObjectWithContext(CatalogSettings.singleton, null);
         }
+
+        /// <summary>
+        ///     Sets selected CatalogAsset as the Catalog Asset in CatalogSettings.
+        /// </summary>
+        [MenuItem("Assets/Game Foundation/Use This Catalog In GameFoundationCatalogSettings", false)]
+        public static void SetAsCatalogSettingsCatalogAsset()
+        {
+            CatalogSettings.catalogAsset = (CatalogAsset) Selection.activeObject;
+        }
+
+        /// <summary>
+        ///     Validates whether active object is of type CatalogAsset in order to enable SetAsCatalogSettingsCatalogAsset MenuItem.
+        /// </summary>
+        [MenuItem("Assets/Game Foundation/Use This Catalog In GameFoundationCatalogSettings", true)]
+        public static bool ValidateSetAsCatalogSettingsCatalogAsset()
+        {
+            return Selection.activeObject is CatalogAsset;
+        }
     }
 }

@@ -17,11 +17,11 @@ namespace UnityEngine.GameFoundation.Configs
                 k_GFLogger.LogWarning($"Transaction '{key}' doesn't have a product id assigned and will not be purchasable!");
             }
 
-            var iapTransaction = new IAPTransaction
+            return new IAPTransaction
             {
+                productType = productType,
                 productId = productId
             };
-            return iapTransaction;
         }
     }
 }

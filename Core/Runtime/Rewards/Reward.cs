@@ -294,8 +294,9 @@ namespace UnityEngine.GameFoundation
                 && hasCooldownFinished;
 
             // when resetIfExpires is true and any item expires
-            var doResetAfterExpiration = rewardDefinition.resetIfExpired
-                && ticksSinceClaim > cooldownTicks + expirationTicks;
+            var doResetAfterExpiration = rewardDefinition.expirationSeconds > 0
+                                         && rewardDefinition.resetIfExpired
+                                         && ticksSinceClaim > cooldownTicks + expirationTicks;
             if (isClaimableOutOfRange
                 || wasLastRewardClaimed
                 || doResetAfterExpiration)

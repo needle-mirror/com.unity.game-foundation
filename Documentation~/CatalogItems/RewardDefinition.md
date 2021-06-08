@@ -1,4 +1,4 @@
-# Reward Definitions
+# Reward Definition
 
 ## Overview
 
@@ -20,9 +20,6 @@ To begin creating a Reward Definition, [follow the tutorial to create a simple d
 ## Reward Item Definitions
 
 A Reward Definition also keeps an ordered collection of Reward Item Definitions. Each Reward Item Definition describes a payout. If the validaton conditions of the Reward Definition indicate that the Reward Item at a certain index in the collection is valid, then the player may claim that payout.
-
-## 
-< [_table of contents_](../TableOfContents.md)
 
 
 [Follow the tutorial to create a simple daily reward or progressive daily reward]: ../Tutorials/17-CreatingRewards.md

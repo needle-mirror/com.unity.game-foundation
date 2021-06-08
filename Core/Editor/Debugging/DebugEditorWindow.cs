@@ -44,7 +44,7 @@ namespace UnityEditor.GameFoundation.Debugging
 
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
             GameFoundationSdk.initialized += UpdateState;
-            GameFoundationSdk.uninitialized += UpdateState;
+            GameFoundationSdk.willUninitialize += UpdateState;
 
             m_TreeView.AttachListeners();
         }
@@ -55,7 +55,7 @@ namespace UnityEditor.GameFoundation.Debugging
 
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
             GameFoundationSdk.initialized -= UpdateState;
-            GameFoundationSdk.uninitialized -= UpdateState;
+            GameFoundationSdk.willUninitialize -= UpdateState;
         }
 
         void OnGUI()

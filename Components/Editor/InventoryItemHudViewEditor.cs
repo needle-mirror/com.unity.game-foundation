@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.GameFoundation;
 using UnityEngine.GameFoundation.Components;
 using UnityEngine.GameFoundation.DefaultCatalog;
-using UnityEngine.UI;
 
 namespace UnityEditor.GameFoundation.Components
 {
@@ -60,97 +59,58 @@ namespace UnityEditor.GameFoundation.Components
 
         void PopulateStaticPropertyKeys()
         {
-            m_SelectedIconPropertyIndex = m_IconPropertyDropdownHelper.Populate(
-                CatalogSettings.catalogAsset.FindItem(m_ItemDefinitionKey_SerializedProperty.stringValue) as InventoryItemDefinitionAsset,
-                m_IconAssetPropertyKey_SerializedProperty.stringValue, PropertyType.ResourcesAsset, true);
+            m_SelectedIconPropertyIndex = m_IconPropertyDropdownHelper.Populate(PrefabTools.GetLookUpCatalogAsset()
+                    .FindItem(m_ItemDefinitionKey_SerializedProperty.stringValue) as InventoryItemDefinitionAsset,
+                m_IconAssetPropertyKey_SerializedProperty.stringValue,
+                new []{ PropertyType.ResourcesAsset, PropertyType.Addressables });
         }
 
         public override void OnInspectorGUI()
         {
+            var itemDisplayContent = new GUIContent("Item", "The Inventory Item to display.");
+            var iconPropertyKeyContent = new GUIContent("Icon Asset Property Key", 
+                "The key for the sprite that is defined in the Static Property of Inventory Item. " +
+                "If none is specified no image will be displayed.");
+            var itemImageFieldContent = new GUIContent("Item Image Field", 
+                "The Image component in which to display Currency icon sprite.");
+            var itemQuantityFieldContent = new GUIContent("Item Quantity Text Field",
+                "TextMeshProUGUI component in which to display Inventory item quantity.");
+
             // Pull the information from the target into the serializedObject.
             serializedObject.Update();
 
-            var itemDisplayContent = new GUIContent("Item", "The Inventory Item to display.");
-            if (m_ItemDropdownHelper.displayNames != null && m_ItemDropdownHelper.displayNames.Length > 0)
-            {
-                m_SelectedItemIndex = EditorGUILayout.Popup(itemDisplayContent, m_SelectedItemIndex, m_ItemDropdownHelper.displayNames);
-                var itemKey = m_ItemDropdownHelper.GetKey(m_SelectedItemIndex);
-                if (m_InventoryItemHudView.itemDefinitionKey != itemKey)
-                {
-                    SetSelectedInventoryItemKey(itemKey);
-                }
-            }
-            else
-            {
-                EditorGUILayout.Popup(itemDisplayContent, 0, new[] { "None" });
-            }
-
-            EditorGUILayout.Space();
-
-            var iconPropertyKeyContent = new GUIContent("Icon Asset Property Key", "The key for the sprite that is defined in the Static Property of Inventory Item. " +
-                "If none is specified no image will be displayed.");
-            m_SelectedIconPropertyIndex = EditorGUILayout.Popup(iconPropertyKeyContent, m_SelectedIconPropertyIndex, m_IconPropertyDropdownHelper.displayNames);
-            var iconAssetPropertyKey = m_IconPropertyDropdownHelper.GetKey(m_SelectedIconPropertyIndex);
-            if (m_InventoryItemHudView.iconSpritePropertyKey != iconAssetPropertyKey)
-            {
-                m_InventoryItemHudView.SetIconSpritePropertyKey(iconAssetPropertyKey);
-                m_IconAssetPropertyKey_SerializedProperty.stringValue = iconAssetPropertyKey;
-            }
+            PrefabTools.DisplayCatalogOverrideAlertIfNecessary();
 
             using (var check = new EditorGUI.ChangeCheckScope())
             {
-                var itemImageFieldContent = new GUIContent("Item Image Field", "The Image component in which to display Currency icon sprite.");
-                var itemImageField = (Image)EditorGUILayout.ObjectField(itemImageFieldContent,
-                    m_InventoryItemHudView.iconImageField, typeof(Image), true);
+                m_SelectedItemIndex = EditorGUILayout.Popup(
+                    itemDisplayContent, m_SelectedItemIndex, m_ItemDropdownHelper.displayNames);
+                m_ItemDefinitionKey_SerializedProperty.stringValue = m_ItemDropdownHelper.GetKey(m_SelectedItemIndex);
 
                 if (check.changed)
                 {
-                    m_InventoryItemHudView.SetIconImageField(itemImageField);
-                    if (m_IconImageField_SerializedProperty != null)
-                    {
-                        m_IconImageField_SerializedProperty.objectReferenceValue = itemImageField;
-                    }
+                    PopulateStaticPropertyKeys();
                 }
             }
 
             EditorGUILayout.Space();
 
-            using (var check = new EditorGUI.ChangeCheckScope())
-            {
-                var itemQuantityFieldContent = new GUIContent("Item Quantity Text Field",
-                    "Text component in which to display Inventory item quantity.");
-                var itemQuantityField = (Text)EditorGUILayout.ObjectField(itemQuantityFieldContent,
-                    m_InventoryItemHudView.quantityTextField, typeof(Text), true);
+            m_SelectedIconPropertyIndex = EditorGUILayout.Popup(
+                iconPropertyKeyContent, m_SelectedIconPropertyIndex, m_IconPropertyDropdownHelper.displayNames);
+            m_IconAssetPropertyKey_SerializedProperty.stringValue = m_IconPropertyDropdownHelper
+                .GetKey(m_SelectedIconPropertyIndex);
 
-                if (check.changed)
-                {
-                    m_InventoryItemHudView.SetQuantityTextField(itemQuantityField);
-                    if (m_QuantityText_SerializedProperty != null)
-                    {
-                        m_QuantityText_SerializedProperty.objectReferenceValue = itemQuantityField;
-                    }
-                }
-            }
+            EditorGUILayout.PropertyField(m_IconImageField_SerializedProperty, itemImageFieldContent);
+
+            EditorGUILayout.Space();
+
+            EditorGUILayout.PropertyField(m_QuantityText_SerializedProperty, itemQuantityFieldContent);
 
             // Use the default object field GUI for these properties.
             DrawPropertiesExcluding(serializedObject, kExcludedFields);
 
             // Push all changes made on the serializedObject back to the target.
             serializedObject.ApplyModifiedProperties();
-        }
-
-        void SetSelectedInventoryItemKey(string key)
-        {
-            // Update the serialized value
-            m_ItemDefinitionKey_SerializedProperty.stringValue = key;
-
-            // Update Component's state
-            m_InventoryItemHudView.SetItemDefinition(key);
-
-            // Push all changes made on the serializedObject back to the target.
-            serializedObject.ApplyModifiedProperties();
-
-            PopulateStaticPropertyKeys();
         }
     }
 }

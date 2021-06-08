@@ -15,15 +15,15 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         [field: SerializeField]
         public string key { get; internal set; }
 
-        /// <inheritdoc cref="payout"/>
-        [SerializeField]
-        internal TransactionExchangeDefinitionObject m_Payout
-            = new TransactionExchangeDefinitionObject();
-
         /// <summary>
         ///     A link to the <see cref="RewardAsset"/> which owns this <see cref="RewardItemObject"/>.
         /// </summary>
         public RewardAsset reward { get; internal set; }
+
+        /// <inheritdoc cref="payout"/>
+        [SerializeField]
+        internal TransactionExchangeDefinitionObject m_Payout
+            = new TransactionExchangeDefinitionObject();
 
         /// <summary>
         ///     A reference to a <see cref="TransactionExchangeDefinitionObject"/>.
@@ -50,14 +50,6 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
             {
                 key = key,
                 payout = m_Payout.Configure()
-            };
-        }
-
-        internal RewardItemObject Clone()
-        {
-            return new RewardItemObject
-            {
-                m_Payout = m_Payout.Clone()
             };
         }
     }

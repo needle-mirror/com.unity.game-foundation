@@ -48,6 +48,12 @@ namespace UnityEngine.GameFoundation.Components
         bool m_InteractableInternal = true;
 
         /// <summary>
+        ///     Tracks whether any properties have been changed.
+        ///     Checked by Update() to see whether content should be updated.
+        /// </summary>
+        bool m_IsDirty;
+
+        /// <summary>
         ///     Specifies whether the debug logs is visible.
         /// </summary>
         bool m_ShowDebugLogs = false;
@@ -68,7 +74,8 @@ namespace UnityEngine.GameFoundation.Components
         void OnEnable()
         {
             GameFoundationSdk.initialized += RegisterEvents;
-            GameFoundationSdk.uninitialized += UnregisterEvents;
+            GameFoundationSdk.initialized += InitializeComponentData;
+            GameFoundationSdk.willUninitialize += UnregisterEvents;
 
             if (GameFoundationSdk.IsInitialized)
             {
@@ -82,7 +89,8 @@ namespace UnityEngine.GameFoundation.Components
         void OnDisable()
         {
             GameFoundationSdk.initialized -= RegisterEvents;
-            GameFoundationSdk.uninitialized -= UnregisterEvents;
+            GameFoundationSdk.initialized -= InitializeComponentData;
+            GameFoundationSdk.willUninitialize -= UnregisterEvents;
 
             if (GameFoundationSdk.IsInitialized)
             {
@@ -95,6 +103,9 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         void RegisterEvents()
         {
+            if (GameFoundationSdk.rewards == null)
+                return;
+
             GameFoundationSdk.rewards.rewardItemClaimSucceeded += OnRewardItemClaimSucceeded;
             GameFoundationSdk.rewards.rewardItemClaimFailed += OnRewardItemClaimFailed;
             GameFoundationSdk.rewards.rewardItemClaimInitiated += OnRewardItemClaimInitiated;
@@ -105,6 +116,9 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         void UnregisterEvents()
         {
+            if (GameFoundationSdk.rewards == null)
+                return;
+
             GameFoundationSdk.rewards.rewardItemClaimSucceeded -= OnRewardItemClaimSucceeded;
             GameFoundationSdk.rewards.rewardItemClaimFailed -= OnRewardItemClaimFailed;
             GameFoundationSdk.rewards.rewardItemClaimInitiated -= OnRewardItemClaimInitiated;
@@ -144,19 +158,37 @@ namespace UnityEngine.GameFoundation.Components
         }
 
         /// <summary>
-        ///     Initializes RewardClaimButton before the first frame update.
+        ///     Initializes RewardClaimButton before the first frame update if Game Foundation Sdk was already
+        ///     initialized before RewardClaimButton was enabled, otherwise sets content to a blank state in order
+        ///     to wait for Game Foundation Sdk to initialize.
         ///     If m_RewardDefinitionKey or m_RewardItemDefinitionKey is null or can't be found in the Reward Catalog or Reward it
-        ///     will
-        ///     log error and return without setting button info.
+        ///     will log error and return without setting button info.
         /// </summary>
         void Start()
         {
-            ThrowIfNotInitialized(nameof(Start));
-
-            if (!m_IsDrivenByOtherComponent)
+            if (!GameFoundationSdk.IsInitialized)
             {
-                SetRewardItemDefinition(m_RewardDefinitionKey, m_RewardItemDefinitionKey);
+                k_GFLogger.Log("Waiting for initialization.");
+                SetButtonEnabledStateInternal(false);
+                return;
             }
+
+            // This is to catch the case where Game Foundation initialized before OnEnable added the GameFoundationSdk initialize listener.
+            if (GameFoundationSdk.IsInitialized && m_RewardItemDefinition is null)
+            {
+                InitializeComponentData();
+            }
+        }
+
+        /// <summary>
+        ///     Initializes RewardClaimButton data from Game Foundation Sdk.
+        /// </summary>
+        void InitializeComponentData()
+        {
+            if (!Application.isPlaying)
+                return;
+
+            SetRewardItemDefinition(m_RewardDefinitionKey, m_RewardItemDefinitionKey);
         }
 
         /// <summary>
@@ -180,35 +212,6 @@ namespace UnityEngine.GameFoundation.Components
             if (Application.isPlaying)
             {
                 SetButtonEnabledStateInternal(m_RewardItemDefinition != null);
-            }
-        }
-
-        /// <summary>
-        ///     Sets the RewardItem that will be claimed when Claim method is called.
-        /// </summary>
-        /// <param name="definition">
-        ///     The runtime RewardItem that should be claimed when Claim() is called.
-        ///     If null the Claim button will be disabled.
-        /// </param>
-        public void SetRewardItemDefinition(RewardItemDefinition definition)
-        {
-            ThrowIfNotInitialized(nameof(SetRewardItemDefinition));
-
-            m_RewardItemDefinition = definition;
-
-            if (definition == null)
-            {
-                m_RewardDefinitionKey = null;
-                m_RewardItemDefinitionKey = null;
-
-                SetButtonEnabledStateInternal(false);
-            }
-            else
-            {
-                m_RewardDefinitionKey = definition.rewardDefinition.key;
-                m_RewardItemDefinitionKey = definition.key;
-
-                SetButtonEnabledStateInternal(true);
             }
         }
 
@@ -250,22 +253,54 @@ namespace UnityEngine.GameFoundation.Components
         }
 
         /// <summary>
+        ///     Sets the RewardItem that will be claimed when Claim method is called.
+        /// </summary>
+        /// <param name="definition">
+        ///     The runtime RewardItem that should be claimed when Claim() is called.
+        ///     If null the Claim button will be disabled.
+        /// </param>
+        public void SetRewardItemDefinition(RewardItemDefinition definition)
+        {
+            if (PrefabTools.FailIfNotInitialized(k_GFLogger, nameof(SetRewardItemDefinition)))
+            {
+                return;
+            }
+
+            m_RewardItemDefinition = definition;
+
+            if (definition is null)
+            {
+                m_RewardDefinitionKey = null;
+                m_RewardItemDefinitionKey = null;
+
+                SetButtonEnabledStateInternal(false);
+            }
+            else
+            {
+                m_RewardDefinitionKey = definition.rewardDefinition?.key;
+                m_RewardItemDefinitionKey = definition.key;
+
+                SetButtonEnabledStateInternal(true);
+            }
+        }
+
+        /// <summary>
         ///     Calls RewardManager.Claim with the RewardItem component has stored.
         /// </summary>
         public void Claim()
         {
-            ThrowIfNotInitialized(nameof(Claim));
+            var rewardClaim = GetComponent<RewardClaimManager>();
 
-            if (m_RewardItemDefinition != null)
+            if (PrefabTools.FailIfNotInitialized(k_GFLogger, nameof(Claim))
+                || m_RewardItemDefinition == null
+                || rewardClaim.IsInQueue(m_RewardItemDefinition))
             {
-                var rewardClaim = GetComponent<RewardClaimManager>();
-                if (rewardClaim.IsInQueue(m_RewardItemDefinition))
-                    return;
-
-                SetButtonEnabledStateInternal(false);
-
-                GetComponent<RewardClaimManager>().Claim(m_RewardItemDefinition);
+                return;
             }
+
+            SetButtonEnabledStateInternal(false);
+
+            GetComponent<RewardClaimManager>().Claim(m_RewardItemDefinition);
         }
 
         /// <summary>
@@ -282,6 +317,25 @@ namespace UnityEngine.GameFoundation.Components
 
             m_Interactable = enableState;
             UpdateButtonStatus();
+        }
+
+        /// <summary>
+        ///     Checks to see whether any properties have been changed (by checking <see cref="m_IsDirty"/>) and
+        ///     if so, calls <see cref="UpdateContent"/> before resetting the flag.
+        /// </summary>
+        void Update()
+        {
+            if (m_IsDirty)
+            {
+                m_IsDirty = false;
+
+                m_RewardItemDefinition = GetRewardItemDefinition(rewardDefinitionKey, rewardItemDefinitionKey);
+
+                if (Application.isPlaying)
+                {
+                    SetButtonEnabledStateInternal(m_RewardItemDefinition != null);
+                }
+            }
         }
 
         /// <summary>
@@ -310,7 +364,7 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         void UpdateButtonStatus()
         {
-            if (m_Button == null)
+            if (m_Button is null)
                 return;
 
             m_Button.interactable = m_Interactable && m_InteractableInternal;
@@ -377,18 +431,11 @@ namespace UnityEngine.GameFoundation.Components
         }
 
         /// <summary>
-        ///     Throws an Invalid Operation Exception if GameFoundation has not been initialized before this view is used.
+        ///     When changes are made via the Inspector, trigger <see cref="UpdateContent"/>
         /// </summary>
-        /// <param name="callingMethod">
-        ///     Calling method name.
-        /// </param>
-        void ThrowIfNotInitialized(string callingMethod)
+        void OnValidate()
         {
-            if (!GameFoundationSdk.IsInitialized)
-            {
-                var message = $"GameFoundationSdk.Initialize() must be called before {callingMethod} is used.";
-                k_GFLogger.LogException(message, new InvalidOperationException(message));
-            }
+            m_IsDirty = true;
         }
     }
 }

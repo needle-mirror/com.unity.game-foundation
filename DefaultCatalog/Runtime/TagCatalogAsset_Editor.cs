@@ -80,6 +80,43 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
                 target.Add(item);
             }
         }
+
+        /// <summary>
+        ///     Deep copy this instance.
+        /// </summary>
+        /// <returns>
+        ///     Return a deep copy of this instance.
+        /// </returns>
+        internal TagCatalogAsset Clone()
+        {
+            var clone = CreateInstance<TagCatalogAsset>();
+            clone.m_CatalogAsset = m_CatalogAsset;
+
+            foreach (var tag in m_Tags)
+            {
+                var tagClone = tag.Clone();
+
+                clone.m_Tags.Add(tagClone);
+            }
+
+            return clone;
+        }
+
+        /// <summary>
+        ///     Update all member references to target objects stored in the given <paramref name="owner"/>.
+        /// </summary>
+        /// <param name="owner">
+        ///     The catalog containing all required references.
+        /// </param>
+        internal void RefreshReferences(CatalogAsset owner)
+        {
+            m_CatalogAsset = owner;
+
+            foreach (var tag in m_Tags)
+            {
+                tag.RefreshReferences(owner);
+            }
+        }
     }
 }
 #endif

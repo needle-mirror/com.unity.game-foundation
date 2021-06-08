@@ -10,7 +10,7 @@ The [Inventory Manager](GameSystems/InventoryManager.md) tracks all items in pla
 
 The [Wallet Manager](GameSystems/WalletManager.md), similar to the Inventory Manager (above), tracks [Currencies](CatalogItems/Currency.md) acquired by the player in your game to maintain your [Game Economy](GameSystems/GameEconomy.md).
 
-## Rewards
+## Reward
 
 The [Reward Manager](GameSystems/RewardManager.md) provides access to in-game rewards such as Daily Bonuses, Promotions, etc.  These rewards can promote retention and generally improve your player's experience in your game world.
 
@@ -19,7 +19,7 @@ The [Reward Manager](GameSystems/RewardManager.md) provides access to in-game re
 The [Transaction Manager](GameSystems/TransactionManager.md) process both [Virtual Transaction](CatalogItems/VirtualTransaction.md) and [IAP Transaction](CatalogItems/IAPTransaction.md) within your game.
 
 
-## Data access layer
+## Data Access Layer
 
 The data access layer is responsible for providing Game Foundation-related game state data to the Game Foundation systems.
 This makes it easy for you to switch between no persistence, local persistence, and your own persistence, without changing how you use GameFoundation.
@@ -32,14 +32,6 @@ You can also get Game Foundation's raw data from it to serialize them however yo
 You can also implement your own `IDataAccessLayer` if you have more specific requirements.
 
 More info [in this page].
-
-## 
-< [_table of contents_](TableOfContents.md)
-
-
-
-
-
 
 
 [inventory manager]: GameSystems/InventoryManager.md

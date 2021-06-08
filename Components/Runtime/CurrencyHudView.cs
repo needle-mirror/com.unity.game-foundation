@@ -1,4 +1,4 @@
-using System;
+using TMPro;
 using UnityEngine.UI;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -11,7 +11,7 @@ namespace UnityEngine.GameFoundation.Components
     ///     Component that manages displaying a Currency's icon and quantity.
     ///     When attached to a game object, it will display the Currency's icon and quantity.
     /// </summary>
-    [AddComponentMenu("Game Foundation/Currency Hud", 4)]
+    [AddComponentMenu("Game Foundation/Currency HUD View", 4)]
     [ExecuteInEditMode]
     public class CurrencyHudView : MonoBehaviour
     {
@@ -30,7 +30,7 @@ namespace UnityEngine.GameFoundation.Components
         public string iconSpritePropertyKey => m_IconSpritePropertyKey;
 
         [SerializeField]
-        internal string m_IconSpritePropertyKey = "hud_icon";
+        internal string m_IconSpritePropertyKey;
 
         /// <summary>
         ///     The Image component to assign the <see cref="Currency"/> icon image to.
@@ -41,12 +41,12 @@ namespace UnityEngine.GameFoundation.Components
         internal Image m_IconImageField;
 
         /// <summary>
-        ///     The Text component to assign the <see cref="Currency"/> quantity to.
+        ///     The TextMeshProUGUI component to assign the <see cref="Currency"/> quantity to.
         /// </summary>
-        public Text quantityTextField => m_QuantityTextField;
+        public TextMeshProUGUI quantityTextField => m_QuantityTextField;
 
         [SerializeField]
-        internal Text m_QuantityTextField;
+        internal TextMeshProUGUI m_QuantityTextField;
 
         /// <summary>
         ///     A reference to the <see cref="Currency"/> definition.
@@ -54,6 +54,12 @@ namespace UnityEngine.GameFoundation.Components
         public Currency currency => m_Currency;
 
         Currency m_Currency;
+
+        /// <summary>
+        ///     Tracks whether any properties have been changed.
+        ///     Checked by Update() to see whether content should be updated.
+        /// </summary>
+        bool m_IsDirty;
 
         /// <summary>
         ///     Specifies whether the debug logs is visible.
@@ -71,7 +77,8 @@ namespace UnityEngine.GameFoundation.Components
         void OnEnable()
         {
             GameFoundationSdk.initialized += RegisterEvents;
-            GameFoundationSdk.uninitialized += UnregisterEvents;
+            GameFoundationSdk.initialized += InitializeComponentData;
+            GameFoundationSdk.willUninitialize += UnregisterEvents;
 
             if (GameFoundationSdk.IsInitialized)
             {
@@ -90,7 +97,8 @@ namespace UnityEngine.GameFoundation.Components
         void OnDisable()
         {
             GameFoundationSdk.initialized -= RegisterEvents;
-            GameFoundationSdk.uninitialized -= UnregisterEvents;
+            GameFoundationSdk.initialized -= InitializeComponentData;
+            GameFoundationSdk.willUninitialize -= UnregisterEvents;
 
             if (GameFoundationSdk.IsInitialized)
             {
@@ -103,6 +111,9 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         void RegisterEvents()
         {
+            if (GameFoundationSdk.wallet == null)
+                return;
+
             GameFoundationSdk.wallet.balanceChanged += OnCurrencyChanged;
         }
 
@@ -111,51 +122,57 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         void UnregisterEvents()
         {
+            if (GameFoundationSdk.wallet == null)
+                return;
+
             GameFoundationSdk.wallet.balanceChanged -= OnCurrencyChanged;
         }
 
         /// <summary>
-        ///     Initializes CurrencyHudView before the first frame update.
+        ///     Initializes CurrencyHudView before the first frame update if Game Foundation Sdk was already initialized
+        ///     before CurrencyHudView was enabled, otherwise sets content to a blank state in order to wait for
+        ///     Game Foundation Sdk to initialize.
         /// </summary>
         void Start()
         {
             if (!Application.isPlaying)
                 return;
 
-            ThrowIfNotInitialized(nameof(Start));
+            // This is to catch the case where Game Foundation initialized before OnEnable added the GameFoundationSdk initialize listener.
+            if (GameFoundationSdk.IsInitialized && m_Currency is null)
+            {
+                InitializeComponentData();
+                return;
+            }
 
-            m_Currency = GetCurrency(m_CurrencyKey);
-            UpdateContent();
+            if (!GameFoundationSdk.IsInitialized)
+            {
+                k_GFLogger.Log("Waiting for initialization.");
+                m_IsDirty = true;
+            }
         }
 
         /// <summary>
-        ///     Sets Currency should be displayed by this view.
+        ///     Initializes CurrencyHudView data from Game Foundation Sdk.
         /// </summary>
-        /// <param name="currency">
-        ///     A reference to the Currency that should be displayed.
-        /// </param>
-        public void SetCurrency(Currency currency)
+        void InitializeComponentData()
         {
-            ThrowIfNotInitialized(nameof(SetCurrency));
+            if (!Application.isPlaying)
+                return;
 
-            m_Currency = currency;
-            m_CurrencyKey = currency?.key;
-
-            UpdateContent();
+            m_IsDirty = true;
         }
 
         /// <summary>
-        ///     Sets Currency should be displayed by this view.
+        ///     Sets the Currency that should be displayed by this view.
         /// </summary>
         /// <param name="currencyKey">
         ///     The Currency identifier that should be displayed.
         /// </param>
-        internal void SetCurrency(string currencyKey)
+        void SetCurrency(string currencyKey)
         {
             m_CurrencyKey = currencyKey;
-            m_Currency = GetCurrency(currencyKey);
-
-            UpdateContent();
+            m_IsDirty = true;
         }
 
         /// <summary>
@@ -180,6 +197,24 @@ namespace UnityEngine.GameFoundation.Components
         }
 
         /// <summary>
+        ///     Sets the Currency that should be displayed by this view. Runtime only.
+        /// </summary>
+        /// <param name="currency">
+        ///     A reference to the Currency that should be displayed.
+        /// </param>
+        public void SetCurrency(Currency currency)
+        {
+            if (PrefabTools.FailIfNotInitialized(k_GFLogger, nameof(SetCurrency)))
+            {
+                return;
+            }
+
+            m_Currency = currency;
+            m_CurrencyKey = currency?.key;
+            m_IsDirty = true;
+        }
+
+        /// <summary>
         ///     Sets sprite name for Currency icon that will be displayed on this view.
         /// </summary>
         /// <param name="propertyKey">
@@ -194,7 +229,7 @@ namespace UnityEngine.GameFoundation.Components
             }
 
             m_IconSpritePropertyKey = propertyKey;
-            UpdateIconSprite();
+            m_IsDirty = true;
         }
 
         /// <summary>
@@ -211,16 +246,16 @@ namespace UnityEngine.GameFoundation.Components
             }
 
             m_IconImageField = image;
-            UpdateIconSprite();
+            m_IsDirty = true;
         }
 
         /// <summary>
-        ///     Sets the Text component to display the Currency quantity on this view.
+        ///     Sets the TextMeshProUGUI component to display the Currency quantity on this view.
         /// </summary>
         /// <param name="text">
-        ///     The Text component to display the Currency quantity
+        ///     The TextMeshProUGUI component to display the Currency quantity
         /// </param>
-        public void SetQuantityTextField(Text text)
+        public void SetQuantityTextField(TextMeshProUGUI text)
         {
             if (m_QuantityTextField == text)
             {
@@ -228,7 +263,31 @@ namespace UnityEngine.GameFoundation.Components
             }
 
             m_QuantityTextField = text;
-            UpdateQuantity();
+            m_IsDirty = true;
+        }
+
+        /// <summary>
+        ///     Checks to see whether any properties have been changed (by checking <see cref="m_IsDirty"/>) and
+        ///     if so, calls <see cref="UpdateContent"/> before resetting the flag.
+        ///
+        ///     At runtime, also assigns the appropriate value for <see cref="m_Transaction"/> from the Catalog if needed.
+        ///     If m_Transaction and m_TransactionKey don't currently match, this replaces m_Transaction with the
+        ///     correct transaction by searching the Catalog for m_TransactionKey.
+        /// </summary>
+        void Update()
+        {
+            if (m_IsDirty)
+            {
+                m_IsDirty = false;
+                if (GameFoundationSdk.IsInitialized &&
+                    (m_Currency is null && !string.IsNullOrEmpty(m_CurrencyKey) || 
+                    !(m_Currency is null) && m_Currency.key != m_CurrencyKey))
+                {
+                    m_Currency = GetCurrency(m_CurrencyKey);
+                }
+
+                UpdateContent();
+            }
         }
 
         /// <summary>
@@ -237,47 +296,57 @@ namespace UnityEngine.GameFoundation.Components
         internal void UpdateContent()
         {
 #if UNITY_EDITOR
-
             // To avoid updating the content the prefab selected in the Project window
             if (!Application.isPlaying && PrefabUtility.IsPartOfPrefabAsset(gameObject))
             {
                 return;
             }
 #endif
+            
+            if (Application.isPlaying && !GameFoundationSdk.IsInitialized)
+            {
+                SetIconSprite(null);
+                SetQuantity(null);
+                return;
+            }
 
-            UpdateIconSprite();
+            LoadAndSetIconSprite();
             UpdateQuantity();
         }
 
         /// <summary>
         ///     Updates the Currency icon on this view.
         /// </summary>
-        void UpdateIconSprite()
+        void LoadAndSetIconSprite()
         {
-            Sprite sprite = null;
-
             if (!string.IsNullOrEmpty(m_CurrencyKey))
             {
                 if (Application.isPlaying)
                 {
                     if (m_Currency != null && m_Currency.TryGetStaticProperty(m_IconSpritePropertyKey, out var spriteProperty))
                     {
-                        sprite = spriteProperty.AsAsset<Sprite>();
+                        PrefabTools.LoadSprite(spriteProperty, SetIconSprite, OnSpriteLoadFailed);
+                    }
+                    else
+                    {
+                        SetIconSprite(null);
                     }
                 }
 #if UNITY_EDITOR
                 else
                 {
-                    var currencyAsset = CatalogSettings.catalogAsset.FindItem(m_CurrencyKey) as CurrencyAsset;
+                    var currencyAsset = PrefabTools.GetLookUpCatalogAsset().FindItem(m_CurrencyKey) as CurrencyAsset;
                     if (currencyAsset != null && currencyAsset.TryGetStaticProperty(m_IconSpritePropertyKey, out var spriteProperty))
                     {
-                        sprite = spriteProperty.AsAsset<Sprite>();
+                        PrefabTools.LoadSprite(spriteProperty, SetIconSprite, OnSpriteLoadFailed);
+                    }
+                    else
+                    {
+                        SetIconSprite(null);
                     }
                 }
 #endif
             }
-
-            SetIconSprite(sprite);
         }
 
         /// <summary>
@@ -297,15 +366,12 @@ namespace UnityEngine.GameFoundation.Components
             if (m_IconImageField.sprite != icon)
             {
                 m_IconImageField.sprite = icon;
-                if (!(icon is null)) m_IconImageField.SetNativeSize();
-#if UNITY_EDITOR
-                EditorUtility.SetDirty(m_IconImageField);
-#endif
+                m_IconImageField.preserveAspect = true;
             }
         }
 
         /// <summary>
-        ///     Updates the Currency quantity on this view.
+        ///     Updates the Currency quantity on this view. Runtime only.
         /// </summary>
         void UpdateQuantity()
         {
@@ -314,8 +380,8 @@ namespace UnityEngine.GameFoundation.Components
                 return;
             }
 
-            var currency = GameFoundationSdk.catalog?.Find<Currency>(m_CurrencyKey);
-            SetQuantity(currency != null ? GameFoundationSdk.wallet.Get(currency) : 0);
+            var quantity = m_Currency != null ? GameFoundationSdk.wallet.Get(m_Currency) : 0;
+            SetQuantity(quantity.ToString());
         }
 
         /// <summary>
@@ -324,7 +390,7 @@ namespace UnityEngine.GameFoundation.Components
         /// <param name="quantity">
         ///     The new quantity to display.
         /// </param>
-        void SetQuantity(long quantity)
+        void SetQuantity(string quantity)
         {
             if (m_QuantityTextField == null)
             {
@@ -332,28 +398,9 @@ namespace UnityEngine.GameFoundation.Components
                 return;
             }
 
-            var quantityText = quantity.ToString();
-            if (m_QuantityTextField.text != quantityText)
+            if (m_QuantityTextField.text != quantity)
             {
-                m_QuantityTextField.text = quantity.ToString();
-#if UNITY_EDITOR
-                EditorUtility.SetDirty(m_QuantityTextField);
-#endif
-            }
-        }
-
-        /// <summary>
-        ///     Throws an Invalid Operation Exception if GameFoundation has not been initialized before this view is used.
-        /// </summary>
-        /// <param name="callingMethod">
-        ///     Calling method name.
-        /// </param>
-        void ThrowIfNotInitialized(string callingMethod)
-        {
-            if (!GameFoundationSdk.IsInitialized)
-            {
-                var message = $"GameFoundationSdk.Initialize() must be called before {callingMethod} is used.";
-                 k_GFLogger.LogException(message, new InvalidOperationException(message));
+                m_QuantityTextField.text = quantity;
             }
         }
 
@@ -368,11 +415,30 @@ namespace UnityEngine.GameFoundation.Components
         {
             if (quantifiable is Currency currency)
             {
-                if (currency?.key == m_CurrencyKey)
+                if (currency.key == m_CurrencyKey)
                 {
                     UpdateQuantity();
                 }
             }
+        }
+
+        /// <summary>
+        ///     Callback for if there is an error while trying to load a sprite from its Property.
+        /// </summary>
+        /// <param name="errorMessage">
+        ///     The error message returned by <see cref="PrefabTools.LoadSprite"/>.
+        /// </param>
+        void OnSpriteLoadFailed(string errorMessage)
+        {
+            k_GFLogger.LogWarning(errorMessage);
+        }
+
+        /// <summary>
+        ///     When changes are made via the Inspector, trigger <see cref="UpdateContent"/>
+        /// </summary>
+        void OnValidate()
+        {
+            m_IsDirty = true;
         }
     }
 }

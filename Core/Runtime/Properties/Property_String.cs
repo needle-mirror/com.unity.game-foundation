@@ -26,6 +26,7 @@ namespace UnityEngine.GameFoundation
                     return boolValue.ToString();
                 case PropertyType.String:
                 case PropertyType.ResourcesAsset:
+                case PropertyType.Addressables:
                     return m_StringValue;
 
                 default:

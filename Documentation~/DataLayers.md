@@ -1,6 +1,6 @@
 # Data Layers
 
-The Data Layer provides an abstraction to the data operations in Game Foundation, providing developers more flexibilities to decide where to save, load, synchronize, but also more control around the states of all the objects of Game Foundation (see the [architecture] page for more context).
+The Data Layer provides an abstraction to the data operations in Game Foundation, providing developers more flexibilities to decide where to save, load, synchronize, but also more control around the states of all the objects of Game Foundation (see the [Architecture] page for more context).
 
 The API notifies the data layer of the changes operated inside Game Foundation so it can save those changes on files locally, or synchronize them in the Cloud.
 
@@ -22,7 +22,7 @@ This data layer is perfect for two situations:
 
 The __Memory Data Layer__ initializes with two parameters:
 
-- The __database__ of all the static data.
+- The __catalog__ of all the static data.
 - The player data.
 
 The benefit of this data layer is that Game Foundation doesn't force any file structure and location for saving the states, and it leaves this up to the developer.  
@@ -55,16 +55,8 @@ ChilliConnect is a reference backend solution that Game Foundation provides. We'
 
 You can find the implementation of ChilliConnect Adapters for Game Foundation in the sample files attached to this package.
 
-## 
-< [_table of contents_](TableOfContents.md)
 
-
-
-
-
-
-
-[architecture]: Architecture.md
+[Architecture]: Architecture.md
 [memory data layer]: #memory-data-layer
 [persistence data layer]: #persistence-data-layer
 [chilliconnect]: #chilliconnect

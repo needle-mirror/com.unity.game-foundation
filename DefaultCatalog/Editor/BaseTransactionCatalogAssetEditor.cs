@@ -14,7 +14,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
         protected BaseTransactionCatalogAssetEditor(string name, EditorWindow window)
             : base(name, window) { }
 
-        protected void DrawPayouts(TTransactionAsset transaction)
+        protected void DrawConsumablePayouts(TTransactionAsset transaction)
         {
             using (new EditorGUILayout.VerticalScope())
             {

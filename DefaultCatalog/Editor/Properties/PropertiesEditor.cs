@@ -43,7 +43,8 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
             k_DoublePropertyDisplayName,
             nameof(PropertyType.Bool),
             nameof(PropertyType.String),
-            k_ResourcesAssetPropertyDisplayName
+            k_ResourcesAssetPropertyDisplayName,
+            k_AddressablesAssetPropertyDisplayName,
         };
 
         static readonly GUIContent k_LongPropertyLabel = new GUIContent(
@@ -66,11 +67,18 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
             k_ResourcesAssetPropertyDisplayName,
             "This property stores an asset from a Resources folder.\nUse AsAsset<>() to get the asset reference.");
 
+        static readonly GUIContent k_AddressablesPropertyLabel = new GUIContent(
+            k_AddressablesAssetPropertyDisplayName,
+            "This property stores an Addressables address.\nIt can be cast into a AsyncOperationHandle used to load an Addressables asset asynchronously.");
+
         const string k_LongPropertyDisplayName = "Integer number";
 
         const string k_DoublePropertyDisplayName = "Double";
 
         const string k_ResourcesAssetPropertyDisplayName = "Resources Asset";
+
+        const string k_AddressablesAssetPropertyDisplayName = "Addressables";
+
 
         protected static GUIContent GetLabelFor(PropertyType type)
         {
@@ -90,6 +98,9 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
 
                 case PropertyType.ResourcesAsset:
                     return k_AssetPropertyLabel;
+
+                case PropertyType.Addressables:
+                    return k_AddressablesPropertyLabel;
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(type), type, null);
@@ -111,6 +122,8 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
         /// </remarks>
         readonly Dictionary<string, ResourcesAssetDrawer> m_ResourcesAssetDrawers
             = new Dictionary<string, ResourcesAssetDrawer>();
+        readonly Dictionary<string, AddressablesDropdownDrawer> m_AddressablesDropdownDrawers
+            = new Dictionary<string, AddressablesDropdownDrawer>();
 
         string m_NewPropertyName = "";
 
@@ -168,19 +181,30 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
                 return;
             }
 
+            string additionalInfoString = null;
+
             //Duplicate keys to be able to edit the dictionary in the foreach loop.
             var propertyKeys = new List<string>(properties.Keys);
             string toDelete = null;
+
             foreach (var propertyKey in propertyKeys)
             {
                 //Draw row: Property key | value type | default value | delete button
                 using (new GUILayout.HorizontalScope())
                 {
-                    GUILayout.Label(propertyKey, GUILayout.Width(k_KeyWidth));
+                    // show the key for this property
+                    // detect clicks on key or property so we can select Addressables asset later
+                    var selectPropertyClicked = GUILayout.Button(new GUIContent(propertyKey),
+                        EditorStyles.label, GUILayout.Width(k_KeyWidth));
 
+                    // show property type (i.e. "Integer number", "Addressables", etc)
                     Property property = properties[propertyKey];
                     var propertyLabel = GetLabelFor(property.type);
-                    GUILayout.Label(propertyLabel, GUILayout.Width(k_TypeWidth));
+                    if (GUILayout.Button(new GUIContent(propertyLabel),
+                        EditorStyles.label, GUILayout.Width(k_TypeWidth)))
+                    {
+                        selectPropertyClicked = true;
+                    }
 
                     var controlName = $"valueField{propertyKey}";
                     GUI.SetNextControlName(controlName);
@@ -231,6 +255,21 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
                                 break;
                             }
 
+                            case PropertyType.Addressables:
+                            {                                
+                                if (!m_AddressablesDropdownDrawers.TryGetValue(propertyKey, out var drawer))
+                                {
+                                    drawer = new AddressablesDropdownDrawer();
+                                    m_AddressablesDropdownDrawers[propertyKey] = drawer;
+                                }
+                                
+                                var addressablesPropertyResult = drawer.Draw(property.m_StringValue, selectPropertyClicked);
+                                property.m_StringValue = addressablesPropertyResult.updatedAddressablesAddress;
+                                additionalInfoString = addressablesPropertyResult.additionalInfo;
+
+                                break;
+                            }
+
                             default:
                                 throw new NotSupportedException(
                                     $"{nameof(PropertiesEditor)}: Cannot draw field for {nameof(property)} " +
@@ -244,6 +283,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
                         }
                     }
 
+                    // add the delete button
                     if (GUILayout.Button(
                         "X",
                         GameFoundationEditorStyles.tableViewButtonStyle,
@@ -252,6 +292,12 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
                         toDelete = propertyKey;
                     }
                 }
+            }
+
+            // if needed, add the additional info (i.e. "* Warning: ...") at the bottom of the window
+            if (!(additionalInfoString is null))
+            {
+                GUILayout.Label(additionalInfoString, GameFoundationEditorStyles.addressablesWarningTextStyle);
             }
 
             //Do any actual deletion outside the rendering loop to prevent sync issues.

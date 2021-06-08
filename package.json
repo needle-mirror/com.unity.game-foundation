@@ -1,8 +1,8 @@
 {
   "name": "com.unity.game-foundation",
   "displayName": "Game Foundation",
-  "version": "0.8.0-preview",
-  "unity": "2018.4",
+  "version": "0.9.0-preview",
+  "unity": "2019.4",
   "description": "Game Foundation core package.\n\nThis package contains the following components: \n▪ Inventory System \n▪ Virtual Currency Wallet \n▪ Properties System \n▪ Transaction System  \n▪ Reward System  \n▪ Core Systems \n\nNote: CatalogManager now holds the reference to the catalogs at Runtime. Any runtime code that was previously written as \nGameFoundationSettings.database.xCatalog should now be written as CatalogManager.xCatalog. \nGameFoundation's Initialization changed to take an IDataAccessLayer as an argument instead of a persistence object. \n\nNote: Preview release, public API subject to change.",
   "keywords": [
     "unity",
@@ -16,12 +16,24 @@
     "Reward"
   ],
   "dependencies": {
+    "com.unity.addressables": "1.16.16",
     "com.unity.analytics": "3.3.2"
+  },
+  "relatedPackages": {
+    "com.unity.game-foundation.tests": "0.9.0-preview"
+  },
+  "upmCi": {
+    "footprint": "d4ce6f25d1cd16072d487c1fbd1ccae2137271cd"
+  },
+  "repository": {
+    "url": "https://github.cds.internal.unity3d.com/unity/game-foundation.git",
+    "type": "git",
+    "revision": "c05f52f5708608f433025b117e1b4c6218eec08f"
   },
   "samples": [
     {
       "displayName": "01 Inventory Basics",
-      "description": "This sample showcases the basics of how to work with a single inventory.",
+      "description": "This sample showcases the basics of how to work with Inventory system.",
       "path": "Samples~/01_InventoryBasics"
     },
     {
@@ -41,54 +53,38 @@
     },
     {
       "displayName": "04 Wallet",
-      "description": "This sample showcases how to work with the wallet and currencies.",
+      "description": "This sample showcases how to work with the Wallet and Currency System.",
       "path": "Samples~/04_Wallet"
     },
     {
       "displayName": "05 Properties",
-      "description": "This sample showcases how to work with the properties system.",
+      "description": "This sample showcases how to work with the Properties.",
       "path": "Samples~/05_Properties"
     },
     {
       "displayName": "06 Data Persistence",
-      "description": "This sample showcases how to use data persistence to save and load your data.",
+      "description": "This sample showcases how to use a Persistence Data Layer to save and load your data.",
       "path": "Samples~/06_DataPersistence"
     },
     {
       "displayName": "07 Transactions",
-      "description": "This sample showcases how to use the Transaction System.",
+      "description": "This sample showcases how to use the Transaction system.",
       "path": "Samples~/07_Transactions"
     },
     {
-      "displayName": "08 ChilliConnect",
-      "description": "This sample showcases how to use the ChilliConnect Adapter for Game Foundation.",
-      "path": "Samples~/08_ChilliConnect"
-    },
-    {
-      "displayName": "09 Inventory Reset and Initial Allocation",
+      "displayName": "08 Inventory Reset and Initial Allocation",
       "description": "This sample showcases inventory initial allocation and to reinitialize Game Foundation.",
-      "path": "Samples~/09_InventoryResetAndInitialAllocation"
+      "path": "Samples~/08_InventoryResetAndInitialAllocation"
     },
     {
-      "displayName": "10 Item Lists",
-      "description": "This sample showcases how to add and remove items from Item Lists in Game Foundation.",
-      "path": "Samples~/10_ItemLists"
+      "displayName": "09 Item Lists",
+      "description": "This sample showcases how Item Lists work within the Inventory system.",
+      "path": "Samples~/09_ItemLists"
     },
     {
-      "displayName": "11 Item Maps",
-      "description": "This sample showcases add and remove items from Item Maps in Game Foundation.",
-      "path": "Samples~/11_ItemMaps"
+      "displayName": "10 Item Maps",
+      "description": "This sample showcases how Item Maps work within the Inventory system.",
+      "path": "Samples~/10_ItemMaps"
     }
-  ],
-  "relatedPackages": {
-    "com.unity.game-foundation.tests": "0.8.0-preview"
-  },
-  "upmCi": {
-    "footprint": "7ea60d949343c0500177502ae11c389216353033"
-  },
-  "repository": {
-    "url": "https://github.cds.internal.unity3d.com/unity/game-foundation.git",
-    "type": "git",
-    "revision": "eca03c6bb08fcfd60cee86c2341061bf809e806a"
-  }
+  ]
 }

@@ -4,7 +4,6 @@
 
 This tutorial will show how to use the Promotion Popup prefab and component to advertise a transaction that you would like to display as a special offer, like a starter pack, for example.
 
-
 ![Promotion Pop Up Prefab in action](../images/promotion-popup-prefab-01.png)
 
 The image above shows the prefab displaying a sample starter pack promotion.
@@ -79,9 +78,9 @@ If you want to have the prefab auto generate the image for you:
 - Specify whether you want a prefix for when the image displays the count of each item, by default an `x` is used but this can be changed, or, if the field is left blank, no prefix will be used
 - Specify whether you want a prefix for when the image displays the count of each currency, by default an `x` is used but this can be changed, or, if the field is left blank, no prefix will be used
 - The game object where you want the image generated should be set in the `Promo Image Container`.
-- The Payout Item Prefab is used to arrange the payout image and count for easy adding of each transaction payout. A basic Payout Item prefab is included and attached here, however you could customize your own for a different look.
+- The Payout Item Prefab is used to arrange the payout image and count for easy adding of each transaction payout. Basic Payout Item prefabs can be found in `Game Foundation Prefabs/UI Prefabs/Store/Payout Items/`. The one used by default in the Promotion Popup Prefab is the `Vertical Payout Item` however you could customize your own for a different look.
 - The Separator Prefab will be used in between each Payout Item Prefab that is generated. In the image above you'll see a simple separator prefab was used to add the `+` in between each payout.
-By default no separator prefab is used by the component, however you can find the one we used in that image in `Game Foundation Prefabs/Samples/02_Promotion Popup.
+By default no separator prefab is used by the component, however you can find the one we used in that image in `Game Foundation Prefabs/Samples/02_Promotion Popup`.
 
 #### Purchase Button
 
@@ -109,11 +108,6 @@ Finally there is a host of callbacks you may want to subscribe to for knowing wh
 
 We hope this prefab will help to provide a simple and easy way for adding a promotion to your game.
 In the [next section] you'll learn about additional tools for configuring your game.
-
-## 
-< [_table of contents_](../TableOfContents.md)
-
-
 
 
 [Working with Store Prefabs tutorial]: 13-WorkingWithStorePrefabs.md#purchase-button-component

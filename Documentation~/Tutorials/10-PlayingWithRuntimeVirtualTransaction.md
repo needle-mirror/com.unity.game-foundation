@@ -334,15 +334,6 @@ public class GFInit : MonoBehaviour
 }
 ```
 
-## 
-< [_table of contents_](../TableOfContents.md)
-
-
-
-
-
-
-
 
 [virtual transaction]:  ../CatalogItems/VirtualTransaction.md
 [virtual transactions]: ../CatalogItems/VirtualTransaction.md

@@ -2,14 +2,28 @@
     "name": "Unity.GameFoundation",
     "references": [
         "Unity.Promise",
-        "UnityEngine.Purchasing"
+        "Unity.Addressables",
+        "Unity.ResourceManager",
+        "UnityEngine.Purchasing",
+        "UnityEngine.Purchasing.Security",
+        "UnityEngine.Purchasing.SecurityCore",
+        "UnityEngine.Purchasing.SecurityStub",
+        "UnityEngine.Purchasing.Stores",
+        "Purchasing.Common"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": []
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.purchasing",
+            "expression": "3.0",
+            "define": "UNITY_PURCHASING"
+        }
+    ],
+    "noEngineReferences": false
 }

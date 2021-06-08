@@ -29,6 +29,3 @@ When a promise is released, its key is reset, so the linked deferred and complet
 They don't allocate.
 
 ![](images/promise.svg)
-
-## 
-< [_table of contents_](TableOfContents.md)

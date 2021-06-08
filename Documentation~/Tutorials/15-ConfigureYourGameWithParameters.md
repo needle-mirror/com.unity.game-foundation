@@ -84,13 +84,6 @@ if (enabled)
 
 Now that you've learned about expanding your game functionality with Game Parameters, the [next section] can help expand your game's retention by showing you how to use the Rewards system.
 
-## 
-< [_table of contents_](../TableOfContents.md)
-
-
-
-
-
 
 [currency]:   ../CatalogItems/Currency.md
 [currencies]: ../CatalogItems/Currency.md

@@ -208,10 +208,6 @@ public class GFInit : MonoBehaviour
 }
 ```
 
-## 
-< [_table of contents_](../TableOfContents.md)
-
-
 
 [with transactions]: 09-CreatingAVirtualTransaction.md
 [virtual products]:  09-CreatingAVirtualTransaction.md

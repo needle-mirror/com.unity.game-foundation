@@ -186,7 +186,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
 
                                     if (tagAlreadyAdded)
                                     {
-                                        tooltip = "Tag already added to this item.  Please type a new unique name or select an existing tag.";
+                                        tooltip = "Tag already added to this item. Please type a new unique name or select an existing tag.";
                                     }
 
                                     if (GUILayout.Button(new GUIContent("Add", tooltip), GUILayout.Width(TagPickerStyles.tagAddButtonWidth)))

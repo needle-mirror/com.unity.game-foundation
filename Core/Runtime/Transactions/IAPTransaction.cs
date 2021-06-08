@@ -11,6 +11,11 @@ namespace UnityEngine.GameFoundation
     public sealed class IAPTransaction : BaseTransaction
     {
         /// <summary>
+        ///     The type of IAP product.
+        /// </summary>
+        public IAPProductType productType { get; internal set; }
+
+        /// <summary>
         ///     The product identifier defined in the platform store.
         /// </summary>
         public string productId { get; internal set; }

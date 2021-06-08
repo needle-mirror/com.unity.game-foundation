@@ -17,7 +17,8 @@ namespace UnityEditor.GameFoundation.Components
         SerializedProperty m_CatalogAsset_SerializedProperty;
         SerializedProperty m_OverrideCatalogAsset_SerializedProperty;
 
-        readonly GUIContent m_OverrideCatalogContent = new GUIContent("Override Catalog Asset", "Overrides the catalog asset that is defined in GameFoundationSettings.");
+        readonly GUIContent m_OverrideCatalogContent = new GUIContent("Override Catalog Asset",
+            "Overrides the catalog asset that is defined in GameFoundationSettings.");
 
         readonly string[] kExcludedFields =
         {
@@ -55,13 +56,11 @@ namespace UnityEditor.GameFoundation.Components
 
             using (new EditorGUILayout.HorizontalScope())
             {
-                m_OverrideCatalogAsset_SerializedProperty.boolValue = EditorGUILayout.Toggle(m_OverrideCatalogContent, m_GameFoundationInit.m_OverrideCatalogAsset);
+                EditorGUILayout.PropertyField(m_OverrideCatalogAsset_SerializedProperty, m_OverrideCatalogContent);
 
                 if (m_GameFoundationInit.m_OverrideCatalogAsset)
                 {
-                    m_CatalogAsset_SerializedProperty.objectReferenceValue = EditorGUILayout.ObjectField(
-                        m_CatalogAsset_SerializedProperty.objectReferenceValue,
-                        typeof(CatalogAsset), false);
+                    EditorGUILayout.PropertyField(m_CatalogAsset_SerializedProperty, new GUIContent());
                 }
             }
 

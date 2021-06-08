@@ -86,14 +86,6 @@ As you could see they are useful to store additional data in your catalog items.
 
 There is also a way to store data that will change at runtime in certain catalog items, which we will cover in the [next tutorial].
 
-## 
-< [_table of contents_](../TableOfContents.md)
-
-
-
-
-
-
 
 [catalog items]: ../Catalog.md#Catalog-Items
 

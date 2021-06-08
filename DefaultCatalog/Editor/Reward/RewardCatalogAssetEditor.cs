@@ -109,49 +109,42 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
             {
                 using (var check = new EditorGUI.ChangeCheckScope())
                 {
-                    var newCooldownValues = DrawIntFieldWithUnits(
-                        reward.cooldownSeconds, reward.cooldownDisplayUnits,
+                    var newCooldownValues = DrawIntFieldWithUnits(reward.cooldownSeconds, reward.cooldownDisplayUnits,
                         m_CooldownLabel, m_CooldownUnitsLabel);
+                    
 
+                    var newExpirationValues = DrawIntFieldWithUnits(reward.expirationSeconds, reward.expirationDisplayUnits, 
+                        m_ExpirationLabel, m_ExpirationUnitsLabel);
+                        
+
+                    bool resetIfExpired = reward.resetIfExpired;
+                    var hasExpiration = newExpirationValues.time > 0;
+                    if (hasExpiration)
+                    {
+                        m_ResetIfExpiredLabel.tooltip = k_ResetIfExpiredDefaultTooltip;
+                    }
+                    else
+                    {
+                        if (reward.resetIfExpired)
+                        {
+                            resetIfExpired = false;
+                            reward.Editor_SetResetIfExpired(false);
+                        }
+
+                        m_ResetIfExpiredLabel.tooltip =
+                            "Reset if Expired can only be enabled if Expiration is greater than 0. " +
+                            k_ResetIfExpiredDefaultTooltip;
+                    }
+
+                    using (new EditorGUI.DisabledGroupScope(!hasExpiration))
+                    {
+                        resetIfExpired = EditorGUILayout.Toggle(m_ResetIfExpiredLabel, resetIfExpired);
+                    }
+                    
                     if (check.changed)
                     {
                         reward.Editor_SetCooldown(newCooldownValues.time, newCooldownValues.timeUnit);
-                    }
-                }
-
-                using (var check = new EditorGUI.ChangeCheckScope())
-                {
-                    var newExpirationValues = DrawIntFieldWithUnits(
-                        reward.expirationSeconds, reward.expirationDisplayUnits,
-                        m_ExpirationLabel, m_ExpirationUnitsLabel);
-
-                    if (check.changed)
-                    {
                         reward.Editor_SetExpiration(newExpirationValues.time, newExpirationValues.timeUnit);
-                    }
-                }
-
-                bool resetIfExpired = reward.resetIfExpired;
-                var hasExpiration = reward.expirationSeconds > 0;
-                if (hasExpiration)
-                {
-                    m_ResetIfExpiredLabel.tooltip = k_ResetIfExpiredDefaultTooltip;
-                }
-                else
-                {
-                    resetIfExpired = false;
-                    m_ResetIfExpiredLabel.tooltip =
-                        "Reset if Expired can only be enabled if Expiration is greater than 0. " +
-                        k_ResetIfExpiredDefaultTooltip;
-                }
-
-                using (var check = new EditorGUI.ChangeCheckScope())
-                using (new EditorGUI.DisabledGroupScope(!hasExpiration))
-                {
-                    resetIfExpired = EditorGUILayout.Toggle(m_ResetIfExpiredLabel, resetIfExpired);
-
-                    if (check.changed)
-                    {
                         reward.Editor_SetResetIfExpired(resetIfExpired);
                     }
                 }

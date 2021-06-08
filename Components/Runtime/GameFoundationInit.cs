@@ -5,12 +5,14 @@ using UnityEngine.Events;
 using UnityEngine.GameFoundation.DefaultCatalog;
 using UnityEngine.GameFoundation.DefaultLayers;
 using UnityEngine.GameFoundation.DefaultLayers.Persistence;
+using UnityEngine.Serialization;
 
 namespace UnityEngine.GameFoundation.Components
 {
     /// <summary>
     ///     Component that initialize Game Foundation SDK.
     /// </summary>
+    [ExecuteAlways]
     public class GameFoundationInit : MonoBehaviour
     {
         /// <summary>
@@ -57,7 +59,12 @@ namespace UnityEngine.GameFoundation.Components
         public GameFoundationInitializationFailedEvent onGameFoundationInitializationFailed;
 
         /// <summary>
-        ///     Event raised when GameFoundation is uninitialized.
+        ///     Event raised immediately before GameFoundation is uninitialized.
+        /// </summary>
+        public GameFoundationInitializationEvent onGameFoundationWillUninitialize;
+
+        /// <summary>
+        ///     Event raised immediately after GameFoundation is uninitialized.
         /// </summary>
         public GameFoundationInitializationEvent onGameFoundationUninitialized;
 
@@ -83,6 +90,8 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         static bool s_Initialized;
 
+        internal static GameFoundationInit instance;
+
         /// <summary>
         ///     Data layer type to define <see cref="IDataAccessLayer"/>.
         /// </summary>
@@ -106,6 +115,9 @@ namespace UnityEngine.GameFoundation.Components
 
         void Awake()
         {
+            if (!Application.isPlaying)
+                return;
+
             if (!s_Initialized)
             {
                 s_Initialized = true;
@@ -131,11 +143,20 @@ namespace UnityEngine.GameFoundation.Components
 
         void OnEnable()
         {
+#if UNITY_EDITOR
+            if (instance == null)
+            {
+                instance = this;
+            }
+#endif
             RegisterEvents();
         }
 
         void OnDisable()
         {
+#if UNITY_EDITOR
+            instance = null;
+#endif
             UnregisterEvents();
         }
 
@@ -146,6 +167,7 @@ namespace UnityEngine.GameFoundation.Components
 
             GameFoundationSdk.initialized += OnGameFoundationInitialized;
             GameFoundationSdk.initializationFailed += OnGameFoundationInitializationFailed;
+            GameFoundationSdk.willUninitialize += OnGameFoundationWillUninitialize;
             GameFoundationSdk.uninitialized += OnGameFoundationUninitialized;
 
             m_EventsRegistered = true;
@@ -158,6 +180,7 @@ namespace UnityEngine.GameFoundation.Components
 
             GameFoundationSdk.initialized -= OnGameFoundationInitialized;
             GameFoundationSdk.initializationFailed -= OnGameFoundationInitializationFailed;
+            GameFoundationSdk.willUninitialize -= OnGameFoundationWillUninitialize;
             GameFoundationSdk.uninitialized -= OnGameFoundationUninitialized;
 
             m_EventsRegistered = false;
@@ -188,16 +211,16 @@ namespace UnityEngine.GameFoundation.Components
             IDataAccessLayer dataLayer = null;
             var currentCatalog = m_OverrideCatalogAsset ? m_CatalogAsset : null;
 
-            if (dataLayerType == DataLayerType.Memory)
+            if (dataLayerType == GameFoundationInit.DataLayerType.Memory)
             {
                 // this data layer will not save any data, it is usually used for examples or tests
                 dataLayer = new MemoryDataLayer(currentCatalog);
             }
-            else if (dataLayerType == DataLayerType.LocalPersistence)
+            else if (dataLayerType == GameFoundationInit.DataLayerType.LocalPersistence)
             {
                 if (string.IsNullOrEmpty(m_LocalPersistenceFilename))
                 {
-                    onGameFoundationInitializationFailed.Invoke(new ArgumentException("Local Persistence filename is not defined."));
+                    onGameFoundationInitializationFailed?.Invoke(new ArgumentException("Local Persistence filename is not defined."));
                     yield return null;
                 }
 
@@ -235,17 +258,22 @@ namespace UnityEngine.GameFoundation.Components
 
         void OnGameFoundationInitialized()
         {
-            onGameFoundationInitialized.Invoke();
+            onGameFoundationInitialized?.Invoke();
         }
 
         void OnGameFoundationInitializationFailed(Exception exception)
         {
-            onGameFoundationInitializationFailed.Invoke(exception);
+            onGameFoundationInitializationFailed?.Invoke(exception);
+        }
+
+        void OnGameFoundationWillUninitialize()
+        {
+            onGameFoundationWillUninitialize?.Invoke();
         }
 
         void OnGameFoundationUninitialized()
         {
-            onGameFoundationUninitialized.Invoke();
+            onGameFoundationUninitialized?.Invoke();
         }
     }
 }

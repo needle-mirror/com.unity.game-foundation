@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.GameFoundation.DefaultCatalog;
@@ -41,6 +42,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
         {
             this.name = name;
             m_Window = window;
+            SubscribeToCatalogUpdates();
         }
 
         protected abstract List<T> GetValidItems();
@@ -125,15 +127,7 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
 
         public void OnWillEnter()
         {
-            RefreshItems();
-
-            isCreating = false;
-
-            SelectItem(null);
-
-            // Select the first Item
-            SelectValidItem(0);
-
+            RefreshView();
             GameFoundationAnalytics.SendOpenTabEvent(tabName);
         }
 
@@ -388,20 +382,28 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
             }
             else
             {
-                using (new EditorGUILayout.VerticalScope())
+                try
                 {
-                    GUILayout.FlexibleSpace();
-
-                    using (new EditorGUILayout.HorizontalScope())
+                    using (new EditorGUILayout.VerticalScope())
                     {
                         GUILayout.FlexibleSpace();
 
-                        GUILayout.Label("No object selected.");
+                        using (new EditorGUILayout.HorizontalScope())
+                        {
+                            GUILayout.FlexibleSpace();
+
+                            GUILayout.Label("No object selected.");
+
+                            GUILayout.FlexibleSpace();
+                        }
 
                         GUILayout.FlexibleSpace();
                     }
-
-                    GUILayout.FlexibleSpace();
+                }
+                catch (ArgumentException)
+                {
+                    // this except occurs if deleting item, filtering items or changing selected item ...
+                    // ... while in the process of creating a new item.  consume the exception.
                 }
             }
         }
@@ -425,6 +427,17 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
         public virtual void RefreshItems()
         {
             m_Items.Clear();
+        }
+
+        /// <summary>
+        ///     Refreshes the Item list shown in the left nav bar and the selected item shown in the right content view.
+        /// </summary>
+        private void RefreshView()
+        {
+            RefreshItems();
+            isCreating = false;
+            SelectItem(null);
+            SelectValidItem(0);
         }
 
         void ClearAndRemoveItems()
@@ -461,6 +474,22 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
             {
                 SelectItem(null);
             }
+        }
+
+        /// <summary>
+        ///     Subscribes to the Catalog Settings event that is triggered anytime the catalog asset is changed.
+        /// </summary>
+        private void SubscribeToCatalogUpdates()
+        {
+            CatalogSettings.onCatalogChanged += RefreshView;
+        }
+
+        /// <summary>
+        ///     Unsubscribes from the Catalog Settings event that is triggered anytime the catalog asset is changed.
+        /// </summary>
+        public void UnsubscribeFromCatalogUpdates()
+        {
+            CatalogSettings.onCatalogChanged -= RefreshView;
         }
     }
 }

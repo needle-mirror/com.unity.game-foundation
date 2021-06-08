@@ -47,15 +47,6 @@ Click on the selection component and select a definition, then click on the _Add
 For each click, a new item has been created.
 For each of those, you have a `Delete` button which you can click on to remove it from the [Inventory Manager].
 
-## 
-< [_table of contents_](../TableOfContents.md)
-
-
-
-
-
-
-
 
 [item instances]: ../CatalogItems/InventoryItemDefinition.md
 

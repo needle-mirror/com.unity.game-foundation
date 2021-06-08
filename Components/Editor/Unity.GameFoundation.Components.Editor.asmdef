@@ -3,9 +3,9 @@
     "references": [
         "Unity.GameFoundation",
         "Unity.GameFoundation.DefaultCatalog",
-        "Unity.GameFoundation.Components"
+        "Unity.GameFoundation.Components",
+        "Unity.TextMeshPro"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [
         "Editor"
     ],
@@ -14,5 +14,7 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": []
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

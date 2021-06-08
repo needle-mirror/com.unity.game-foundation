@@ -1,5 +1,4 @@
-using System;
-using System.Collections.Generic;
+using TMPro;
 using UnityEngine.UI;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -12,7 +11,7 @@ namespace UnityEngine.GameFoundation.Components
     ///     Component that manages displaying a Inventory Item's icon and quantity.
     ///     When attached to a game object, it will display the Inventory Item's icon and quantity.
     /// </summary>
-    [AddComponentMenu("Game Foundation/Inventory Item Hud", 5)]
+    [AddComponentMenu("Game Foundation/Inventory Item HUD View", 5)]
     [ExecuteInEditMode]
     public class InventoryItemHudView : MonoBehaviour
     {
@@ -31,7 +30,7 @@ namespace UnityEngine.GameFoundation.Components
         public string iconSpritePropertyKey => m_IconSpritePropertyKey;
 
         [SerializeField]
-        internal string m_IconSpritePropertyKey = "hud_icon";
+        internal string m_IconSpritePropertyKey;
 
         /// <summary>
         ///     The Image component to assign the <see cref="InventoryItem"/> icon image to.
@@ -42,22 +41,12 @@ namespace UnityEngine.GameFoundation.Components
         internal Image m_IconImageField;
 
         /// <summary>
-        ///     The Text component to assign the <see cref="InventoryItem"/> quantity to.
+        ///     The TextMeshProUGUI component to assign the <see cref="InventoryItem"/> quantity to.
         /// </summary>
-        public Text quantityTextField => m_QuantityTextField;
+        public TextMeshProUGUI quantityTextField => m_QuantityTextField;
 
         [SerializeField]
-        internal Text m_QuantityTextField;
-
-        /// <summary>
-        ///     The List of Inventory Items <see cref="InventoryItem"/> that has the same definition key to cache them.
-        /// </summary>
-        readonly List<InventoryItem> m_TempItemList = new List<InventoryItem>();
-
-        /// <summary>
-        ///     The Quantity of the <see cref="InventoryItem"/>.
-        /// </summary>
-        long m_Quantity;
+        internal TextMeshProUGUI m_QuantityTextField;
 
         /// <summary>
         ///     A reference to the <see cref="InventoryItemDefinition"/> definition.
@@ -65,6 +54,12 @@ namespace UnityEngine.GameFoundation.Components
         public InventoryItemDefinition itemDefinition => m_ItemDefinition;
 
         InventoryItemDefinition m_ItemDefinition;
+
+        /// <summary>
+        ///     Tracks whether any properties have been changed.
+        ///     Checked by Update() to see whether content should be updated.
+        /// </summary>
+        bool m_IsDirty;
 
         /// <summary>
         ///     Specifies whether the debug logs is visible.
@@ -82,7 +77,8 @@ namespace UnityEngine.GameFoundation.Components
         void OnEnable()
         {
             GameFoundationSdk.initialized += RegisterEvents;
-            GameFoundationSdk.uninitialized += UnregisterEvents;
+            GameFoundationSdk.initialized += InitializeComponentData;
+            GameFoundationSdk.willUninitialize += UnregisterEvents;
 
             if (GameFoundationSdk.IsInitialized)
             {
@@ -101,7 +97,8 @@ namespace UnityEngine.GameFoundation.Components
         void OnDisable()
         {
             GameFoundationSdk.initialized -= RegisterEvents;
-            GameFoundationSdk.uninitialized -= UnregisterEvents;
+            GameFoundationSdk.initialized -= InitializeComponentData;
+            GameFoundationSdk.willUninitialize -= UnregisterEvents;
 
             if (GameFoundationSdk.IsInitialized)
             {
@@ -114,6 +111,9 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         void RegisterEvents()
         {
+            if (GameFoundationSdk.inventory == null)
+                return;
+
             GameFoundationSdk.inventory.itemAdded += OnItemChanged;
             GameFoundationSdk.inventory.itemDeleted += OnItemChanged;
             GameFoundationSdk.inventory.itemQuantityChanged += OnItemQuantityChanged;
@@ -124,39 +124,48 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         void UnregisterEvents()
         {
+            if (GameFoundationSdk.inventory == null)
+                return;
+
             GameFoundationSdk.inventory.itemAdded -= OnItemChanged;
             GameFoundationSdk.inventory.itemDeleted -= OnItemChanged;
             GameFoundationSdk.inventory.itemQuantityChanged -= OnItemQuantityChanged;
         }
 
         /// <summary>
-        ///     Initializes InventoryItemHudView before the first frame update.
+        ///     Initializes InventoryItemHudView before the first frame update if Game Foundation Sdk was already
+        ///     initialized before CurrencyHudView was enabled, otherwise sets content to a blank state in order to
+        ///     wait for Game Foundation Sdk to initialize.
         /// </summary>
         void Start()
         {
-            if (Application.isPlaying)
-            {
-                ThrowIfNotInitialized(nameof(Start));
+            if (!Application.isPlaying)
+                return;
 
-                m_ItemDefinition = GetItemDefinition(m_ItemDefinitionKey);
-                UpdateContent();
+            // This is to catch the case where Game Foundation initialized before OnEnable added the GameFoundationSdk initialize listener.
+            if (GameFoundationSdk.IsInitialized && m_ItemDefinition is null)
+            {
+                InitializeComponentData();
+                return;
+            }
+
+            if (!GameFoundationSdk.IsInitialized)
+            {
+                k_GFLogger.Log("Waiting for initialization.");
+                m_IsDirty = true;
             }
         }
 
         /// <summary>
-        ///     Sets Inventory Item should be displayed by this view.
+        ///     Initializes InventoryItemHudView data from Game Foundation Sdk.
         /// </summary>
-        /// <param name="itemDefinition">
-        ///     The Inventory Item definition that should be displayed.
-        /// </param>
-        public void SetItemDefinition(InventoryItemDefinition itemDefinition)
+        void InitializeComponentData()
         {
-            ThrowIfNotInitialized(nameof(SetItemDefinition));
+            if (!Application.isPlaying)
+                return;
 
-            m_ItemDefinition = itemDefinition;
-            m_ItemDefinitionKey = itemDefinition?.key;
-
-            UpdateContent();
+            m_ItemDefinition = GetItemDefinition(m_ItemDefinitionKey);
+            m_IsDirty = true;
         }
 
         /// <summary>
@@ -165,12 +174,10 @@ namespace UnityEngine.GameFoundation.Components
         /// <param name="itemDefinitionKey">
         ///     The InventoryItem key that should be displayed.
         /// </param>
-        internal void SetItemDefinition(string itemDefinitionKey)
+        void SetItemDefinition(string itemDefinitionKey)
         {
-            m_ItemDefinition = GetItemDefinition(itemDefinitionKey);
             m_ItemDefinitionKey = itemDefinitionKey;
-
-            UpdateContent();
+            m_IsDirty = true;
         }
 
         /// <summary>
@@ -195,6 +202,24 @@ namespace UnityEngine.GameFoundation.Components
         }
 
         /// <summary>
+        ///     Sets Inventory Item should be displayed by this view.
+        /// </summary>
+        /// <param name="itemDefinition">
+        ///     The Inventory Item definition that should be displayed.
+        /// </param>
+        public void SetItemDefinition(InventoryItemDefinition itemDefinition)
+        {
+            if (PrefabTools.FailIfNotInitialized(k_GFLogger, nameof(SetItemDefinition)))
+            {
+                return;
+            }
+
+            m_ItemDefinition = itemDefinition;
+            m_ItemDefinitionKey = itemDefinition?.key;
+            m_IsDirty = true;
+        }
+
+        /// <summary>
         ///     Sets the property key to use when getting the sprite of the Inventory Item icon.
         /// </summary>
         /// <param name="propertyKey">
@@ -209,7 +234,7 @@ namespace UnityEngine.GameFoundation.Components
             }
 
             m_IconSpritePropertyKey = propertyKey;
-            UpdateIconSprite();
+            m_IsDirty = true;
         }
 
         /// <summary>
@@ -226,16 +251,16 @@ namespace UnityEngine.GameFoundation.Components
             }
 
             m_IconImageField = image;
-            UpdateIconSprite();
+            m_IsDirty = true;
         }
 
         /// <summary>
-        ///     Sets the Text component to display the Inventory item quantity on this view.
+        ///     Sets the TextMeshProUGUI component to display the Inventory item quantity on this view.
         /// </summary>
         /// <param name="text">
-        ///     The Text component to display the Inventory item quantity
+        ///     The TextMeshProUGUI component to display the Inventory item quantity
         /// </param>
-        public void SetQuantityTextField(Text text)
+        public void SetQuantityTextField(TextMeshProUGUI text)
         {
             if (m_QuantityTextField == text)
             {
@@ -243,7 +268,31 @@ namespace UnityEngine.GameFoundation.Components
             }
 
             m_QuantityTextField = text;
-            UpdateQuantity();
+            m_IsDirty = true;
+        }
+
+        /// <summary>
+        ///     Checks to see whether any properties have been changed (by checking <see cref="m_IsDirty"/>) and
+        ///     if so, calls <see cref="UpdateContent"/> before resetting the flag.
+        ///
+        ///     At runtime, also assigns the appropriate value for <see cref="m_ItemDefinition"/> from the Catalog if needed.
+        ///     If m_ItemDefinition and m_ItemDefinitionKey don't currently match, this replaces m_ItemDefinition with the
+        ///     correct transaction by searching the Catalog for m_ItemDefinitionKey.
+        /// </summary>
+        void Update()
+        {
+            if (m_IsDirty)
+            {
+                m_IsDirty = false;
+                if (GameFoundationSdk.IsInitialized &&
+                    (m_ItemDefinition is null && !string.IsNullOrEmpty(m_ItemDefinitionKey) ||
+                     !(m_ItemDefinition is null) && m_ItemDefinition.key != m_ItemDefinitionKey))
+                {
+                    m_ItemDefinition = GetItemDefinition(m_ItemDefinitionKey);
+                }
+
+                UpdateContent();
+            }
         }
 
         /// <summary>
@@ -260,39 +309,50 @@ namespace UnityEngine.GameFoundation.Components
             }
 #endif
 
-            UpdateIconSprite();
+            if (Application.isPlaying && !GameFoundationSdk.IsInitialized)
+            {
+                SetIconSprite(null);
+                SetQuantity(null);
+                return;
+            }
+
+            LoadAndSetIconSprite();
             UpdateQuantity();
         }
 
         /// <summary>
         ///     Updates the Inventory item icon on this view.
         /// </summary>
-        void UpdateIconSprite()
+        void LoadAndSetIconSprite()
         {
-            Sprite sprite = null;
-
             if (!string.IsNullOrEmpty(m_ItemDefinitionKey))
             {
                 if (Application.isPlaying)
                 {
                     if (m_ItemDefinition != null && m_ItemDefinition.TryGetStaticProperty(m_IconSpritePropertyKey, out var spriteProperty))
                     {
-                        sprite = spriteProperty.AsAsset<Sprite>();
+                        PrefabTools.LoadSprite(spriteProperty, SetIconSprite, OnSpriteLoadFailed);
+                    }
+                    else
+                    {
+                        SetIconSprite(null);
                     }
                 }
 #if UNITY_EDITOR
                 else
                 {
-                    var itemAsset = CatalogSettings.catalogAsset.FindItem(m_ItemDefinitionKey) as InventoryItemDefinitionAsset;
+                    var itemAsset = PrefabTools.GetLookUpCatalogAsset().FindItem(m_ItemDefinitionKey) as InventoryItemDefinitionAsset;
                     if (!(itemAsset is null) && itemAsset.TryGetStaticProperty(m_IconSpritePropertyKey, out var spriteProperty))
                     {
-                        sprite = spriteProperty.AsAsset<Sprite>();
+                        PrefabTools.LoadSprite(spriteProperty, SetIconSprite, OnSpriteLoadFailed);
+                    }
+                    else
+                    {
+                        SetIconSprite(null);
                     }
                 }
 #endif
             }
-
-            SetIconSprite(sprite);
         }
 
         /// <summary>
@@ -303,7 +363,7 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         void SetIconSprite(Sprite icon)
         {
-            if (m_IconImageField == null)
+            if (m_IconImageField is null)
             {
                 k_GFLogger.LogWarning("Icon Image field is not defined.");
                 return;
@@ -312,10 +372,7 @@ namespace UnityEngine.GameFoundation.Components
             if (m_IconImageField.sprite != icon)
             {
                 m_IconImageField.sprite = icon;
-                if (!(icon is null)) m_IconImageField.SetNativeSize();
-#if UNITY_EDITOR
-                EditorUtility.SetDirty(m_IconImageField);
-#endif
+                m_IconImageField.preserveAspect = true;
             }
         }
 
@@ -324,7 +381,9 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         void UpdateQuantity()
         {
-            SetQuantity(GetQuantity());
+            if (!Application.isPlaying || m_ItemDefinition == null) return;
+
+            SetQuantity(GetQuantity().ToString());
         }
 
         /// <summary>
@@ -336,7 +395,7 @@ namespace UnityEngine.GameFoundation.Components
         long GetQuantity()
         {
             if (!Application.isPlaying || m_ItemDefinition == null) return 0;
-            
+
             return GameFoundationSdk.inventory.GetTotalQuantity(itemDefinition);
         }
 
@@ -346,36 +405,18 @@ namespace UnityEngine.GameFoundation.Components
         /// <param name="quantity">
         ///     The new quantity to display.
         /// </param>
-        void SetQuantity(long quantity)
+        void SetQuantity(string quantity)
         {
-            if (m_QuantityTextField == null)
+            if (m_QuantityTextField is null)
             {
                 k_GFLogger.LogWarning("Item Quantity Text field is not defined.");
                 return;
             }
 
-            if (m_Quantity == quantity) return;
+            if (m_QuantityTextField.text == quantity)
+                return;
 
-            m_Quantity = quantity;
-            m_QuantityTextField.text = quantity.ToString();
-#if UNITY_EDITOR
-            EditorUtility.SetDirty(m_QuantityTextField);
-#endif
-        }
-
-        /// <summary>
-        ///     Throws an Invalid Operation Exception if GameFoundation has not been initialized before this view is used.
-        /// </summary>
-        /// <param name="callingMethod">
-        ///     Calling method name.
-        /// </param>
-        void ThrowIfNotInitialized(string callingMethod)
-        {
-            if (!GameFoundationSdk.IsInitialized)
-            {
-                var message = $"GameFoundationSdk.Initialize() must be called before {callingMethod} is used.";
-                k_GFLogger.LogException(message, new InvalidOperationException(message));
-            }
+            m_QuantityTextField.text = quantity;
         }
 
         /// <summary>
@@ -391,7 +432,7 @@ namespace UnityEngine.GameFoundation.Components
             
             if (m_ItemDefinitionKey == inventoryItem.definition.key)
             {
-                UpdateContent();
+                m_IsDirty = true;
             }
         }
         
@@ -410,9 +451,29 @@ namespace UnityEngine.GameFoundation.Components
             {
                 if (item.definition.key == m_ItemDefinitionKey)
                 {
-                    UpdateContent();
+                    m_IsDirty = true;
                 }
             }
+        }
+
+        /// <summary>
+        ///     Callback for if there is an error while trying to load a sprite from its Property.
+        /// </summary>
+        /// <param name="errorMessage">
+        ///     The error message returned by <see cref="PrefabTools.LoadSprite"/>.
+        /// </param>
+        void OnSpriteLoadFailed(string errorMessage)
+        {
+            k_GFLogger.LogWarning(errorMessage);
+        }
+
+        /// <summary>
+        ///     When changes are made in the Inspector, set <see cref="m_IsDirty"/> to true
+        ///     in order to trigger <see cref="UpdateContent"/>
+        /// </summary>
+        void OnValidate()
+        {
+            m_IsDirty = true;
         }
     }
 }

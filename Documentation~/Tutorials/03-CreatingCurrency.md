@@ -38,15 +38,6 @@ Apart from those specific fields, a [currency] has the same features as an [inve
 
 With this [currency] created, we now can switch back to the code with the [next tutorial].
 
-## 
-< [_table of contents_](../TableOfContents.md)
-
-
-
-
-
-
-
 
 [currency]: ../CatalogItems/Currency.md
 

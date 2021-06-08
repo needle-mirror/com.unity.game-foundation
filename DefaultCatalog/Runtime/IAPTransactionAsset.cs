@@ -8,6 +8,21 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
     public partial class IAPTransactionAsset : BaseTransactionAsset<IAPTransaction, IAPTransactionConfig>
     {
         /// <summary>
+        ///     The type of product.
+        ///     This field is populated dynamically during edit mode.
+        ///     Unlike other fields, this one can't be externalized,
+        ///     because its value should ideally never change once it's set.
+        /// </summary>
+        [SerializeField]
+        IAPProductType m_ProductType = IAPProductType.Undetermined;
+
+        internal IAPProductType productType
+        {
+            get => m_ProductType;
+            private set => m_ProductType = value;
+        }
+
+        /// <summary>
         ///     The product ID for the Apple platform
         /// </summary>
         [SerializeField]
@@ -77,6 +92,8 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
             CatalogBuilder builder, IExternalValueProvider valueProvider)
         {
             var item = builder.Create<IAPTransactionConfig>(key);
+
+            item.productType = productType;
 
             if (valueProvider is null)
             {

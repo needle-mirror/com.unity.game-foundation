@@ -28,7 +28,12 @@
         /// <summary>
         ///     Designates a property as an asset.
         /// </summary>
-        ResourcesAsset
+        ResourcesAsset,
+
+        /// <summary>
+        ///     Designates a property as an Addressables address value.
+        /// </summary>
+        Addressables
     }
 
     /// <summary>

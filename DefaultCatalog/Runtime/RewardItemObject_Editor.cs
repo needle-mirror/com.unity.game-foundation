@@ -49,6 +49,29 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
 
             return isRemoved;
         }
+
+        internal RewardItemObject Clone()
+        {
+            return new RewardItemObject
+            {
+                m_Payout = m_Payout.Clone(),
+                key = key,
+                reward = reward
+            };
+        }
+
+        /// <summary>
+        ///     Update all member references to target objects stored in the given <paramref name="owner"/>.
+        /// </summary>
+        /// <param name="owner">
+        ///     The catalog containing all required references.
+        /// </param>
+        internal void RefreshReferences(CatalogAsset owner)
+        {
+            reward = (RewardAsset)owner.FindItem(reward.key);
+
+            m_Payout.RefreshReferences(owner);
+        }
     }
 }
 #endif

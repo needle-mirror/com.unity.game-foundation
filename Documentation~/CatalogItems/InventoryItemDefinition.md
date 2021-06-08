@@ -1,4 +1,4 @@
-# Inventory Item Definitions
+# Inventory Item Definition
 
 ## Overview
 
@@ -23,17 +23,6 @@ The interface is similar to the other [catalog items editor].
 
   Mutable Properties belong only to the definition they are declared into.
   This means you can use the same property key in different definitions with a different type if you want to.
-
-## 
-< [_table of contents_](../TableOfContents.md)
-
-
-
-
-
-
-
-
 
 
 [catalog item]: ../Catalog.md#Catalog-Items

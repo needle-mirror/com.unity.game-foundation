@@ -4,7 +4,6 @@
         "Unity.GameFoundation",
         "Unity.Promise"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [
         "Editor"
     ],
@@ -13,5 +12,13 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": []
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.purchasing",
+            "expression": "3.0",
+            "define": "UNITY_PURCHASING"
+        }
+    ],
+    "noEngineReferences": false
 }

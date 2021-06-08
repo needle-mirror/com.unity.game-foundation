@@ -50,9 +50,9 @@ public class MyGameManager : MonoBehaviour
 }
 ```
 
-When you initialize Game Foundation, all managers, including `InventoryManager`, `WalletManager` and `TransactionManager` will be initialized and ready to use.
+When you initialize Game Foundation, all managers, including `InventoryManager`, `WalletManager`, `TransactionManager`, and `RewardManager` will be initialized and ready to use.
 
-* **Tip:** To verify that Game Foundation is working and installed correctly, please null-check any Game Foundation manager.
+**Tip:** To verify that Game Foundation is working and installed correctly, please null-check any Game Foundation manager.
 
 ```Csharp
 using System.Collections;
@@ -92,6 +92,8 @@ After implementing the above code, when you press Play you will see that Game Fo
 
 ![Display Name and Id](images/image32.png)
 
+Game Foundation also lets you override fixed catalog data at initialization using the External Value Provider. For more detail, please visit the [IExternalValueProvider](ExternalValueProvider.md) page. 
+
 Now you can head over to one of our Tutorials for more information:
 
 1. [Creating an Inventory Item Definition](Tutorials/01-CreatingAnItemDefinition.md)
@@ -111,6 +113,3 @@ Now you can head over to one of our Tutorials for more information:
 1. [Configure your game with parameters](Tutorials/15-ConfigureYourGameWithParameters.md)
 
 Also, please visit [Known Issues](KnownIssues.md) if you need further assistance.
-
-## 
-< [_table of contents_](TableOfContents.md)

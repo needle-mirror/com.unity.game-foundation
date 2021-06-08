@@ -1,8 +1,8 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.GameFoundation;
 using UnityEngine.GameFoundation.Components;
 using UnityEngine.GameFoundation.DefaultCatalog;
-using UnityEngine.UI;
 
 namespace UnityEditor.GameFoundation.Components
 {
@@ -12,54 +12,39 @@ namespace UnityEditor.GameFoundation.Components
     [CustomEditor(typeof(TransactionItemView))]
     class TransactionItemViewEditor : Editor
     {
-        TransactionItemView m_TransactionItemView;
+        protected TransactionItemView m_TransactionItemView;
 
         int m_SelectedTransactionIndex = -1;
         int m_SelectedItemIconPropertyIndex = -1;
         int m_SelectedPriceIconPropertyIndex = -1;
+        int m_SelectedBadgeTextPropertyIndex = -1;
 
-        DropdownCatalogItemHelper<BaseTransactionAsset> m_TransactionDropdownHelper = new DropdownCatalogItemHelper<BaseTransactionAsset>();
-        DropdownStaticPropertyHelper m_ItemIconPropertyDropdownHelper = new DropdownStaticPropertyHelper();
-        DropdownPayoutItemPropertyHelper m_PriceIconPropertyDropdownHelper = new DropdownPayoutItemPropertyHelper();
+        readonly DropdownCatalogItemHelper<BaseTransactionAsset> m_TransactionDropdownHelper = new DropdownCatalogItemHelper<BaseTransactionAsset>();
+        readonly DropdownStaticPropertyHelper m_ItemIconPropertyDropdownHelper = new DropdownStaticPropertyHelper();
+        readonly DropdownCostItemPropertyHelper m_PriceIconPropertyDropdownHelper = new DropdownCostItemPropertyHelper();
+        readonly DropdownStaticPropertyHelper m_BadgeTextPropertyDropdownHelper = new DropdownStaticPropertyHelper();
 
-        SerializedProperty m_TransactionKey_SerializedProperty;
+        protected SerializedProperty m_TransactionKey_SerializedProperty;
         SerializedProperty m_ItemIconAssetPropertyKey_SerializedProperty;
         SerializedProperty m_PriceIconSpritePropertyKey_SerializedProperty;
+        SerializedProperty m_BadgeTextPropertyKey_SerializedProperty;
         SerializedProperty m_NoPriceString_SerializedProperty;
         SerializedProperty m_ItemIconImageField_SerializedProperty;
         SerializedProperty m_ItemNameTextField_SerializedProperty;
+        SerializedProperty m_BadgeField_SerializedProperty;
         SerializedProperty m_PurchaseButton_SerializedProperty;
         SerializedProperty m_Interactable_SerializedProperty;
         SerializedProperty m_ShowButtonEditorFields_SerializedProperty;
+        SerializedProperty m_ShowBadgeEditorFields_SerializedProperty;
 
-        readonly string[] kExcludedFields =
-        {
-            "m_Script",
-            nameof(TransactionItemView.m_TransactionKey),
-            nameof(TransactionItemView.m_ItemIconSpritePropertyKey),
-            nameof(TransactionItemView.m_PriceIconSpritePropertyKey),
-            nameof(TransactionItemView.m_NoPriceString),
-            nameof(TransactionItemView.m_ItemIconImageField),
-            nameof(TransactionItemView.m_ItemNameTextField),
-            nameof(TransactionItemView.m_PurchaseButton),
-            nameof(TransactionItemView.m_Interactable),
-            nameof(TransactionItemView.showButtonEditorFields)
-        };
+
+        protected readonly List<string> kExcludedFields = new List<string>();
 
         void OnEnable()
         {
             m_TransactionItemView = target as TransactionItemView;
 
-            m_TransactionKey_SerializedProperty = serializedObject.FindProperty(nameof(m_TransactionItemView.m_TransactionKey));
-            m_ItemIconAssetPropertyKey_SerializedProperty = serializedObject.FindProperty(nameof(m_TransactionItemView.m_ItemIconSpritePropertyKey));
-            m_PriceIconSpritePropertyKey_SerializedProperty = serializedObject.FindProperty(nameof(m_TransactionItemView.m_PriceIconSpritePropertyKey));
-            m_NoPriceString_SerializedProperty = serializedObject.FindProperty(nameof(m_TransactionItemView.m_NoPriceString));
-            m_ItemIconImageField_SerializedProperty = serializedObject.FindProperty(nameof(m_TransactionItemView.m_ItemIconImageField));
-            m_ItemNameTextField_SerializedProperty = serializedObject.FindProperty(nameof(m_TransactionItemView.m_ItemNameTextField));
-            m_PurchaseButton_SerializedProperty = serializedObject.FindProperty(nameof(m_TransactionItemView.m_PurchaseButton));
-            m_Interactable_SerializedProperty = serializedObject.FindProperty(nameof(m_TransactionItemView.m_Interactable));
-            m_ShowButtonEditorFields_SerializedProperty = serializedObject.FindProperty(nameof(m_TransactionItemView.showButtonEditorFields));
-
+            Setup();
             PopulateTransactions();
             PopulateStaticPropertyKeys();
 
@@ -67,20 +52,54 @@ namespace UnityEditor.GameFoundation.Components
             m_TransactionItemView.UpdateContent();
         }
 
+        protected virtual void Setup()
+        {
+            kExcludedFields.Add("m_Script");
+            kExcludedFields.Add(nameof(TransactionItemView.m_TransactionKey));
+            kExcludedFields.Add(nameof(TransactionItemView.m_ItemIconSpritePropertyKey));
+            kExcludedFields.Add(nameof(TransactionItemView.m_PriceIconSpritePropertyKey));
+            kExcludedFields.Add(nameof(TransactionItemView.m_BadgeTextPropertyKey));
+            kExcludedFields.Add(nameof(TransactionItemView.m_NoPriceString));
+            kExcludedFields.Add(nameof(TransactionItemView.m_ItemIconImageField));
+            kExcludedFields.Add(nameof(TransactionItemView.m_ItemNameTextField));
+            kExcludedFields.Add(nameof(TransactionItemView.m_BadgeField));
+            kExcludedFields.Add(nameof(TransactionItemView.m_PurchaseButton));
+            kExcludedFields.Add(nameof(TransactionItemView.m_Interactable));
+            kExcludedFields.Add(nameof(TransactionItemView.showBadgeEditorFields));
+            kExcludedFields.Add(nameof(TransactionItemView.showButtonEditorFields));
+
+
+            m_TransactionKey_SerializedProperty = serializedObject.FindProperty(nameof(m_TransactionItemView.m_TransactionKey));
+            m_ItemIconAssetPropertyKey_SerializedProperty = serializedObject.FindProperty(nameof(m_TransactionItemView.m_ItemIconSpritePropertyKey));
+            m_PriceIconSpritePropertyKey_SerializedProperty = serializedObject.FindProperty(nameof(m_TransactionItemView.m_PriceIconSpritePropertyKey));
+            m_BadgeTextPropertyKey_SerializedProperty = serializedObject.FindProperty(nameof(m_TransactionItemView.m_BadgeTextPropertyKey));
+            m_NoPriceString_SerializedProperty = serializedObject.FindProperty(nameof(m_TransactionItemView.m_NoPriceString));
+            m_ItemIconImageField_SerializedProperty = serializedObject.FindProperty(nameof(m_TransactionItemView.m_ItemIconImageField));
+            m_ItemNameTextField_SerializedProperty = serializedObject.FindProperty(nameof(m_TransactionItemView.m_ItemNameTextField));
+            m_BadgeField_SerializedProperty = serializedObject.FindProperty(nameof(m_TransactionItemView.m_BadgeField));
+            m_PurchaseButton_SerializedProperty = serializedObject.FindProperty(nameof(m_TransactionItemView.m_PurchaseButton));
+            m_Interactable_SerializedProperty = serializedObject.FindProperty(nameof(m_TransactionItemView.m_Interactable));
+            m_ShowBadgeEditorFields_SerializedProperty = serializedObject.FindProperty(nameof(m_TransactionItemView.showBadgeEditorFields));
+            m_ShowButtonEditorFields_SerializedProperty = serializedObject.FindProperty(nameof(m_TransactionItemView.showButtonEditorFields));
+        }
+
         void PopulateTransactions()
         {
             m_SelectedTransactionIndex = m_TransactionDropdownHelper.Populate(m_TransactionKey_SerializedProperty.stringValue);
         }
 
-        void PopulateStaticPropertyKeys()
+        protected virtual void PopulateStaticPropertyKeys()
         {
-            m_SelectedItemIconPropertyIndex = m_ItemIconPropertyDropdownHelper.Populate(
-                CatalogSettings.catalogAsset.FindItem(m_TransactionKey_SerializedProperty.stringValue) as BaseTransactionAsset,
-                m_ItemIconAssetPropertyKey_SerializedProperty.stringValue, PropertyType.ResourcesAsset, true);
+            var transactionItem = PrefabTools.GetLookUpCatalogAsset().FindItem(m_TransactionKey_SerializedProperty.stringValue) as BaseTransactionAsset;
 
-            m_SelectedPriceIconPropertyIndex = m_PriceIconPropertyDropdownHelper.Populate(
-                CatalogSettings.catalogAsset.FindItem(m_TransactionKey_SerializedProperty.stringValue) as BaseTransactionAsset,
-                m_PriceIconSpritePropertyKey_SerializedProperty.stringValue, PropertyType.ResourcesAsset, true, true);
+            m_SelectedItemIconPropertyIndex = m_ItemIconPropertyDropdownHelper.Populate(transactionItem,
+                m_ItemIconAssetPropertyKey_SerializedProperty.stringValue, new []{ PropertyType.ResourcesAsset, PropertyType.Addressables });
+
+            m_SelectedPriceIconPropertyIndex = m_PriceIconPropertyDropdownHelper.Populate(transactionItem,
+                m_PriceIconSpritePropertyKey_SerializedProperty.stringValue, new []{ PropertyType.ResourcesAsset, PropertyType.Addressables });
+
+            m_SelectedBadgeTextPropertyIndex = m_BadgeTextPropertyDropdownHelper.Populate(transactionItem,
+                m_BadgeTextPropertyKey_SerializedProperty.stringValue, PropertyType.String);
         }
 
         public override void OnInspectorGUI()
@@ -102,14 +121,10 @@ namespace UnityEditor.GameFoundation.Components
                 EditorGUILayout.Space();
             }
 
-            DrawIconAndNameSection();
-            EditorGUILayout.Space();
-
-            DrawButtonSection();
-            EditorGUILayout.Space();
+            DrawTransactionDetailSections();
 
             // Use the default object field GUI for these properties.
-            DrawPropertiesExcluding(serializedObject, kExcludedFields);
+            DrawPropertiesExcluding(serializedObject, kExcludedFields.ToArray());
 
             // Push all changes made on the serializedObject back to the target.
             serializedObject.ApplyModifiedProperties();
@@ -117,142 +132,140 @@ namespace UnityEditor.GameFoundation.Components
 
         void DrawTransactionSection()
         {
-            var itemDisplayContent = new GUIContent("Transaction Item", "The Transaction Item to display in this button");
-            if (m_TransactionDropdownHelper.displayNames != null && m_TransactionDropdownHelper.displayNames.Length > 0)
+            var itemDisplayContent = new GUIContent("Transaction Item", 
+                "The Transaction Item to display in this button");
+
+            PrefabTools.DisplayCatalogOverrideAlertIfNecessary();
+
+            using (var check = new EditorGUI.ChangeCheckScope())
             {
-                m_SelectedTransactionIndex = EditorGUILayout.Popup(itemDisplayContent, m_SelectedTransactionIndex, m_TransactionDropdownHelper.displayNames);
-                var transactionKey = m_TransactionDropdownHelper.GetKey(m_SelectedTransactionIndex);
-                if (m_TransactionItemView.transactionKey != transactionKey)
+                m_SelectedTransactionIndex = EditorGUILayout.Popup(itemDisplayContent, m_SelectedTransactionIndex,
+                    m_TransactionDropdownHelper.displayNames);
+                m_TransactionKey_SerializedProperty.stringValue = m_TransactionDropdownHelper
+                    .GetKey(m_SelectedTransactionIndex);
+
+                if (check.changed)
                 {
-                    SetSelectedItemKey(transactionKey);
+                    PopulateStaticPropertyKeys();
                 }
-            }
-            else
-            {
-                EditorGUILayout.Popup(itemDisplayContent, 0, new[] { "None" });
             }
         }
 
         void DrawRuntimeSection()
         {
-            using (var check = new EditorGUI.ChangeCheckScope())
-            {
-                var interactableContent = new GUIContent("Interactable", "Sets the button's interactable state.");
-                var interactable = EditorGUILayout.Toggle(interactableContent, m_TransactionItemView.interactable);
-
-                if (check.changed)
-                {
-                    m_TransactionItemView.interactable = m_Interactable_SerializedProperty.boolValue = interactable;
-                }
-            }
+            var interactableContent = new GUIContent("Interactable", "Sets the button's interactable state.");
+            EditorGUILayout.PropertyField(m_Interactable_SerializedProperty, interactableContent);
         }
 
-        void DrawIconAndNameSection()
+        protected virtual void DrawTransactionDetailSections()
         {
+            DrawIconAndNameSection();
+            EditorGUILayout.Space();
+
+            DrawBadgeSection();
+            EditorGUILayout.Space();
+
+            DrawPurchaseButtonSection();
+            EditorGUILayout.Space();
+        }
+
+        protected void DrawIconAndNameSection()
+        {
+            var itemIconPropertyKeyContent = new GUIContent("Icon Asset Property Key",
+                "The key for the sprite that is defined in the Static Property of Transaction Item. " +
+                "If none is specified no image will be displayed.");
+            var imageIconFieldContent = new GUIContent("Icon Image Field",
+                "The Image component in which to display item icon sprite.");
+            var itemNameFieldContent = new GUIContent("Name Text Field",
+                "Text component in which to display Store Item price.");
+
             if (!m_TransactionItemView.m_IsDrivenByOtherComponent)
             {
-                var itemIconPropertyKeyContent = new GUIContent("Icon Asset Property Key",
-                    "The key for the sprite that is defined in the Static Property of Transaction Item. " +
-                    "If none is specified no image will be displayed.");
                 m_SelectedItemIconPropertyIndex = EditorGUILayout.Popup(itemIconPropertyKeyContent,
                     m_SelectedItemIconPropertyIndex, m_ItemIconPropertyDropdownHelper.displayNames);
-                var iconAssetPropertyKey = m_ItemIconPropertyDropdownHelper.GetKey(m_SelectedItemIconPropertyIndex);
-                if (m_TransactionItemView.itemIconSpritePropertyKey != iconAssetPropertyKey)
-                {
-                    m_TransactionItemView.SetItemIconSpritePropertyKey(iconAssetPropertyKey);
-                    m_ItemIconAssetPropertyKey_SerializedProperty.stringValue = iconAssetPropertyKey;
-                }
+                m_ItemIconAssetPropertyKey_SerializedProperty.stringValue = m_ItemIconPropertyDropdownHelper
+                    .GetKey(m_SelectedItemIconPropertyIndex);
             }
-
-            using (var check = new EditorGUI.ChangeCheckScope())
+            
+            EditorGUILayout.PropertyField(m_ItemIconImageField_SerializedProperty, imageIconFieldContent);
+            EditorGUILayout.PropertyField(m_ItemNameTextField_SerializedProperty, itemNameFieldContent);
+        }
+        
+        protected void DrawBadgeSection()
+        {
+            m_ShowBadgeEditorFields_SerializedProperty.boolValue = EditorGUILayout.Foldout(m_ShowBadgeEditorFields_SerializedProperty.boolValue, "Badge", true);
+            if (m_ShowBadgeEditorFields_SerializedProperty.boolValue)
             {
-                var imageIconFieldContent = new GUIContent("Icon Image Field", "The Image component in which to display item icon sprite.");
-                var itemIconField = (Image)EditorGUILayout.ObjectField(imageIconFieldContent, m_TransactionItemView.itemIconImageField, typeof(Image), true);
+                EditorGUI.indentLevel++;
 
-                if (check.changed)
+                if (!m_TransactionItemView.m_IsDrivenByOtherComponent)
                 {
-                    m_TransactionItemView.SetItemIconImageField(itemIconField);
-                    m_ItemIconImageField_SerializedProperty.objectReferenceValue = itemIconField;
+                    using (var check = new EditorGUI.ChangeCheckScope())
+                    {
+                        var badgeTextPropertyKeyContent = new GUIContent("Badge Text Property Key",
+                            "The key for the badge text that is defined in the Static Property of Transaction Item.");
+                        m_SelectedBadgeTextPropertyIndex = EditorGUILayout.Popup(badgeTextPropertyKeyContent,
+                            m_SelectedBadgeTextPropertyIndex, m_BadgeTextPropertyDropdownHelper.displayNames);
+
+                        if (check.changed)
+                        {
+                            var badgeTextPropertyKey = m_BadgeTextPropertyDropdownHelper.GetKey(m_SelectedBadgeTextPropertyIndex);
+                            m_TransactionItemView.SetBadgeTextPropertyKey(badgeTextPropertyKey);
+                            m_BadgeTextPropertyKey_SerializedProperty.stringValue = badgeTextPropertyKey;
+                        }
+                    }
                 }
-            }
 
-            using (var check = new EditorGUI.ChangeCheckScope())
-            {
-                var itemNameFieldContent = new GUIContent("Name Text Field", "Text component in which to display Store Item price.");
-                var itemNameField = (Text)EditorGUILayout.ObjectField(itemNameFieldContent, m_TransactionItemView.itemNameTextField, typeof(Text), true);
-
-                if (check.changed)
+                using (var check = new EditorGUI.ChangeCheckScope())
                 {
-                    m_TransactionItemView.SetItemNameTextField(itemNameField);
-                    m_ItemNameTextField_SerializedProperty.objectReferenceValue = itemNameField;
+                    var badgeFieldContent = new GUIContent("Badge Field",
+                        "GameObject in which to display the transaction's badge.");
+                    var badgeField = (ImageInfoView)EditorGUILayout.ObjectField(badgeFieldContent,
+                        m_TransactionItemView.m_BadgeField, typeof(ImageInfoView), true);
+
+                    if (check.changed)
+                    {
+                        m_TransactionItemView.SetBadgeField(badgeField);
+                        m_BadgeField_SerializedProperty.objectReferenceValue = badgeField;
+                    }
                 }
+                EditorGUI.indentLevel--;
             }
         }
 
-        void DrawButtonSection()
+        protected void DrawPurchaseButtonSection()
         {
-            m_ShowButtonEditorFields_SerializedProperty.boolValue = EditorGUILayout.Foldout(m_ShowButtonEditorFields_SerializedProperty.boolValue, "Buttons");
+            var priceIconPropertyKeyContent = new GUIContent("Price Icon Asset Property",
+                "The key for the sprite that is defined in the Static Property of Transaction Item. " +
+                "If none is specified no image will be displayed.");
+            var noPriceStringContent = new GUIContent("No Price String",
+                "String to display on Purchase Button when there is no cost defined in the Transaction Item.");
+            var purchaseButtonContent = new GUIContent("Purchase Button",
+                "PurchaseButton component to use when generating a button for purchasing item in this view.");
+
+            m_ShowButtonEditorFields_SerializedProperty.boolValue = EditorGUILayout.Foldout(
+                m_ShowButtonEditorFields_SerializedProperty.boolValue, "Purchase Button", true);
+
             if (m_ShowButtonEditorFields_SerializedProperty.boolValue)
             {
                 EditorGUI.indentLevel++;
 
                 if (!m_TransactionItemView.m_IsDrivenByOtherComponent)
                 {
-                    var priceIconPropertyKeyContent = new GUIContent("Price Icon Asset Property",
-                        "The key for the sprite that is defined in the Static Property of Transaction Item. " +
-                        "If none is specified no image will be displayed.");
                     m_SelectedPriceIconPropertyIndex = EditorGUILayout.Popup(priceIconPropertyKeyContent,
                         m_SelectedPriceIconPropertyIndex, m_PriceIconPropertyDropdownHelper.displayNames);
-                    var priceIconAssetPropertyKey =
+                    m_PriceIconSpritePropertyKey_SerializedProperty.stringValue =
                         m_PriceIconPropertyDropdownHelper.GetKey(m_SelectedPriceIconPropertyIndex);
-                    if (m_TransactionItemView.priceIconSpritePropertyKey != priceIconAssetPropertyKey)
-                    {
-                        m_TransactionItemView.SetPriceIconSpritePropertyKey(priceIconAssetPropertyKey);
-                        m_PriceIconSpritePropertyKey_SerializedProperty.stringValue = priceIconAssetPropertyKey;
-                    }
-
-                    using (var check = new EditorGUI.ChangeCheckScope())
-                    {
-                        var noPriceStringContent = new GUIContent("No Price String",
-                            "String to display on Purchase Button when there is no cost defined in the Transaction Item.");
-                        var noPriceString =
-                            EditorGUILayout.TextField(noPriceStringContent, m_TransactionItemView.noPriceString);
-                        if (check.changed)
-                        {
-                            m_TransactionItemView.SetNoPriceString(noPriceString);
-                            m_NoPriceString_SerializedProperty.stringValue = noPriceString;
-                        }
-                    }
+                    
+                    EditorGUILayout.PropertyField(m_NoPriceString_SerializedProperty, noPriceStringContent);
 
                     EditorGUILayout.Space();
                 }
 
-                using (var check = new EditorGUI.ChangeCheckScope())
-                {
-                    var purchaseButtonContent = new GUIContent("Purchase Button", "PurchaseButton component to use when generating a button for purchasing item in this view.");
-                    var purchaseButton = (PurchaseButton)EditorGUILayout.ObjectField(purchaseButtonContent, m_TransactionItemView.purchaseButton, typeof(PurchaseButton), true);
-
-                    if (check.changed)
-                    {
-                        m_TransactionItemView.SetPurchaseButton(purchaseButton);
-                        m_PurchaseButton_SerializedProperty.objectReferenceValue = purchaseButton;
-                    }
-                }
+                EditorGUILayout.PropertyField(m_PurchaseButton_SerializedProperty, purchaseButtonContent);
 
                 EditorGUI.indentLevel--;
             }
-        }
-
-        void SetSelectedItemKey(string key)
-        {
-            // Update the serialized value
-            m_TransactionKey_SerializedProperty.stringValue = key;
-            m_TransactionItemView.SetTransaction(key);
-
-            // Push all changes made on the serializedObject back to the target.
-            serializedObject.ApplyModifiedProperties();
-
-            PopulateStaticPropertyKeys();
         }
     }
 }

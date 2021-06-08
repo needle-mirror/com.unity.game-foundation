@@ -1,4 +1,4 @@
-# Tags
+# Tag
 
 ## Overview
 
@@ -15,17 +15,6 @@ The __Tags__ tab is visible for each type of [catalog item].
 ![Tag Editor Overview](../images/tag-editor.png)
 
 The layout is similar to the one for the [catalog items].
-
-## 
-< [_table of contents_](../TableOfContents.md)
-
-
-
-
-
-
-
-
 
 
 [catalog items]: ../Catalog.md#catalog-items

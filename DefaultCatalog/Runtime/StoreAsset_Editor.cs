@@ -159,6 +159,17 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
 
             base.CopyValues(storeTarget);
         }
+
+        /// <inheritdoc/>
+        internal override void RefreshReferences(CatalogAsset owner)
+        {
+            base.RefreshReferences(owner);
+
+            foreach (var storeItem in m_StoreItems)
+            {
+                storeItem.RefreshReferences(owner);
+            }
+        }
     }
 }
 

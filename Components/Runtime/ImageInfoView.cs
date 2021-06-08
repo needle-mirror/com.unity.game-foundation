@@ -1,4 +1,7 @@
-﻿using UnityEditor;
+﻿using System.Collections.Generic;
+using TMPro;
+using UnityEditor;
+using UnityEngine.GameFoundation.DefaultCatalog;
 using UnityEngine.UI;
 
 namespace UnityEngine.GameFoundation.Components
@@ -17,12 +20,17 @@ namespace UnityEngine.GameFoundation.Components
         internal Image m_ImageField;
 
         /// <summary>
-        ///     The Text component to show a text.
+        ///     The TextMeshProUGUI component to show a text.
         /// </summary>
-        public Text textField => m_TextField;
+        public TextMeshProUGUI textField => m_TextField;
 
         [SerializeField]
-        internal Text m_TextField;
+        internal TextMeshProUGUI m_TextField;
+
+        /// <summary>
+        ///     Instance of the GameFoundationDebug class to use for logging.
+        /// </summary>
+        static readonly GameFoundationDebug k_GFLogger = GameFoundationDebug.Get<ImageInfoView>();
 
         /// <summary>
         ///     Sets icon and text that are displayed in this view.
@@ -33,6 +41,17 @@ namespace UnityEngine.GameFoundation.Components
         {
             SetIcon(icon);
             SetText(text);
+        }
+
+        /// <summary>
+        ///     Sets icon and text that are displayed in this view.
+        /// </summary>
+        /// <param name="text">Text to display</param>
+        /// <param name="imageProperty">Property to get sprite image from</param>
+        public void SetView(string text, Property imageProperty)
+        {
+            SetText(text);
+            LoadAndSetIconSprite(imageProperty);
         }
 
         /// <summary>
@@ -47,7 +66,7 @@ namespace UnityEngine.GameFoundation.Components
             }
 
             m_ImageField.sprite = icon;
-            if (!(icon is null)) m_ImageField.SetNativeSize();
+            m_ImageField.preserveAspect = true;
 #if UNITY_EDITOR
             EditorUtility.SetDirty(m_ImageField);
 #endif
@@ -69,6 +88,25 @@ namespace UnityEngine.GameFoundation.Components
 #if UNITY_EDITOR
             EditorUtility.SetDirty(m_TextField);
 #endif
+        }
+        
+        /// <summary>
+        ///     Loads a sprite from a Property and calls SetIcon if load is successful.
+        /// </summary>
+        void LoadAndSetIconSprite(Property imageProperty)
+        {
+            PrefabTools.LoadSprite(imageProperty, SetIcon, OnSpriteLoadFailed);
+        }
+
+        /// <summary>
+        ///     Callback for if there is an error while trying to load a sprite from its Property.
+        /// </summary>
+        /// <param name="errorMessage">
+        ///     The error message returned by <see cref="PrefabTools.LoadSprite"/>.
+        /// </param>
+        void OnSpriteLoadFailed(string errorMessage)
+        {
+            k_GFLogger.LogWarning(errorMessage);
         }
     }
 }

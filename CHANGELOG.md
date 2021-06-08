@@ -1,5 +1,57 @@
 # Changelog
 
+## [0.9.0] - 2021-06-08
+
+### Added
+
+* Added compatibility with Unity In App Purchasing package version 3.x.
+* Menu option for CatalogAssets (Right click in Project window or in Assets dropdown when selected) to set selected CatalogAsset as the GameFoundationCatalogSettings Catalog Asset.
+* Added a new Bundle Transaction Item prefab and DetailedTransactionItemView component for displaying a more detailed view of Transaction items with multiple payouts.
+* Added a new Horizontal Payout Item to provide a different orientation of layout for a payout item, used by default by the Bundle Transaction Item.
+* Added concept of a Featured Transaction Item or Featured Bundle Transaction Item to Store View component. This allows a special prefab to be designated for use with the first item in the store.
+* Added a new `Reveal Hidden Items Button` feature to the StoreView component that can be used in combination with the StoreView.ShowHiddenItems method to display the full transaction items list when the store is actively being filtered by a given tag.
+* New event `GameFoundationSdk.willUninitialize`. Use this if you're having problems due to nullified Game Foundation managers when handling `GameFoundationSdk.uninitialized`.
+* Badge field has been added to `TransactionItemView` and a badge game object to the Transaction Item prefab.
+* `StoreView` now generates its content at editor time.
+* Added Addressables support to Static Properties and prefab components and included Addressables package as a dependency. These properties allow accessing Addressables assets by linking 'Keys' in the Game Foundation Inventory Item, Currency, Transaction, Game Parameter, Store and/or Reward windows to addresses in the Addressables package. These addresses can be changed in the editor using a drop down list and you can click on the descriptive 'label' to the right of the address to cycle between associated Addressables. Once set, the associated assets can be accessed using the desired ``CatalogItemAsset``.
+
+### Changed
+
+* Minimum Unity Editor version has increased to 2019.4 LTS from 2018.4 LTS
+* ``RewardData`` has been updated to regroup all claimed reward data into a single object: ``ClaimedRewardData``.
+* IAP Transactions can no longer be assigned payouts if the given product ID is not found in the IAP Catalog.
+* IAP Transactions can no longer be assigned payouts if the given product ID found in the IAP Catalog is of the Non-Consumable type. To grant inventory items or currency based on a non-consumable product, you should use the ``GameFoundationSdk.transactions.IsIapProductOwned`` method in your custom logic. Note that subscriptions are still not yet explicitly supported by Game Foundation, but they would work similarly to non-consumable products.
+* Purchase Button component no longer auto disables the purchase button under any circumstances.
+  The property `itemPurchasableStatus` and callback `onPurchasableStatusChanged` have been added for getting more detailed info about the purchasable status of the transaction for greater customization in the button's behavior under various circumstances. 
+* Renamed the folder containing transaction items, from `Items` to `Transaction Items`.
+* `Payout Item` prefab (previously located in Promotion folder) has been renamed to `Vertical Payout Item` and moved to a new folder, `Store/Payout Items`.
+* `Horizontal Transaction Item` prefab filename has been changed to `Transaction Item`.
+* All MonoBehaviours, prefabs, and scenes in `Game Foundation Prefabs.unitypackage` are now using TextMeshProUGUI components instead of Text components.
+* `StoreView` content generation is optimized to reuse existing GameObjects when possible.
+
+### Removed
+
+* `Grid Store`, `Horizontal Store`, `Vertical Transaction Item`, and `Columns Transaction Item` prefabs has been removed.
+* `Grid Store` and `Horizontal Store` sample scenes has been removed. 
+* Support for In App Purchasing versions older than 3.0 are now deprecated and will be removed in a future release.
+* Dropped support for ChilliConnect. This will be replaced soon by [Unity Gaming Services](https://unity.com/solutions/gaming-services).
+
+### Fixed
+
+* Fixed bug where ResetIfExpired for a Reward would still be true but display as false in Editor under certain circumstances.
+* Fixed bug where if Reward expiration time is 0 and ResetIfExpired is true the reward would still reset, where instead it should not reset when expiration time is 0.
+* Fixed case where prefabs in the same scene as a GameFoundationInit that has a catalog override selected would display items and properties from the catalog selected in GameFoundationCatalogSettings, instead of from the catalog override selection.
+* Fixed issue in prefabs where the icon image size is reset to its native dimensions at runtime or if a different definition is selected. Now you can resize the image's rect transform to the size you like and the icon image's native size will no longer be a factor. This may cause existing projects to need to reset the transforms for the icon so that it is not shifted over.
+* Fixed bug where Promotion Popup Prefab would not auto lay out promotion items correctly after calling the Open() method.
+* Fixed bug where the inspectors for the PurchaseButton component or any components that pass info to a PurchaseButton (StoreView, PromotionPopupView, etc) were getting their list of possible keys from the Transaction's payout list instead of it's costs list.
+* Fixed bug where static property icon key fields in component inspectors were showing keys for any type of Resources Asset, when they only support Sprite resources.
+* Fixed bug where when creating a Catalog Asset from the right click -> Create menu in the Project window, the window navigates one folder up in the hierarchy once the catalog is created.
+
+### Prefab and Sample Package Note
+If the new prefab package is installed on top of a previous package, the `Vertical Payout Item` and `Transaction Item` prefabs, `01 - Store` and `02 - Manual Store` scenes will show up as newly created files.
+The old `Payout Item`, `Horizontal Transaction Item`, and `Grid Store` prefabs and `Store - Horizotal`, `Store - Vertical`, and `Store Grid` sample scenes are no longer supported, and can be deleted.
+All the current prefabs will change to point to the new prefabs.
+
 ## [0.8.0] - 2020-11-20
 
 ### Added

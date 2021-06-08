@@ -5,14 +5,23 @@
         "Unity.GameFoundation",
         "Unity.GameFoundation.DefaultCatalog",
         "Unity.GameFoundation.DefaultLayers",
-        "UnityEngine.Purchasing"
+        "UnityEngine.Purchasing",
+        "Unity.ResourceManager",
+        "Unity.TextMeshPro"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": []
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.purchasing",
+            "expression": "3.0",
+            "define": "UNITY_PURCHASING"
+        }
+    ],
+    "noEngineReferences": false
 }

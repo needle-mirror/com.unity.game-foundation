@@ -246,15 +246,6 @@ public class GFInit : MonoBehaviour
 }
 ```
 
-## 
-< [_table of contents_](../TableOfContents.md)
-
-
-
-
-
-
-
 
 [the previous tutorial]: 07-MutablePropertiesEditor.md
 

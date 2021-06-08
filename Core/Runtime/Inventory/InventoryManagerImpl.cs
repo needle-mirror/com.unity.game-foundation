@@ -59,7 +59,7 @@ namespace UnityEngine.GameFoundation
         Dictionary<string, IItemCollection> m_ItemCollections = new Dictionary<string, IItemCollection>();
 
         /// <inheritdoc/>
-        protected override void InitializeData(Completer completer)
+        protected override void InitializeData(Completer completer, GameFoundationInitOptions initOptions = null)
         {
             var inventoryManagerData = dataLayer.GetData();
             var catalog = GameFoundationSdk.catalog;

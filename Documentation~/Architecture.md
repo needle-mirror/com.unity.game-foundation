@@ -27,14 +27,6 @@ These components can be as simple as a local persistence system:
 But the solution can be a lot more powerful if you decide to use a Data Layer implementation connected to some backend services.
 Cloud save, but also server authoritative transactions, A/B Testing and segmentation are then easy to use, as the Game Foundation Core API doesn't change if you decide to switch from local persistence to cloud persistence.
 
-## 
-< [_table of contents_](TableOfContents.md)
-
-
-
-
-
-
 
 [GameFoundationSdk]: GameFoundationSdk.md
 

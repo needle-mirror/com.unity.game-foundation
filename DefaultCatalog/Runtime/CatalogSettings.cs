@@ -8,6 +8,7 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
     /// </summary>
     public partial class CatalogSettings : ScriptableObject
     {
+        internal static event Action onCatalogChanged;
         static CatalogSettings s_Instance;
 
         /// <summary>
@@ -59,7 +60,25 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         public static CatalogAsset catalogAsset
         {
             get => singleton.m_CatalogAsset;
-            set => singleton.m_CatalogAsset = value;
+            set => SetCatalogAsset(value);
+        }
+
+        /// <summary>
+        ///     Sets the catalogAsset and invokes the onCatalogChanged event.
+        /// </summary>
+        /// <param name="asset">New catalog asset to set.</param>
+        private static void SetCatalogAsset(CatalogAsset asset)
+        {
+            singleton.m_CatalogAsset = asset;
+            onCatalogChanged?.Invoke();
+        }
+
+        /// <summary>
+        ///     Invokes catalog changed event.
+        /// </summary>
+        private void OnValidate()
+        {
+            onCatalogChanged?.Invoke();
         }
     }
 }

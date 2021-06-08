@@ -15,17 +15,6 @@ The __Game Parameter__ window will let you configure game parameters.
 
 In the example above, a __Game Parameter__ is created per game level. This game parameter can be an approach to set up the difficulty of the levels in a game, or toggle some features on or off according to difficulty of game level.
 
-## 
-< [_table of contents_](../TableOfContents.md)
-
-
-
-
-
-
-
-
-
 
 [catalog item]:  ../Catalog.md#Catalog-Items
 [catalog items]: ../Catalog.md#Catalog-Items

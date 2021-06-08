@@ -21,7 +21,7 @@ namespace UnityEditor.GameFoundation.Components
         int m_SelectedRewardIndex = -1;
         int m_SelectedRewardItemIndex = -1;
 
-        List<Tuple<string, string>> m_RewardItemNames = new List<Tuple<string, string>>();
+        List<DropdownItem> m_RewardItemNames = new List<DropdownItem>();
 
         DropdownCatalogItemHelper<RewardAsset> m_RewardDropdownHelper = new DropdownCatalogItemHelper<RewardAsset>();
         DropdownPopulateHelper m_RewardItemDropdownHelper = new DropdownPopulateHelper();
@@ -62,7 +62,8 @@ namespace UnityEditor.GameFoundation.Components
             var selectedRewardKey = m_RewardKey_SerializedProperty.stringValue;
             if (!string.IsNullOrEmpty(selectedRewardKey))
             {
-                var selectedRewardDefinition = CatalogSettings.catalogAsset.FindItem(selectedRewardKey) as RewardAsset;
+                var selectedRewardDefinition = PrefabTools.GetLookUpCatalogAsset()
+                    .FindItem(selectedRewardKey) as RewardAsset;
 
                 if (selectedRewardDefinition != null)
                 {
@@ -72,12 +73,14 @@ namespace UnityEditor.GameFoundation.Components
                     for (int i = 0; i < rewardItemObjects.Count; i++)
                     {
                         var rewardItem = rewardItemObjects[i];
-                        m_RewardItemNames.Add(new Tuple<string, string>(BuildRewardItemName(rewardItem, i), rewardItem.key));
+                        m_RewardItemNames.Add(
+                            new DropdownItem(BuildRewardItemName(rewardItem, i), rewardItem.key));
                     }
                 }
             }
 
-            m_SelectedRewardItemIndex = m_RewardItemDropdownHelper.Populate(m_RewardItemNames, m_RewardItemKey_SerializedProperty.stringValue);
+            m_SelectedRewardItemIndex = m_RewardItemDropdownHelper
+                .Populate(m_RewardItemNames, m_RewardItemKey_SerializedProperty.stringValue);
         }
 
         public override void OnInspectorGUI()
@@ -105,46 +108,24 @@ namespace UnityEditor.GameFoundation.Components
         {
             var rewardContent = new GUIContent("Reward",
                 "The Reward that the RewardItem to claim belongs to.");
-            if (m_RewardDropdownHelper.displayNames != null && m_RewardDropdownHelper.displayNames.Length > 0)
-            {
-                m_SelectedRewardIndex = EditorGUILayout.Popup(rewardContent, m_SelectedRewardIndex, m_RewardDropdownHelper.displayNames);
-                var rewardKey = m_RewardDropdownHelper.GetKey(m_SelectedRewardIndex);
-                if (m_RewardClaimButton.rewardDefinitionKey != rewardKey)
-                {
-                    SetSelectedRewardKey(rewardKey);
-                }
-            }
-            else
-            {
-                EditorGUILayout.Popup(rewardContent, 0, new[] { "None" });
-            }
-
             var rewardItemContent = new GUIContent("Reward Item", "The RewardItem to claim.");
-            if (m_RewardItemDropdownHelper.displayNames != null && m_RewardItemDropdownHelper.displayNames.Length > 0)
+
+            PrefabTools.DisplayCatalogOverrideAlertIfNecessary();
+
+            using(var check = new EditorGUI.ChangeCheckScope())
             {
-                m_SelectedRewardItemIndex = EditorGUILayout.Popup(rewardItemContent, m_SelectedRewardItemIndex, m_RewardItemDropdownHelper.displayNames);
-                var rewardItemKey = m_RewardItemDropdownHelper.GetKey(m_SelectedRewardItemIndex);
-                if (m_RewardClaimButton.rewardItemDefinitionKey != rewardItemKey)
+                m_SelectedRewardIndex = EditorGUILayout.Popup(rewardContent, m_SelectedRewardIndex, 
+                    m_RewardDropdownHelper.displayNames);
+                m_RewardKey_SerializedProperty.stringValue = m_RewardDropdownHelper.GetKey(m_SelectedRewardIndex);
+
+                if (check.changed)
                 {
-                    SetSelectedRewardItemKey(rewardItemKey);
+                    PopulateRewardItems();
                 }
             }
-            else
-            {
-                EditorGUILayout.Popup(rewardItemContent, 0, new[] { "None" });
-            }
-        }
 
-        void SetSelectedRewardKey(string key)
-        {
-            // Update the serialized value
-            m_RewardKey_SerializedProperty.stringValue = key;
-            m_RewardClaimButton.SetRewardItemDefinition(key, m_RewardItemKey_SerializedProperty.stringValue);
-
-            // Push all changes made on the serializedObject back to the target.
-            serializedObject.ApplyModifiedProperties();
-
-            PopulateRewardItems();
+            m_SelectedRewardItemIndex = EditorGUILayout.Popup(rewardItemContent, m_SelectedRewardItemIndex, m_RewardItemDropdownHelper.displayNames);
+            m_RewardItemKey_SerializedProperty.stringValue = m_RewardItemDropdownHelper.GetKey(m_SelectedRewardItemIndex);
         }
 
         string BuildRewardItemName(RewardItemObject rewardItem, int index)
@@ -231,16 +212,6 @@ namespace UnityEditor.GameFoundation.Components
             }
 
             return m_RewardItemName.ToString();
-        }
-
-        void SetSelectedRewardItemKey(string key)
-        {
-            // Update the serialized value
-            m_RewardItemKey_SerializedProperty.stringValue = key;
-            m_RewardClaimButton.SetRewardItemDefinition(m_RewardKey_SerializedProperty.stringValue, key);
-
-            // Push all changes made on the serializedObject back to the target.
-            serializedObject.ApplyModifiedProperties();
         }
     }
 }

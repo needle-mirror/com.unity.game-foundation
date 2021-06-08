@@ -59,6 +59,13 @@ namespace UnityEditor.GameFoundation
                     break;
                 }
 
+                case (int)PropertyType.Addressables:
+                {
+                    stringValue.stringValue = EditorGUI.TextField(position, label, stringValue.stringValue);
+
+                    break;
+                }
+
                 case (int)PropertyType.ResourcesAsset:
                 {
                     if (m_ResourcesAssetDrawer == null)
@@ -87,6 +94,7 @@ namespace UnityEditor.GameFoundation
                 //Reset string value when type is changed
                 if (changeScope.changed
                     && propertyType.intValue != (int)PropertyType.String
+                    && propertyType.intValue != (int)PropertyType.Addressables
                     && propertyType.intValue != (int)PropertyType.ResourcesAsset)
                 {
                     stringValue.stringValue = null;

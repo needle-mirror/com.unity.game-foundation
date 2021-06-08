@@ -31,7 +31,12 @@ namespace UnityEngine.GameFoundation
         public static event Action<Exception> initializationFailed;
 
         /// <summary>
-        ///     Event raised when GameFoundation is uninitialized.
+        ///     Event raised immediately before GameFoundation is uninitialized.
+        /// </summary>
+        public static event Action willUninitialize;
+
+        /// <summary>
+        ///     Event raised immediately after GameFoundation is uninitialized.
         /// </summary>
         public static event Action uninitialized;
 
@@ -120,6 +125,11 @@ namespace UnityEngine.GameFoundation
         /// </returns>
         public static Deferred Initialize(IDataAccessLayer dataLayer)
         {
+            return Initialize(dataLayer, null);
+        }
+
+        internal static Deferred Initialize(IDataAccessLayer dataLayer, GameFoundationInitOptions initOptions)
+        {
             Promises.GetHandles(out var deferred, out var completer);
 
             if (Tools.RejectIfArgNull(dataLayer, nameof(dataLayer), completer)) return deferred;
@@ -154,7 +164,7 @@ namespace UnityEngine.GameFoundation
 
             GameFoundationSdk.dataLayer = dataLayer;
 
-            var routine = InitializeRoutine(completer);
+            var routine = InitializeRoutine(completer, initOptions);
 
             // Works on both Editor and binary
             if (Application.isPlaying)
@@ -171,7 +181,11 @@ namespace UnityEngine.GameFoundation
         /// <param name="completer">
         ///     Collects the status of the initialization.
         /// </param>
-        static IEnumerator InitializeRoutine(Completer completer)
+        /// <param name="initOptions">
+        ///     An instance of <see cref="GameFoundationInitOptions"/>
+        ///     containing any dependencies you need to provide or wish to override.
+        /// </param>
+        static IEnumerator InitializeRoutine(Completer completer, GameFoundationInitOptions initOptions = null)
         {
             void FailInitialization(Exception reason)
             {
@@ -300,10 +314,10 @@ namespace UnityEngine.GameFoundation
 
                 var transactionManager = new TransactionManagerImpl();
 
-                //transactions needs to be set before calling Initialize because
-                //UnityPurchasingAdapter uses this reference in its initialization.
+                // transactions needs to be set before calling Initialize because
+                // the IPurchasingAdapter uses this reference in its initialization.
                 transactions = transactionManager;
-                using (var initialization = transactionManager.Initialize())
+                using (var initialization = transactionManager.Initialize(initOptions))
                 {
                     if (!initialization.isDone)
                     {
@@ -334,7 +348,14 @@ namespace UnityEngine.GameFoundation
         /// </summary>
         public static void Uninitialize()
         {
-            s_InitializationStatus = InitializationStatus.NotInitialized;
+            try
+            {
+                willUninitialize?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                k_GFLogger.LogException("An event handler subscribed to willUninitialize threw an exception.", ex);
+            }
 
             (inventory as InventoryManagerImpl)?.Uninitialize();
             inventory = default;
@@ -358,7 +379,8 @@ namespace UnityEngine.GameFoundation
                 updater = null;
             }
 
-            // Raise event.
+            s_InitializationStatus = InitializationStatus.NotInitialized;
+
             uninitialized?.Invoke();
         }
     }

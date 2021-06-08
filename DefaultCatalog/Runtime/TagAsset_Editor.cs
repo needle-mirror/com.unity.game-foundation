@@ -88,6 +88,32 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
             EditorUtility.SetDirty(this);
         }
 
+        /// <summary>
+        ///     Deep copy this instance.
+        /// </summary>
+        /// <returns>
+        ///     Return a deep copy of this instance.
+        /// </returns>
+        internal TagAsset Clone()
+        {
+            var clone = CreateInstance<TagAsset>();
+            clone.m_Catalog = m_Catalog;
+            clone.m_Key = m_Key;
+
+            return clone;
+        }
+
+        /// <summary>
+        ///     Update all member references to target objects stored in the given <paramref name="owner"/>.
+        /// </summary>
+        /// <param name="owner">
+        ///     The catalog containing all required references.
+        /// </param>
+        internal void RefreshReferences(CatalogAsset owner)
+        {
+            m_Catalog = owner.tagCatalog;
+        }
+
         public static bool operator ==(TagAsset a, TagAsset b)
         {
             if (ReferenceEquals(a, b))

@@ -6,20 +6,26 @@ namespace UnityEditor.GameFoundation.Components
 {
     static class MenuItems
     {
-        [MenuItem("Window/Game Foundation/Create Game Foundation Init GameObject", false, 1800)]
-        static void CreateGameFoundationInit()
+        [MenuItem("GameObject/Game Foundation/Initializer", false, 10)]
+        public static void GameObjectCreateGameFoundationInitializer()
         {
             if (Object.FindObjectOfType(typeof(GameFoundationInit)) == null)
             {
-                GameObject go = new GameObject("Game Foundation");
+                var go = new GameObject("Game Foundation");
                 go.AddComponent<GameFoundationInit>();
                 Selection.activeObject = go;
-                Undo.RegisterCreatedObjectUndo(go, "Created Game Foundation Init GameObject");
+                Undo.RegisterCreatedObjectUndo(go, "Created Game Foundation Initializer");
             }
             else
             {
-                Debug.LogWarning("A Game Foundation object already exists in this scene.");
+                Debug.LogWarning("A Game Foundation initializer already exists in this scene.");
             }
+        }
+
+        [MenuItem("GameObject/Game Foundation/Initializer", true)]
+        public static bool GameObjectCreateGameFoundationInitializerValidate()
+        {
+            return Object.FindObjectOfType(typeof(GameFoundationInit)) == null;
         }
 
         [MenuItem("Window/Game Foundation/Import Prefabs and Samples", false, 1900)]

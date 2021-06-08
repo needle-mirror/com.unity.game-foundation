@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.GameFoundation;
+using UnityEngine.GameFoundation.Data;
 
 namespace UnityEditor.GameFoundation.Components
 {
@@ -42,7 +45,7 @@ namespace UnityEditor.GameFoundation.Components
         ///     Populates arrays for dropdown menu.
         /// </summary>
         /// <param name="entries">
-        ///     An array of display name and key.
+        ///     A collection of <see cref="DropdownItem"/>s.
         /// </param>
         /// <param name="selectedKey">
         ///     A key for selected item in the dropdown menu. If nothing is selected, the key should be null.
@@ -53,7 +56,7 @@ namespace UnityEditor.GameFoundation.Components
         /// <returns>
         ///     Return the index of the selected key.
         /// </returns>
-        public int Populate(List<Tuple<string, string>> entries, string selectedKey, bool noneAsFirstItem = false)
+        public int Populate(List<DropdownItem> entries, string selectedKey, bool noneAsFirstItem = true)
         {
             var count = 0;
             var indexOfKey = 0;
@@ -62,7 +65,7 @@ namespace UnityEditor.GameFoundation.Components
             if (entries != null)
             {
                 count = entries.Count;
-                notFound = !string.IsNullOrEmpty(selectedKey) && !entries.Exists(x => x.Item2 == selectedKey);
+                notFound = !string.IsNullOrEmpty(selectedKey) && !entries.Exists(x => x.key == selectedKey);
             }
             else if (!string.IsNullOrEmpty(selectedKey))
             {
@@ -107,10 +110,10 @@ namespace UnityEditor.GameFoundation.Components
                 for (; index < count; index++)
                 {
                     var entry = entries[keyIndex++];
-                    m_DisplayNames[index] = entry.Item1;
-                    m_Keys[index] = entry.Item2;
+                    m_DisplayNames[index] = entry.displayName;
+                    m_Keys[index] = entry.key;
 
-                    if (!notFound && selectedKey == entry.Item2)
+                    if (!notFound && selectedKey == entry.key)
                     {
                         indexOfKey = index;
                     }

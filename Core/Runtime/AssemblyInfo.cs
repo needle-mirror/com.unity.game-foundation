@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-[assembly: AssemblyVersion("0.8.0")]
+[assembly: AssemblyVersion("0.9.0")]
 
 // Test assemblies
 [assembly: InternalsVisibleTo("Unity.GameFoundation.EditorTests")]
@@ -15,3 +15,6 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("Unity.GameFoundation.DefaultLayers")]
 
 [assembly: InternalsVisibleTo("Unity.GameFoundation.Components")]
+
+// Moq
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]

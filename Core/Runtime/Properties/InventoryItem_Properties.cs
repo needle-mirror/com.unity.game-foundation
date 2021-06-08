@@ -312,7 +312,7 @@ namespace UnityEngine.GameFoundation
             // fire event for this inventory item that its property has changed
             var args = new PropertyChangedEventArgs(this, key, value);
             mutablePropertyChanged?.Invoke(args);
-            
+
             // also fire inventory event that any item's property has changed
             var inventory = GameFoundationSdk.inventory as InventoryManagerImpl;
             inventory?.OnMutablePropertyChanged(args);

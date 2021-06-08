@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine.Events;
 using UnityEngine.GameFoundation.DefaultCatalog;
 using UnityEngine.UI;
@@ -40,7 +41,7 @@ namespace UnityEngine.GameFoundation.Components
 
         [SerializeField]
         [Space]
-        internal string m_DescriptionPropertyKey = "description";
+        internal string m_DescriptionPropertyKey;
 
         /// <summary>
         ///     The Static Property key that should be used to get the title to display for each Reward Item.
@@ -51,7 +52,7 @@ namespace UnityEngine.GameFoundation.Components
         public string rewardItemTitlePropertyKey => m_RewardItemTitlePropertyKey;
 
         [SerializeField]
-        internal string m_RewardItemTitlePropertyKey = "reward_item_title";
+        internal string m_RewardItemTitlePropertyKey;
 
         /// <summary>
         ///     The Static Property key string that should be used for getting the image of each item in the Payout of a Reward
@@ -61,7 +62,7 @@ namespace UnityEngine.GameFoundation.Components
         public string payoutItemIconSpritePropertyKey => m_PayoutItemIconSpritePropertyKey;
 
         [SerializeField]
-        internal string m_PayoutItemIconSpritePropertyKey = "reward_icon";
+        internal string m_PayoutItemIconSpritePropertyKey;
 
         /// <summary>
         ///     The format to display the countdown in.
@@ -97,13 +98,13 @@ namespace UnityEngine.GameFoundation.Components
         internal string m_CountdownExpirationDescription = "Expires In:";
 
         /// <summary>
-        ///     The Text field to display the countdown time in.
+        ///     The TextMeshProUGUI field to display the countdown time in.
         ///     If null no countdown will be displayed.
         /// </summary>
-        public Text countdownTextField => m_CountdownTextField;
+        public TextMeshProUGUI countdownTextField => m_CountdownTextField;
 
         [SerializeField]
-        internal Text m_CountdownTextField;
+        internal TextMeshProUGUI m_CountdownTextField;
 
         /// <summary>
         ///     The RewardItemView prefab to use to display rewards that are currently locked but will be claimable in the future.
@@ -166,21 +167,21 @@ namespace UnityEngine.GameFoundation.Components
         internal bool m_AutoHideCloseButton = true;
 
         /// <summary>
-        ///     The Text field to assign the Reward's displayName to.
+        ///     The TextMeshProUGUI field to assign the Reward's displayName to.
         /// </summary>
-        public Text titleTextField => m_TitleTextField;
+        public TextMeshProUGUI titleTextField => m_TitleTextField;
 
         [SerializeField]
         [Space]
-        internal Text m_TitleTextField;
+        internal TextMeshProUGUI m_TitleTextField;
 
         /// <summary>
-        ///     The Text field to assign the description to.
+        ///     The TextMeshProUGUI field to assign the description to.
         /// </summary>
-        public Text descriptionTextField => m_DescriptionTextField;
+        public TextMeshProUGUI descriptionTextField => m_DescriptionTextField;
 
         [SerializeField]
-        internal Text m_DescriptionTextField;
+        internal TextMeshProUGUI m_DescriptionTextField;
 
         /// <summary>
         ///     The Transform in which to auto populate Reward Items.
@@ -259,6 +260,12 @@ namespace UnityEngine.GameFoundation.Components
         float m_TimeSinceLastCountdownUpdate;
 
         /// <summary>
+        ///     Tracks whether any properties have been changed.
+        ///     Checked by Update() to see whether content should be updated.
+        /// </summary>
+        bool m_IsDirty;
+
+        /// <summary>
         ///     Specifies whether the debug logs is visible.
         /// </summary>
         bool m_ShowDebugLogs = false;
@@ -303,13 +310,25 @@ namespace UnityEngine.GameFoundation.Components
         static readonly GameFoundationDebug k_GFLogger = GameFoundationDebug.Get<RewardPopupView>();
 
         /// <summary>
+        ///     Clears any RewardItems that might be cached at runtime if GameFoundationSdk is not initialized.
+        /// </summary>
+        private void Awake()
+        {
+            if (Application.isPlaying && !GameFoundationSdk.IsInitialized)
+            {
+                ClearRewardItemPrefabs();
+            }
+        }
+
+        /// <summary>
         ///     Adds listeners to the RewardManager's claim success, failure and state changed events, if the application is
         ///     playing.
         /// </summary>
         void OnEnable()
         {
             GameFoundationSdk.initialized += RegisterEvents;
-            GameFoundationSdk.uninitialized += UnregisterEvents;
+            GameFoundationSdk.initialized += InitializeComponentData;
+            GameFoundationSdk.willUninitialize += UnregisterEvents;
 
             if (GameFoundationSdk.IsInitialized)
             {
@@ -329,7 +348,8 @@ namespace UnityEngine.GameFoundation.Components
         void OnDisable()
         {
             GameFoundationSdk.initialized -= RegisterEvents;
-            GameFoundationSdk.uninitialized -= UnregisterEvents;
+            GameFoundationSdk.initialized -= InitializeComponentData;
+            GameFoundationSdk.willUninitialize -= UnregisterEvents;
 
             if (GameFoundationSdk.IsInitialized)
             {
@@ -343,6 +363,10 @@ namespace UnityEngine.GameFoundation.Components
         void RegisterEvents()
         {
             Reward.rewardStateChanged += OnRewardStateChanged;
+
+            if (GameFoundationSdk.rewards == null)
+                return;
+
             GameFoundationSdk.rewards.rewardItemClaimSucceeded += OnRewardClaimSucceeded;
         }
 
@@ -352,11 +376,17 @@ namespace UnityEngine.GameFoundation.Components
         void UnregisterEvents()
         {
             Reward.rewardStateChanged -= OnRewardStateChanged;
+
+            if (GameFoundationSdk.rewards == null)
+                return;
+
             GameFoundationSdk.rewards.rewardItemClaimSucceeded -= OnRewardClaimSucceeded;
         }
 
         /// <summary>
-        ///     Initializes RewardPopupView before the first frame update.
+        ///     Initializes RewardPopupView before the first frame update if Game Foundation Sdk was already
+        ///     initialized before RewardPopupView was enabled, otherwise sets content to a blank state in order
+        ///     to wait for Game Foundation Sdk to initialize.
         ///     Will trigger a PopupOpenedEvent (<see cref="PopupOpenedEvent"/>) if the prefab is active in hierarchy at start.
         /// </summary>
         void Start()
@@ -366,11 +396,29 @@ namespace UnityEngine.GameFoundation.Components
                 return;
             }
 
-            ThrowIfNotInitialized(nameof(Start));
+            if (!GameFoundationSdk.IsInitialized)
+            {
+                k_GFLogger.Log("Waiting for initialization.");
+                m_IsDirty = true;
+                return;
+            }
 
-            m_Reward = GetReward(m_RewardKey);
+            // This is to catch the case where Game Foundation initialized before OnEnable added the GameFoundationSdk initialize listener.
+            if (GameFoundationSdk.IsInitialized && m_Reward is null)
+            {
+                InitializeComponentData();
+            }
+        }
+        
+        /// <summary>
+        ///     Initializes RewardPopupView data from Game Foundation Sdk.
+        /// </summary>
+        void InitializeComponentData()
+        {
+            if (!Application.isPlaying)
+                return;
 
-            UpdateContent();
+            m_IsDirty = true;
         }
 
         /// <summary>
@@ -381,10 +429,8 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         internal void SetRewardKey(string rewardKey)
         {
-            m_Reward = GetReward(rewardKey);
             m_RewardKey = rewardKey;
-
-            UpdateContent();
+            m_IsDirty = true;
         }
 
         /// <summary>
@@ -397,13 +443,14 @@ namespace UnityEngine.GameFoundation.Components
             if (!Application.isPlaying || string.IsNullOrEmpty(rewardKey))
                 return null;
 
-            var reward = GameFoundationSdk.rewards.FindReward(rewardKey);
-            if (reward == null)
-            {
-                k_GFLogger.LogWarning($"No Reward with the key \"{rewardKey}\" can be found in the reward manager.");
-            }
+            var reward = GameFoundationSdk.rewards?.FindReward(rewardKey);
 
-            return reward;
+            if (reward != null || !m_ShowDebugLogs)
+                return reward;
+
+
+            k_GFLogger.LogWarning($"No Reward with the key \"{rewardKey}\" can be found in the reward manager.");
+            return null;
         }
         
         /// <summary>
@@ -440,7 +487,10 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         public void SetReward(Reward reward)
         {
-            ThrowIfNotInitialized(nameof(SetReward));
+            if (PrefabTools.FailIfNotInitialized(k_GFLogger, nameof(SetReward)))
+            {
+                return;
+            }
 
             if (m_RewardKey == reward?.key)
             {
@@ -449,8 +499,7 @@ namespace UnityEngine.GameFoundation.Components
 
             m_RewardKey = reward?.key;
             m_Reward = reward;
-
-            UpdateContent();
+            m_IsDirty = true;
         }
 
         /// <summary>
@@ -461,8 +510,6 @@ namespace UnityEngine.GameFoundation.Components
         {
             if (!Application.isPlaying)
                 return;
-
-            ThrowIfNotInitialized(nameof(Open));
 
             Open(m_Reward ?? GetReward(m_RewardKey));
         }
@@ -479,20 +526,30 @@ namespace UnityEngine.GameFoundation.Components
             if (!Application.isPlaying)
                 return;
 
-            ThrowIfNotInitialized(nameof(Open));
-
             if (gameObject.activeInHierarchy)
             {
                 return;
             }
-
-            if (reward == null)
+            
+            if (!GameFoundationSdk.IsInitialized)
             {
-                k_GFLogger.LogWarning("Reward is null.");
+                k_GFLogger.Log("Reward Popup has been opened when Game Foundation Sdk is not initialized. Content will be blank until Game Foundation initializes and no changes to state have been made.");
+                m_Reward = null;
+            }
+            else
+            {
+                if (reward is null)
+                {
+                    k_GFLogger.LogWarning("Reward is null.");
+                }
+
+                m_RewardKey = reward?.key;
+                m_Reward = reward;
             }
 
-            m_Reward = reward;
-            m_RewardKey = reward?.key;
+            // Must call UpdateContent instead of setting m_IsDirty because setting m_IsDirty here because the popup is
+            // set to active in the same frame as it becomes dirty and it can cause a flicker.
+            UpdateContent();
 
             gameObject.SetActive(true);
 
@@ -530,7 +587,7 @@ namespace UnityEngine.GameFoundation.Components
                 return;
 
             m_DescriptionPropertyKey = propertyKey;
-            UpdateContent();
+            m_IsDirty = true;
         }
 
         /// <summary>
@@ -547,7 +604,7 @@ namespace UnityEngine.GameFoundation.Components
                 return;
 
             m_PayoutItemIconSpritePropertyKey = propertyKey;
-            UpdateContent();
+            m_IsDirty = true;
         }
 
         /// <summary>
@@ -565,7 +622,7 @@ namespace UnityEngine.GameFoundation.Components
                 return;
 
             m_RewardItemTitlePropertyKey = propertyKey;
-            UpdateContent();
+            m_IsDirty = true;
         }
 
         /// <summary>
@@ -578,7 +635,7 @@ namespace UnityEngine.GameFoundation.Components
                 return;
 
             m_AutoPopulatedRewardItemContainer = container;
-            UpdateContent();
+            m_IsDirty = true;
         }
 
         /// <summary>
@@ -596,7 +653,7 @@ namespace UnityEngine.GameFoundation.Components
                 return;
 
             m_LockedRewardItemPrefab = lockedItemPrefab;
-            UpdateContent();
+            m_IsDirty = true;
         }
 
         /// <summary>
@@ -612,7 +669,7 @@ namespace UnityEngine.GameFoundation.Components
                 return;
 
             m_ClaimableRewardItemPrefab = claimableItemPrefab;
-            UpdateContent();
+            m_IsDirty = true;
         }
 
         /// <summary>
@@ -628,7 +685,7 @@ namespace UnityEngine.GameFoundation.Components
                 return;
 
             m_ClaimedRewardItemPrefab = claimedItemPrefab;
-            UpdateContent();
+            m_IsDirty = true;
         }
 
         /// <summary>
@@ -645,7 +702,7 @@ namespace UnityEngine.GameFoundation.Components
                 return;
 
             m_MissedRewardItemPrefab = missedItemPrefab;
-            UpdateContent();
+            m_IsDirty = true;
         }
 
         /// <summary>
@@ -683,35 +740,35 @@ namespace UnityEngine.GameFoundation.Components
         }
 
         /// <summary>
-        ///     Sets the Text field in which to display the Reward's displayName.
+        ///     Sets the TextMeshProUGUI field in which to display the Reward's displayName.
         /// </summary>
         /// <param name="nameField">
-        ///     The Text field in which to display the Reward's displayName.
+        ///     The TextMeshProUGUI field in which to display the Reward's displayName.
         ///     If null, no title will be displayed.
         /// </param>
-        public void SetTitleTextField(Text nameField)
+        public void SetTitleTextField(TextMeshProUGUI nameField)
         {
             if (m_TitleTextField == nameField)
                 return;
 
             m_TitleTextField = nameField;
-            UpdateContent();
+            m_IsDirty = true;
         }
 
         /// <summary>
-        ///     Sets the Text field in which to display the Reward's description.
+        ///     Sets the TextMeshProUGUI field in which to display the Reward's description.
         /// </summary>
         /// <param name="descriptionField">
-        ///     The Text field in which to display the Reward's description.
+        ///     The TextMeshProUGUI field in which to display the Reward's description.
         ///     If null, no description will be displayed.
         /// </param>
-        public void SetDescriptionTextField(Text descriptionField)
+        public void SetDescriptionTextField(TextMeshProUGUI descriptionField)
         {
             if (m_DescriptionTextField == descriptionField)
                 return;
 
             m_DescriptionTextField = descriptionField;
-            UpdateContent();
+            m_IsDirty = true;
         }
 
         /// <summary>
@@ -770,13 +827,13 @@ namespace UnityEngine.GameFoundation.Components
         }
 
         /// <summary>
-        ///     Sets the Text field to use when displaying the countdown time.
+        ///     Sets the TextMeshProUGUI field to use when displaying the countdown time.
         /// </summary>
         /// <param name="countdownField">
-        ///     The Text field to use when displaying the countdown time.
+        ///     The TextMeshProUGUI field to use when displaying the countdown time.
         ///     If null, no countdown will be displayed.
         /// </param>
-        public void SetCountdownTimerField(Text countdownField)
+        public void SetCountdownTimerField(TextMeshProUGUI countdownField)
         {
             if (countdownField != m_CountdownTextField)
                 return;
@@ -810,6 +867,12 @@ namespace UnityEngine.GameFoundation.Components
             if (m_CountdownTextField is null)
                 return;
 
+            if (Application.isPlaying && !GameFoundationSdk.IsInitialized)
+            {
+                m_CountdownTextField.text = string.Empty;
+                return;
+            }
+
             if (Application.isPlaying && !(m_Reward is null))
             {
                 m_Reward.Update();
@@ -835,9 +898,6 @@ namespace UnityEngine.GameFoundation.Components
                 if (m_CountdownTextField.text != countdownText)
                 {
                     m_CountdownTextField.text = countdownText;
-#if UNITY_EDITOR
-                    EditorUtility.SetDirty(m_CountdownTextField);
-#endif
                 }
             }
         }
@@ -882,7 +942,7 @@ namespace UnityEngine.GameFoundation.Components
                 return;
             }
 
-            m_CloseButton?.gameObject.SetActive(!m_AutoHideCloseButton || m_Reward != null && m_Reward.IsInCooldown());
+            m_CloseButton?.gameObject.SetActive(!m_AutoHideCloseButton || m_Reward is null || m_Reward.IsInCooldown());
         }
 
         /// <summary>
@@ -897,6 +957,34 @@ namespace UnityEngine.GameFoundation.Components
 
             m_AutoHideCloseButton = autoHide;
             UpdateCloseButton();
+        }
+
+        /// <summary>
+        ///     Checks to see whether any properties have been changed (by checking <see cref="m_IsDirty"/>) and
+        ///     if so, calls <see cref="UpdateContent"/> before resetting the flag.
+        ///
+        ///     At runtime, also assigns the appropriate value for <see cref="m_Reward"/> from the Catalog if needed.
+        ///     If m_Transaction and m_TransactionKey don't currently match, this replaces m_Transaction with the
+        ///     correct transaction by searching the Catalog for m_TransactionKey.
+        /// </summary>
+        void Update()
+        {
+            if (m_IsDirty)
+            {
+                m_IsDirty = false;
+
+                // UpdateContent doesn't update m_Currency, which is what is used to fetch icons at runtime.
+                // If Game Foundation is initialized and m_Currency does not match m_CurrencyKey,
+                // reset m_Currency based on m_CurrencyKey.
+                if (GameFoundationSdk.IsInitialized &&
+                    (m_Reward is null && !string.IsNullOrEmpty(m_RewardKey) || 
+                     !(m_Reward is null) && m_Reward.key != m_RewardKey))
+                {
+                    m_Reward = GetReward(m_RewardKey);
+                }
+
+                UpdateContent();
+            }
         }
 
         /// <summary>
@@ -999,18 +1087,12 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         void UpdateContentAtEditor()
         {
-            // Known Issue: It's temporary protection for editor time to avoid generating GameObjects(RewardItems) in Prefab Asset.
-            if (!PrefabUtility.IsPartOfPrefabInstance(gameObject))
-            {
-                return;
-            }
-
             string displayName = null;
             string descriptionText = null;
 
             var rewardAsset =
                 !string.IsNullOrEmpty(m_RewardKey)
-                    ? CatalogSettings.catalogAsset.FindItem(m_RewardKey) as RewardAsset
+                    ? PrefabTools.GetLookUpCatalogAsset().FindItem(m_RewardKey) as RewardAsset
                     : null;
 
             if (!(rewardAsset is null))
@@ -1076,9 +1158,10 @@ namespace UnityEngine.GameFoundation.Components
         void UpdateGeneratedRewardItemsAtEditor(RewardAsset rewardAsset)
         {
             if (m_AutoPopulatedRewardItemContainer == null)
-            {
                 return;
-            }
+
+            if (!this.ShouldRegenerateGameObjects())
+                return;
 
             ClearRewardItemPrefabs();
 
@@ -1105,6 +1188,9 @@ namespace UnityEngine.GameFoundation.Components
         void ClearRewardItemPrefabs()
         {
             if (m_AutoPopulatedRewardItemContainer is null)
+                return;
+
+            if (!this.ShouldRegenerateGameObjects())
                 return;
 
             var toRemove = new List<Transform>();
@@ -1200,36 +1286,15 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         void SetTextContent(string displayName, string description)
         {
-            if (m_TitleTextField != null && m_TitleTextField.text != displayName)
+            if (!(m_TitleTextField is null) && m_TitleTextField.text != displayName)
             {
                 m_TitleTextField.text = displayName;
-#if UNITY_EDITOR
-                EditorUtility.SetDirty(m_TitleTextField);
-#endif
             }
 
-            if (m_DescriptionTextField != null && m_DescriptionTextField.text != description)
+            if (!(m_DescriptionTextField is null) && m_DescriptionTextField.text != description)
             {
                 m_DescriptionTextField.text = description;
                 m_DescriptionTextField.gameObject.SetActive(!string.IsNullOrEmpty(description));
-#if UNITY_EDITOR
-                EditorUtility.SetDirty(m_DescriptionTextField);
-#endif
-            }
-        }
-
-        /// <summary>
-        ///     Throws an Invalid Operation Exception if GameFoundation has not been initialized before this view is used.
-        /// </summary>
-        /// <param name="callingMethod">
-        ///     Calling method name.
-        /// </param>
-        void ThrowIfNotInitialized(string callingMethod)
-        {
-            if (!GameFoundationSdk.IsInitialized)
-            {
-                var message = $"GameFoundationSdk.Initialize() must be called before {callingMethod} is used.";
-                k_GFLogger.LogException(message, new InvalidOperationException(message));
             }
         }
 
@@ -1271,6 +1336,14 @@ namespace UnityEngine.GameFoundation.Components
 
             var rewardItemDefinition = GetRewardItemDefinition(reward, rewardItemKey);
             onRewardClaimed?.Invoke(reward, rewardItemDefinition);
+        }
+
+        /// <summary>
+        ///     When changes are made via the Inspector, trigger <see cref="UpdateContent"/>
+        /// </summary>
+        void OnValidate()
+        {
+            m_IsDirty = true;
         }
     }
 }

@@ -31,6 +31,7 @@ namespace UnityEngine.GameFoundation
         ///     - <see cref="PropertyType.Long"/>.
         ///     - <see cref="PropertyType.Double"/>.
         ///     - <see cref="PropertyType.Bool"/>.
+        ///     - <see cref="PropertyType.Addressables"/>.
         /// </summary>
         [SerializeField]
         [FormerlySerializedAs("valueType")]
@@ -39,6 +40,7 @@ namespace UnityEngine.GameFoundation
         /// <summary>
         ///     Stored string value if this property is a <see cref="PropertyType.String"/> type.
         ///     Path to the stored asset if this property is an <see cref="PropertyType.ResourcesAsset"/> type.
+        ///     Address if this property is an Addressables type.
         ///     Null otherwise.
         /// </summary>
         [SerializeField]
@@ -69,12 +71,16 @@ namespace UnityEngine.GameFoundation
             {
                 case PropertyType.Long:
                     return a.longValue == b.longValue;
+
                 case PropertyType.Double:
                     return Math.Abs(a.doubleValue - b.doubleValue) <= double.Epsilon;
+
                 case PropertyType.Bool:
                     return a.boolValue == b.boolValue;
+
                 case PropertyType.String:
                 case PropertyType.ResourcesAsset:
+                case PropertyType.Addressables:
                     return a.m_StringValue == b.m_StringValue;
 
                 default:
@@ -106,12 +112,16 @@ namespace UnityEngine.GameFoundation
             {
                 case PropertyType.Long:
                     return a.longValue != b.longValue;
+
                 case PropertyType.Double:
                     return Math.Abs(a.doubleValue - b.doubleValue) > double.Epsilon;
+
                 case PropertyType.Bool:
                     return a.boolValue != b.boolValue;
+
                 case PropertyType.String:
                 case PropertyType.ResourcesAsset:
+                case PropertyType.Addressables:
                     return a.m_StringValue != b.m_StringValue;
 
                 default:
@@ -444,6 +454,7 @@ namespace UnityEngine.GameFoundation
 
                 case PropertyType.String:
                 case PropertyType.ResourcesAsset:
+                case PropertyType.Addressables:
                     return string.Compare(m_StringValue, other.m_StringValue, StringComparison.Ordinal);
 
                 default:

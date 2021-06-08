@@ -19,8 +19,8 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
         protected override void CreateEditors()
         {
             m_Editors.Clear();
-            m_Editors.Add(new VirtualTransactionCatalogAssetEditor("Virtual Transaction", this));
-            m_Editors.Add(new IAPTransactionCatalogAssetEditor("IAP", this));
+            m_Editors.Add(new VirtualTransactionAssetEditor("Virtual Transaction", this));
+            m_Editors.Add(new IAPTransactionAssetEditor("IAP", this));
         }
     }
 }

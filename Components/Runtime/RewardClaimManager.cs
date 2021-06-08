@@ -83,7 +83,7 @@ namespace UnityEngine.GameFoundation.Components
         void OnEnable()
         {
             GameFoundationSdk.initialized += OnGameFoundationInitialized;
-            GameFoundationSdk.uninitialized += OnGameFoundationUninitialized;
+            GameFoundationSdk.willUninitialize += OnGameFoundationWillUninitialize;
 
             if (GameFoundationSdk.IsInitialized)
             {
@@ -98,7 +98,7 @@ namespace UnityEngine.GameFoundation.Components
         void OnDisable()
         {
             GameFoundationSdk.initialized -= OnGameFoundationInitialized;
-            GameFoundationSdk.uninitialized -= OnGameFoundationUninitialized;
+            GameFoundationSdk.willUninitialize -= OnGameFoundationWillUninitialize;
 
             if (GameFoundationSdk.IsInitialized)
             {
@@ -111,6 +111,9 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         void RegisterEvents()
         {
+            if (GameFoundationSdk.rewards == null)
+                return;
+
             GameFoundationSdk.rewards.rewardItemClaimSucceeded += OnRewardItemClaimSucceeded;
             GameFoundationSdk.rewards.rewardItemClaimFailed += OnRewardItemClaimFailed;
             GameFoundationSdk.rewards.rewardItemClaimInitiated += OnRewardItemClaimInitiated;
@@ -122,6 +125,9 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         void UnregisterEvents()
         {
+            if (GameFoundationSdk.rewards == null)
+                return;
+
             GameFoundationSdk.rewards.rewardItemClaimSucceeded -= OnRewardItemClaimSucceeded;
             GameFoundationSdk.rewards.rewardItemClaimFailed -= OnRewardItemClaimFailed;
             GameFoundationSdk.rewards.rewardItemClaimInitiated -= OnRewardItemClaimInitiated;
@@ -276,7 +282,7 @@ namespace UnityEngine.GameFoundation.Components
         /// <summary>
         ///     When Game Foundation is uninitialized, it reset the state of the queue.
         /// </summary>
-        void OnGameFoundationUninitialized()
+        void OnGameFoundationWillUninitialize()
         {
             UnregisterEvents();
 

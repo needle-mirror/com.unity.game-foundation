@@ -59,6 +59,17 @@ namespace UnityEngine.GameFoundation
         event Action<PurchaseEventArgs> purchaseSucceededInIAPSDK;
 
         /// <summary>
+        ///     Invoked after a purchase has succeeded in the purchasing adapter,
+        ///     but before the purchase has been processed by the Game Foundation data layer.
+        ///     It includes data that was returned by the purchasing adapter.
+        ///     It does not include an IAPTransaction or IAPTransaction key because this event
+        ///     happens regardless of whether or not an associated IAPTransaction exists.
+        ///     You can use <see cref="Catalog.FindIAPTransactionByProductId"/> to see if
+        ///     this IapResult does relate to an IAPTransaction.
+        /// </summary>
+        event Action<IapResult> purchaseSucceededInPurchasingAdapter;
+
+        /// <summary>
         ///     Returns true if the optional purchasing adapter has finished initializing.
         /// </summary>
         bool purchasingAdapterIsInitialized { get; }

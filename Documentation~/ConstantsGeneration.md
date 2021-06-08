@@ -1,4 +1,4 @@
-# Generating constant strings from your catalogs
+# Generating Constant Strings From Your Catalogs
 
 ## Purpose
 
@@ -164,9 +164,6 @@ Each sub-class contains:
 0112:       }
 0113:   }
 ```
-
-## 
-< [_table of contents_](TableOfContents.md)
 
 [Usage]:  #Usage
 [SampleOutput]: #SampleOutput

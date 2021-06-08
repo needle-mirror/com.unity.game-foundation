@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine.Events;
 using UnityEngine.GameFoundation.DefaultCatalog;
 using UnityEngine.Promise;
@@ -32,13 +33,20 @@ namespace UnityEngine.GameFoundation.Components
         internal string m_TransactionKey;
 
         /// <summary>
+        ///     The <see cref="PurchasableStatus"/> of the Transaction attached to this PurchaseButton.
+        /// </summary>
+        public PurchasableStatus itemPurchasableStatus => m_ItemPurchasableStatus;
+
+        PurchasableStatus m_ItemPurchasableStatus = PurchasableStatus.GameFoundationUnavailable;
+
+        /// <summary>
         ///     The Static Property key string that should be used for getting the price icon sprite of the Transaction
         ///     Item for displaying in the this view.
         /// </summary>
         public string priceIconSpritePropertyKey => m_PriceIconSpritePropertyKey;
 
         [SerializeField]
-        internal string m_PriceIconSpritePropertyKey = "purchase_button_icon";
+        internal string m_PriceIconSpritePropertyKey;
 
         /// <summary>
         ///     Use to enable or disable the button.
@@ -55,13 +63,13 @@ namespace UnityEngine.GameFoundation.Components
         /// <summary>
         ///     The Text component to assign the price text to.
         /// </summary>
-        public Text priceTextField => m_PriceTextField;
+        public TextMeshProUGUI priceTextField => m_PriceTextField;
 
         [SerializeField]
-        internal Text m_PriceTextField;
+        internal TextMeshProUGUI m_PriceTextField;
 
         /// <summary>
-        ///     The Image component to assign the Transaction Item's icon image to.
+        ///     The Image component to assign the Transaction Item's cost icon to.
         /// </summary>
         public Image priceIconImageField => m_PriceIconImageField;
 
@@ -77,6 +85,11 @@ namespace UnityEngine.GameFoundation.Components
         internal string m_NoPriceString = kDefaultNoPriceString;
 
         /// <summary>
+        ///     Callback that will get triggered any time <see cref="itemPurchasableStatus"/> changes.
+        /// </summary>
+        public PurchasableStatusChangedEvent onPurchasableStatusChanged;
+
+        /// <summary>
         ///     Callback that will get triggered if item purchase completes successfully.
         /// </summary>
         public TransactionSuccessEvent onPurchaseSuccess;
@@ -85,6 +98,14 @@ namespace UnityEngine.GameFoundation.Components
         ///     Callback that will get triggered if item purchase fails.
         /// </summary>
         public TransactionFailureEvent onPurchaseFailure;
+
+        /// <summary>
+        ///     A callback for when a transaction's <see cref="itemPurchasableStatus"/> changes. Wraps UnityEvent and
+        ///     accepts three parameters: the <see cref="PurchaseButton"/> the status is changing on, the old
+        ///     <see cref="PurchasableStatus"/> and the new <see cref="PurchasableStatus"/>.
+        /// </summary>
+        [Serializable]
+        public class PurchasableStatusChangedEvent : UnityEvent<PurchaseButton, PurchasableStatus, PurchasableStatus> { }
 
         /// <summary>
         ///     A callback for when a transaction is completed. Wraps UnityEvent and accepts a <see cref="BaseTransaction"/> as a
@@ -113,21 +134,20 @@ namespace UnityEngine.GameFoundation.Components
         Button m_Button;
 
         /// <summary>
-        ///     Specifies whether the item is available to purchase.
+        ///     Flag for determining whether there is currently a purchase in progress.
         /// </summary>
-        public bool availableToPurchaseState => m_AvailableToPurchaseState;
-
-        bool m_AvailableToPurchaseState = true;
-
-        /// <summary>
-        ///     Specifies whether the button is interactable internally.
-        /// </summary>
-        bool m_InteractableInternal = true;
+        bool m_PurchaseInProgress = false;
 
         /// <summary>
         ///     Specifies whether the button is driven by other component.
         /// </summary>
         internal bool m_IsDrivenByOtherComponent;
+
+        /// <summary>
+        ///     Tracks whether any properties have been changed.
+        ///     Checked by Update() to see whether content should be updated.
+        /// </summary>
+        bool m_IsDirty;
 
         /// <summary>
         ///     Specifies whether the debug logs is visible.
@@ -167,7 +187,8 @@ namespace UnityEngine.GameFoundation.Components
         void OnEnable()
         {
             GameFoundationSdk.initialized += RegisterEvents;
-            GameFoundationSdk.uninitialized += UnregisterEvents;
+            GameFoundationSdk.initialized += InitializeComponentData;
+            GameFoundationSdk.willUninitialize += UnregisterEvents;
 
             if (GameFoundationSdk.IsInitialized)
             {
@@ -186,7 +207,8 @@ namespace UnityEngine.GameFoundation.Components
         void OnDisable()
         {
             GameFoundationSdk.initialized -= RegisterEvents;
-            GameFoundationSdk.uninitialized -= UnregisterEvents;
+            GameFoundationSdk.initialized -= InitializeComponentData;
+            GameFoundationSdk.willUninitialize -= UnregisterEvents;
 
             if (GameFoundationSdk.IsInitialized)
             {
@@ -199,9 +221,16 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         void RegisterEvents()
         {
-            GameFoundationSdk.inventory.itemAdded += OnInventoryChanged;
-            GameFoundationSdk.inventory.itemDeleted += OnInventoryChanged;
-            GameFoundationSdk.wallet.balanceChanged += OnWalletChanged;
+            if (GameFoundationSdk.inventory != null)
+            {
+                GameFoundationSdk.inventory.itemAdded += OnInventoryChanged;
+                GameFoundationSdk.inventory.itemDeleted += OnInventoryChanged;
+            }
+
+            if (GameFoundationSdk.wallet != null)
+            {
+                GameFoundationSdk.wallet.balanceChanged += OnWalletChanged;
+            }
 
 #if UNITY_PURCHASING && UNITY_PURCHASING_FOR_GAME_FOUNDATION
             if (m_WillPurchasingAdapterInitialized)
@@ -210,7 +239,7 @@ namespace UnityEngine.GameFoundation.Components
                 {
                     OnPurchasingAdapterInitializeSucceeded();
                 }
-                else
+                else if (GameFoundationSdk.transactions != null)
                 {
                     GameFoundationSdk.transactions.purchasingAdapterInitializeSucceeded += OnPurchasingAdapterInitializeSucceeded;
                     GameFoundationSdk.transactions.purchasingAdapterInitializeFailed += OnPurchasingAdapterInitializeFailed;
@@ -224,12 +253,20 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         void UnregisterEvents()
         {
-            GameFoundationSdk.inventory.itemAdded -= OnInventoryChanged;
-            GameFoundationSdk.inventory.itemDeleted -= OnInventoryChanged;
-            GameFoundationSdk.wallet.balanceChanged -= OnWalletChanged;
+            if (GameFoundationSdk.inventory != null)
+            {
+                GameFoundationSdk.inventory.itemAdded -= OnInventoryChanged;
+                GameFoundationSdk.inventory.itemDeleted -= OnInventoryChanged;
+            }
+
+            if (GameFoundationSdk.wallet != null)
+            {
+                GameFoundationSdk.wallet.balanceChanged -= OnWalletChanged;
+            }
 
 #if UNITY_PURCHASING && UNITY_PURCHASING_FOR_GAME_FOUNDATION
-            if (m_WillPurchasingAdapterInitialized)
+            if (m_WillPurchasingAdapterInitialized
+                && GameFoundationSdk.transactions != null)
             {
                 GameFoundationSdk.transactions.purchasingAdapterInitializeSucceeded -= OnPurchasingAdapterInitializeSucceeded;
                 GameFoundationSdk.transactions.purchasingAdapterInitializeFailed -= OnPurchasingAdapterInitializeFailed;
@@ -246,7 +283,9 @@ namespace UnityEngine.GameFoundation.Components
 
             if (Application.isPlaying && m_Button.onClick.GetPersistentEventCount() <= 0)
             {
-                k_GFLogger.LogWarning("There are no onClick listeners attached to the PurchaseButton named " + m_Button.name + " via the Inspector UI. This may cause unexpected behavior when trying to purchase transaction.");
+                k_GFLogger.LogWarning("There are no onClick listeners attached to the PurchaseButton named " 
+                                      + m_Button.name + " via the Inspector UI. This may cause unexpected behavior " +
+                                      "when trying to purchase transaction.");
             }
         }
 
@@ -283,11 +322,19 @@ namespace UnityEngine.GameFoundation.Components
             m_PriceIconSpritePropertyKey = priceIconSpritePropertyKey;
             m_NoPriceString = noPriceString;
 
-            SetTransaction(transactionKey);
+            m_TransactionKey = transactionKey;
+            m_Transaction = GetTransaction(m_TransactionKey);
+            UpdateInteractable();
+            UpdatePurchasableStatus();
+            // Must call UpdateContent instead of setting m_IsDirty because setting m_IsDirty here causes a frame delay
+            // when being driven by a parent component that makes this object look out of sync with its parent.
+            UpdateContent();
         }
 
         /// <summary>
-        ///     Initializes PurchaseButton before the first frame update.
+        ///     Initializes PurchaseButton before the first frame update if Game Foundation Sdk was already
+        ///     initialized before PurchaseButton was enabled, otherwise sets content to a blank state in order
+        ///     to wait for Game Foundation Sdk to initialize.
         ///     If the it's already initialized by TransactionItemView no action will be taken.
         /// </summary>
         void Start()
@@ -297,14 +344,31 @@ namespace UnityEngine.GameFoundation.Components
                 return;
             }
 
-            ThrowIfNotInitialized(nameof(Start));
-
-            if (!m_IsDrivenByOtherComponent)
+            if (!GameFoundationSdk.IsInitialized)
             {
-                SetTransaction(m_TransactionKey);
+                k_GFLogger.Log("Waiting for initialization.");
+                m_IsDirty = true;
+                return;
             }
 
-            UpdateButtonStatus();
+            // This is to catch the case where Game Foundation initialized before OnEnable added the GameFoundationSdk
+            // initialize listener.
+            if (GameFoundationSdk.IsInitialized && m_Transaction is null)
+            {
+                InitializeComponentData();
+            }
+        }
+
+        /// <summary>
+        ///     Initializes PurchaseButton data from Game Foundation Sdk.
+        /// </summary>
+        void InitializeComponentData()
+        {
+            if (!Application.isPlaying)
+                return;
+
+            UpdatePurchasableStatus();
+            m_IsDirty = true;
         }
 
         /// <summary>
@@ -315,26 +379,8 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         internal void SetTransaction(string definitionKey)
         {
-            m_Transaction = GetTransaction(definitionKey);
             m_TransactionKey = definitionKey;
-
-            UpdateContent();
-        }
-
-        /// <summary>
-        ///     Sets Transaction Item should be displayed by this view.
-        /// </summary>
-        /// <param name="transaction">
-        ///     A reference to <see cref="BaseTransaction"/> that should be displayed.
-        /// </param>
-        public void SetTransaction(BaseTransaction transaction)
-        {
-            ThrowIfNotInitialized(nameof(SetTransaction));
-
-            m_Transaction = transaction;
-            m_TransactionKey = transaction?.key;
-
-            UpdateContent();
+            m_IsDirty = true;
         }
 
         /// <summary>
@@ -359,6 +405,24 @@ namespace UnityEngine.GameFoundation.Components
         }
 
         /// <summary>
+        ///     Sets Transaction Item should be displayed by this view.
+        /// </summary>
+        /// <param name="transaction">
+        ///     A reference to <see cref="BaseTransaction"/> that should be displayed.
+        /// </param>
+        public void SetTransaction(BaseTransaction transaction)
+        {
+            if (PrefabTools.FailIfNotInitialized(k_GFLogger, nameof(SetTransaction)))
+            {
+                return;
+            }
+
+            m_Transaction = transaction;
+            m_TransactionKey = transaction?.key;
+            m_IsDirty = true;
+        }
+
+        /// <summary>
         ///     Calls <see cref="ITransactionManager.BeginTransaction(BaseTransaction, List{string})"/> from
         ///     <see cref="GameFoundationSdk.transactions"/> with the purchase detail of the
         ///     Transaction Item displayed in the button.
@@ -366,14 +430,21 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         public void Purchase()
         {
-            if (m_Transaction is null)
+            if (m_ItemPurchasableStatus == PurchasableStatus.PurchaseButtonMisconfigured)
             {
-                k_GFLogger.LogError("Transaction Item is not defined.");
+                k_GFLogger.LogError("Purchase attempted, but the purchase button is misconfigured.");
                 return;
             }
 
-            SetInteractableInternal(false);
+            if (m_ItemPurchasableStatus == PurchasableStatus.ItemPurchaseInProgress)
+            {
+                onPurchaseFailure?.Invoke(m_Transaction,
+                    new InvalidOperationException("A purchase for this item is already in progress."));
+                return;
+            }
 
+            m_PurchaseInProgress = true;
+            UpdatePurchasableStatus();
             StartCoroutine(ExecuteTransaction(m_Transaction));
         }
 
@@ -411,8 +482,9 @@ namespace UnityEngine.GameFoundation.Components
                     yield return null;
                 }
 
-                // We re-enable the button before the break even if there is an error
-                SetInteractableInternal(true);
+                // Set purchaseInProgress to false and update purchasableStatus before the break even if there's an error
+                m_PurchaseInProgress = false;
+                UpdatePurchasableStatus();
 
                 // Now that the transaction has been processed, check for an error
                 if (!deferred.isFulfilled)
@@ -436,65 +508,18 @@ namespace UnityEngine.GameFoundation.Components
                     {
                         if (tradable is CurrencyExchange currencyExchange)
                         {
-                            k_GFLogger.Log($"Player was awarded {currencyExchange.amount} of currency '{currencyExchange.currency.displayName}'");
+                            k_GFLogger.Log($"Player was awarded {currencyExchange.amount} of currency " +
+                                           $"'{currencyExchange.currency.displayName}'");
                         }
                         else if (tradable is InventoryItem inventoryItem)
                         {
-                            k_GFLogger.Log($"Player was awarded 1 of Inventory Item '{inventoryItem.definition.displayName}'");
+                            k_GFLogger.Log($"Player was awarded 1 of Inventory Item " +
+                                           $"'{inventoryItem.definition.displayName}'");
                         }
                     }
                 }
 
                 onPurchaseSuccess?.Invoke(transaction);
-            }
-        }
-
-        /// <summary>
-        ///     Sets the button's interactable state according to Transaction Item's affordability status.
-        /// </summary>
-        /// <param name="state">
-        ///     Whether the button should be enabled or not.
-        /// </param>
-        void SetAvailableToPurchaseState(bool state)
-        {
-            if (m_AvailableToPurchaseState != state)
-            {
-                m_AvailableToPurchaseState = state;
-                UpdateButtonStatus();
-            }
-        }
-
-        /// <summary>
-        ///     Updates the button's interactable state according to Transaction Item's affordability status.
-        /// </summary>
-        void UpdateAvailableToPurchaseState()
-        {
-            if (m_Transaction == null)
-            {
-                SetAvailableToPurchaseState(false);
-            }
-            else if (m_Transaction is VirtualTransaction vTransaction)
-            {
-                SetAvailableToPurchaseState(IsAffordable(vTransaction));
-            }
-            else if (m_Transaction is IAPTransaction iapTransaction)
-            {
-                if (string.IsNullOrEmpty(iapTransaction.productId) || !GameFoundationSdk.transactions.purchasingAdapterIsInitialized)
-                {
-                    SetAvailableToPurchaseState(false);
-                }
-                else
-                {
-#if UNITY_PURCHASING && UNITY_PURCHASING_FOR_GAME_FOUNDATION
-                    bool available = iapTransaction.product.definition.type != ProductType.NonConsumable ||
-                        iapTransaction.product.definition.type == ProductType.NonConsumable &&
-                        !GameFoundationSdk.transactions.IsIapProductOwned(iapTransaction.productId);
-
-                    SetAvailableToPurchaseState(available);
-#else
-                    SetAvailableToPurchaseState(false);
-#endif
-                }
             }
         }
 
@@ -506,29 +531,11 @@ namespace UnityEngine.GameFoundation.Components
         /// </param>
         public void SetInteractable(bool interactable)
         {
-            if (m_Interactable != interactable)
-            {
-                m_Interactable = interactable;
-                UpdateButtonStatus();
-            }
-        }
+            if (m_Interactable == interactable)
+                return;
 
-        void SetInteractableInternal(bool active)
-        {
-            if (m_InteractableInternal != active)
-            {
-                m_InteractableInternal = active;
-                UpdateButtonStatus();
-            }
-        }
-
-        /// <summary>
-        ///     Updates button status according to user defined setting and internal status like affordability
-        ///     of the Transaction Item
-        /// </summary>
-        void UpdateButtonStatus()
-        {
-            m_Button.interactable = m_AvailableToPurchaseState && m_Interactable && m_InteractableInternal;
+            m_Interactable = interactable;
+            UpdateInteractable();
         }
 
         /// <summary>
@@ -537,7 +544,7 @@ namespace UnityEngine.GameFoundation.Components
         /// <param name="text">
         ///     The Text component to display the texts on buttons
         /// </param>
-        public void SetPriceTextField(Text text)
+        public void SetPriceTextField(TextMeshProUGUI text)
         {
             if (m_PriceTextField == text)
             {
@@ -545,7 +552,7 @@ namespace UnityEngine.GameFoundation.Components
             }
 
             m_PriceTextField = text;
-            UpdateContent();
+            m_IsDirty = true;
         }
 
         /// <summary>
@@ -562,7 +569,7 @@ namespace UnityEngine.GameFoundation.Components
             }
 
             m_PriceIconImageField = image;
-            UpdateContent();
+            m_IsDirty = true;
         }
 
         /// <summary>
@@ -579,7 +586,7 @@ namespace UnityEngine.GameFoundation.Components
             }
 
             m_NoPriceString = noPriceString;
-            UpdateContent();
+            m_IsDirty = true;
         }
 
         /// <summary>
@@ -596,19 +603,42 @@ namespace UnityEngine.GameFoundation.Components
             }
 
             m_PriceIconSpritePropertyKey = propertyKey;
-            UpdateContent();
+            m_IsDirty = true;
         }
 
         /// <summary>
         ///     Sets price text and icon on the button.
         /// </summary>
-        /// <param name="priceIcon">
-        ///     Price icon sprite to display
-        /// </param>
         /// <param name="priceText">
         ///     Price text to display
         /// </param>
-        void SetContent(Sprite priceIcon, string priceText)
+        void SetTextContent(string priceText)
+        {
+            if (!(m_PriceTextField is null))
+            {
+                if (m_PriceTextField.text != priceText)
+                {
+                    m_PriceTextField.text = priceText;
+#if UNITY_EDITOR
+                    // Setting dirty here for the case where the TransactionItemView is being driven from a parent
+                    // component, instead of it's own inspector
+                    EditorUtility.SetDirty(this);	
+#endif
+                }
+            }
+            else
+            {
+                k_GFLogger.LogWarning("Price Text Field is not defined.");
+            }
+        }
+
+        /// <summary>
+        ///     Sets price icon on the button.
+        /// </summary>
+        /// <param name="priceIcon">
+        ///     Price icon sprite to display.
+        /// </param>
+        void SetIconSprite(Sprite priceIcon)
         {
             if (!(m_PriceIconImageField is null))
             {
@@ -619,15 +649,16 @@ namespace UnityEngine.GameFoundation.Components
                     if (!(priceIcon is null))
                     {
                         m_PriceIconImageField.gameObject.SetActive(true);
-                        m_PriceIconImageField.SetNativeSize();
+                        m_PriceIconImageField.preserveAspect = true;
                     }
                     else
                     {
                         m_PriceIconImageField.gameObject.SetActive(false);
                     }
-
 #if UNITY_EDITOR
-                    EditorUtility.SetDirty(m_PriceIconImageField);
+                    // Setting dirty here for the case where the TransactionItemView is being driven from a parent
+                    // component, instead of it's own inspector
+                    EditorUtility.SetDirty(this);	
 #endif
                 }
             }
@@ -635,21 +666,31 @@ namespace UnityEngine.GameFoundation.Components
             {
                 k_GFLogger.LogWarning("Icon Image Field is not defined.");
             }
+        }
 
-            if (!(m_PriceTextField is null))
+        /// <summary>
+        ///     Checks to see whether any properties have been changed (by checking <see cref="m_IsDirty"/>) and
+        ///     if so, calls <see cref="UpdateContent"/> before resetting the flag.
+        ///
+        ///     At runtime, also assigns the appropriate value for <see cref="m_Transaction"/> from the Catalog if needed.
+        ///     If m_Transaction and m_TransactionKey don't currently match, this replaces m_Transaction with the
+        ///     correct transaction by searching the Catalog for m_TransactionKey.
+        /// </summary>
+        void Update()
+        {
+            if (m_IsDirty)
             {
-                if (m_PriceTextField.text != priceText)
+                m_IsDirty = false;
+
+                if (GameFoundationSdk.IsInitialized &&
+                    (m_Transaction is null && !string.IsNullOrEmpty(m_TransactionKey) ||
+                     !(m_Transaction is null) && m_Transaction.key != m_TransactionKey))
                 {
-                    m_PriceTextField.text = priceText;
-
-#if UNITY_EDITOR
-                    EditorUtility.SetDirty(m_PriceTextField);
-#endif
+                    m_Transaction = GetTransaction(m_TransactionKey);
                 }
-            }
-            else
-            {
-                k_GFLogger.LogWarning("Price Text Field is not defined.");
+
+                UpdateInteractable();
+                UpdateContent();
             }
         }
 
@@ -675,11 +716,11 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         void UpdateContentAtRuntime()
         {
-            if (string.IsNullOrEmpty(m_TransactionKey) || m_Transaction == null)
+            if (!GameFoundationSdk.IsInitialized || string.IsNullOrEmpty(m_TransactionKey) || m_Transaction is null)
             {
-                SetContent(null, null);
-
-                SetAvailableToPurchaseState(false);
+                SetTextContent(null);
+                SetIconSprite(null);
+                UpdatePurchasableStatus();
                 return;
             }
 
@@ -687,38 +728,44 @@ namespace UnityEngine.GameFoundation.Components
             {
                 if (DoesHaveMultipleCost(vTransaction))
                 {
-                    k_GFLogger.LogWarning($"Transaction item \"{vTransaction.displayName}\" has multiple exchange item. {nameof(PurchaseButton)} can only show the first item on UI.");
+                    k_GFLogger.LogWarning($"Transaction item \"{vTransaction.displayName}\" has multiple item " +
+                                          $"costs. {nameof(PurchaseButton)} can only show the first item on UI.");
                 }
 
                 GetVirtualCost(vTransaction, 0, out var cost, out var costItem);
 
                 if (cost > 0 && costItem != null)
                 {
-                    Sprite sprite = null;
-                    if (costItem.TryGetStaticProperty(m_PriceIconSpritePropertyKey, out var spriteProperty))
+                    if (!string.IsNullOrEmpty(m_PriceIconSpritePropertyKey))
                     {
-                        sprite = spriteProperty.AsAsset<Sprite>();
+                        if (costItem.TryGetStaticProperty(m_PriceIconSpritePropertyKey, out var spriteProperty))
+                        {
+                            PrefabTools.LoadSprite(spriteProperty, SetIconSprite, OnSpriteLoadFailed);
+                        }
+                        else
+                        {
+                            k_GFLogger.LogWarning($"\"{costItem.displayName}\" doesn't have static property " +
+                                                  $"called \"{m_PriceIconSpritePropertyKey}\"");
+                        }    
+                    }
+                    else
+                    {
+                        SetIconSprite(null);
                     }
 
-                    if (sprite is null)
-                    {
-                        k_GFLogger.LogWarning($"\"{costItem.displayName}\" doesn't have sprite called \"{m_PriceIconSpritePropertyKey}\"");
-                    }
-
-                    SetContent(sprite, cost.ToString());
-                    SetAvailableToPurchaseState(IsAffordable(vTransaction));
+                    SetTextContent(cost.ToString());
                 }
-
-                // Item is free
                 else
                 {
-                    SetContent(null, noPriceString);
-                    SetAvailableToPurchaseState(true);
+                    // Item is free
+                    SetTextContent(noPriceString);
+                    SetIconSprite(null);
                 }
             }
             else if (m_Transaction is IAPTransaction iapTransaction)
             {
-                SetContent(null, null);
+                SetTextContent(null);
+                SetIconSprite(null);
 
 #if UNITY_PURCHASING && UNITY_PURCHASING_FOR_GAME_FOUNDATION
                 if (string.IsNullOrEmpty(iapTransaction.productId))
@@ -736,10 +783,10 @@ namespace UnityEngine.GameFoundation.Components
                     GameFoundationSdk.transactions.purchasingAdapterInitializeSucceeded += OnPurchasingAdapterInitializeSucceeded;
                     GameFoundationSdk.transactions.purchasingAdapterInitializeFailed += OnPurchasingAdapterInitializeFailed;
                 }
-
-                UpdateAvailableToPurchaseState();
 #endif
             }
+
+            UpdatePurchasableStatus();
         }
 
         static void GetVirtualCost(VirtualTransaction transaction, int indexOfCost, out long amount, out CatalogItem costItem)
@@ -780,7 +827,8 @@ namespace UnityEngine.GameFoundation.Components
             var productMetadata = GameFoundationSdk.transactions.GetLocalizedIAPProductInfo(iapTransaction.productId);
             if (!string.IsNullOrEmpty(productMetadata.price))
             {
-                SetContent(null, productMetadata.price);
+                SetTextContent(productMetadata.price);
+                SetIconSprite(null);
             }
             else if (m_ShowDebugLogs)
             {
@@ -795,19 +843,14 @@ namespace UnityEngine.GameFoundation.Components
         /// </summary>
         void UpdateContentAtEditor()
         {
-            // To avoid updating the content the prefab selected in the Project window
-            if (PrefabUtility.IsPartOfPrefabAsset(gameObject))
-            {
-                return;
-            }
-
             var transactionAsset = !string.IsNullOrEmpty(m_TransactionKey)
-                ? CatalogSettings.catalogAsset.FindItem(m_TransactionKey) as BaseTransactionAsset
+                ? PrefabTools.GetLookUpCatalogAsset().FindItem(m_TransactionKey) as BaseTransactionAsset
                 : null;
 
             if (transactionAsset is null)
             {
-                SetContent(null, null);
+                SetTextContent(null);
+                SetIconSprite(null);
                 return;
             }
 
@@ -815,45 +858,64 @@ namespace UnityEngine.GameFoundation.Components
             {
                 if (DoesHaveMultipleCost(vTransactionAsset))
                 {
-                    k_GFLogger.LogWarning($"Transaction item \"{vTransactionAsset.displayName}\" has multiple exchange item. {nameof(PurchaseButton)} can only show the first item on UI.");
+                    k_GFLogger.LogWarning(
+                        $"Transaction item \"{vTransactionAsset.displayName}\" has multiple item costs. " +
+                        $"{nameof(PurchaseButton)} can only show the first item on UI.");
                 }
 
                 GetVirtualCostAsset(vTransactionAsset, 0, out var cost, out var itemAsset);
 
                 if (cost > 0 && !(itemAsset is null))
                 {
-                    Sprite sprite = null;
-                    if (itemAsset.TryGetStaticProperty(m_PriceIconSpritePropertyKey, out var spriteProperty))
+                    if (!string.IsNullOrEmpty(m_PriceIconSpritePropertyKey))
                     {
-                        sprite = spriteProperty.AsAsset<Sprite>();
+                        if (itemAsset.TryGetStaticProperty(m_PriceIconSpritePropertyKey, out var spriteProperty))
+                        {
+                            PrefabTools.LoadSprite(spriteProperty, SetIconSprite, OnSpriteLoadFailed);
+                        }
+                        else
+                        {
+                            k_GFLogger.LogWarning($"\"{itemAsset.displayName.currentValue}\" transaction item " +
+                                                  $"doesn't have sprite called \"{m_PriceIconSpritePropertyKey}\"");
+                        }
+                    }
+                    else
+                    {
+                        SetIconSprite(null);
                     }
 
-                    if (sprite is null)
-                    {
-                        k_GFLogger.LogWarning($"\"{itemAsset.displayName}\" transaction item doesn't have sprite called \"{m_PriceIconSpritePropertyKey}\"");
-                    }
-
-                    SetContent(sprite, cost.ToString());
+                    SetTextContent(cost.ToString());
                 }
                 else
                 {
-                    SetContent(null, noPriceString);
+                    SetTextContent(noPriceString);
+                    SetIconSprite(null);
                 }
             }
             else if (transactionAsset is IAPTransactionAsset iapTransactionAsset)
             {
                 if (string.IsNullOrEmpty(iapTransactionAsset.productId))
                 {
-                    k_GFLogger.LogWarning($"Transaction Item \"{iapTransactionAsset.displayName}\" shouldn't have empty or null product id.");
+                    k_GFLogger.LogWarning($"Transaction Item \"{iapTransactionAsset.displayName}\" " +
+                                          $"shouldn't have empty or null product id.");
                 }
 
-                SetContent(null, "N/A");
+                SetTextContent("N/A");
+                SetIconSprite(null);
             }
         }
 
-        void GetVirtualCostAsset(VirtualTransactionAsset transaction, int indexOfCost, out long amount, out CatalogItemAsset costItemAsset)
+        void GetVirtualCostAsset(VirtualTransactionAsset transaction, int indexOfCost, out long amount, 
+            out CatalogItemAsset costItemAsset)
         {
-            var costs = transaction?.costs;
+            if (transaction == null)
+            {
+                amount = 0;
+                costItemAsset = null;
+                return;
+            }
+
+            var costs = transaction.costs;
             if (costs?.GetItems(m_ExchangeObjectsList) > indexOfCost)
             {
                 var cost = m_ExchangeObjectsList[indexOfCost];
@@ -868,7 +930,12 @@ namespace UnityEngine.GameFoundation.Components
 
         bool DoesHaveMultipleCost(VirtualTransactionAsset transaction)
         {
-            var costs = transaction?.costs;
+            if (transaction == null)
+            {
+                return false;
+            }
+
+            var costs = transaction.costs;
             if (costs != null)
             {
                 return costs.GetItems(m_ExchangeObjectsList) > 1;
@@ -885,57 +952,153 @@ namespace UnityEngine.GameFoundation.Components
         ///     True if there is enough of the items in inventory and/or wallet for the purchase,
         ///     false if there is not enough items.
         /// </returns>
-        bool IsAffordable(VirtualTransaction transaction)
+        bool IsAffordable(VirtualTransaction virtualTransaction)
         {
-            if (transaction == null)
+            if (virtualTransaction == null)
             {
                 return false;
             }
 
             ICollection<Exception> costExceptions = new List<Exception>();
-            transaction.VerifyCost(costExceptions);
-            transaction.VerifyPayout(costExceptions);
+            virtualTransaction.VerifyCost(costExceptions);
+            virtualTransaction.VerifyPayout(costExceptions);
 
             return costExceptions.Count == 0;
         }
 
         /// <summary>
-        ///     Throws an Invalid Operation Exception if GameFoundation has not been initialized before this view is used.
+        ///     Determines the current Purchasable Status of the transaction based on several possible
+        ///     configurations at runtime.
         /// </summary>
-        /// <param name="callingMethod">
-        ///     Calling method name.
-        /// </param>
-        void ThrowIfNotInitialized(string callingMethod)
+        PurchasableStatus GetPurchasableStatus()
         {
+            if (string.IsNullOrEmpty(m_TransactionKey))
+            {
+                return PurchasableStatus.PurchaseButtonMisconfigured;
+            }
+
             if (!GameFoundationSdk.IsInitialized)
             {
-                var message = $"GameFoundationSdk.Initialize() must be called before {callingMethod} is used.";
-                k_GFLogger.LogException(message, new InvalidOperationException(message));
+                return PurchasableStatus.GameFoundationUnavailable;
             }
+
+            if (m_Transaction is null)
+            {
+                return PurchasableStatus.PurchaseButtonMisconfigured;
+            }
+
+            if (m_PurchaseInProgress)
+            {
+                return PurchasableStatus.ItemPurchaseInProgress;
+            }
+
+            if (m_Transaction is VirtualTransaction virtualTransaction)
+            {
+                if (!IsAffordable(virtualTransaction))
+                {
+                    return PurchasableStatus.ItemUnaffordable;
+                }
+            }
+
+            if (m_Transaction is IAPTransaction iapTransaction)
+            {
+                if (string.IsNullOrEmpty(iapTransaction.productId))
+                {
+                    return PurchasableStatus.TransactionMisconfigured;
+                }
+
+                if (!GameFoundationSdk.transactions.purchasingAdapterIsInitialized)
+                {
+                    return PurchasableStatus.PurchasingAdapterUnavailable;
+                }
+
+#if UNITY_PURCHASING && UNITY_PURCHASING_FOR_GAME_FOUNDATION
+                if (iapTransaction.product.definition.type == ProductType.NonConsumable
+                    && GameFoundationSdk.transactions.IsIapProductOwned(iapTransaction.productId))
+                {
+                    return PurchasableStatus.ItemOwned;
+                }
+
+                if (iapTransaction.product.definition.type != ProductType.Consumable
+                         && iapTransaction.product.definition.type != ProductType.NonConsumable)
+                {
+                    return PurchasableStatus.TransactionMisconfigured;
+                }
+#else
+                return PurchasableStatus.PurchasingAdapterUnavailable;
+#endif
+            }
+
+            return PurchasableStatus.AvailableToPurchase;
+        }
+
+        /// <summary>
+        ///     Determines the <see cref="PurchasableStatus"/> of the transaction based on several possible
+        ///     configurations and whether or not the determination is being made during runtime or not.
+        ///
+        ///     If the newly determined status is different from the current status, it updates
+        ///     <see cref="itemPurchasableStatus"/> to the new status and triggers the onPurchasableStatusChanged callback.
+        /// </summary>
+        void UpdatePurchasableStatus()
+        {
+            if (!Application.isPlaying)
+                return;
+
+            var newStatus = GetPurchasableStatus();
+
+            if (m_ItemPurchasableStatus == newStatus)
+                return;
+
+            var oldStatus = m_ItemPurchasableStatus;
+            m_ItemPurchasableStatus = newStatus;
+
+            onPurchasableStatusChanged?.Invoke(this, oldStatus, m_ItemPurchasableStatus);
+        }
+
+        /// <summary>
+        ///     Updates the button's interactable state to the state specified in <see cref="m_Interactable"/>.
+        /// </summary>
+        void UpdateInteractable()
+        {
+            if (!(m_Button is null))
+            {
+                m_Button.interactable = m_Interactable;
+            }
+        }
+        
+        /// <summary>
+        ///     Callback for if there is an error while trying to load a sprite from its Property.
+        /// </summary>
+        /// <param name="errorMessage">
+        ///     The error message returned by <see cref="PrefabTools.LoadSprite"/>.
+        /// </param>
+        void OnSpriteLoadFailed(string errorMessage)
+        {
+            k_GFLogger.LogWarning(errorMessage);
         }
 
         /// <summary>
         ///     Listens to updates to the wallet
-        ///     and updates the button enabled state based on the new information.
+        ///     and updates the transaction's purchasable status based on the new information.
         /// </summary>
         void OnWalletChanged(IQuantifiable _, long __)
         {
-            UpdateAvailableToPurchaseState();
+            UpdatePurchasableStatus();
         }
 
         /// <summary>
         ///     Listens to updates to the inventory
-        ///     and updates the button enabled state based on the new information.
+        ///     and updates the transaction's purchasable status based on the new information.
         /// </summary>
         void OnInventoryChanged(InventoryItem item)
         {
-            UpdateAvailableToPurchaseState();
+            UpdatePurchasableStatus();
         }
 
 #if UNITY_PURCHASING && UNITY_PURCHASING_FOR_GAME_FOUNDATION
         /// <summary>
         ///     Gets triggered when the Purchasing Adapter is initialized successfully,
-        ///     and update the button price label and enabled state based on the information
+        ///     and update the button price label and purchasable status based on the information
         /// </summary>
         void OnPurchasingAdapterInitializeSucceeded()
         {
@@ -944,6 +1107,7 @@ namespace UnityEngine.GameFoundation.Components
                 SetIAPTransactionPrice(iapTransaction);
             }
 
+            UpdatePurchasableStatus();
             m_WillPurchasingAdapterInitialized = false;
         }
 
@@ -957,8 +1121,17 @@ namespace UnityEngine.GameFoundation.Components
                 k_GFLogger.LogError($"Transaction Key: \"{m_TransactionKey}\" - Error Message: {exception.Message}");
             }
 
+            UpdatePurchasableStatus();
             m_WillPurchasingAdapterInitialized = false;
         }
 #endif
+
+        /// <summary>
+        ///     When changes are made via the Inspector, trigger <see cref="UpdateContent"/>
+        /// </summary>
+        void OnValidate()
+        {
+            m_IsDirty = true;
+        }
     }
 }

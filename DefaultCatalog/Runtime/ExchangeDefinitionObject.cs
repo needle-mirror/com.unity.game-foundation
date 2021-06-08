@@ -48,5 +48,16 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
                 m_CatalogItem = m_CatalogItem,
                 m_Amount = m_Amount
             };
+
+        /// <summary>
+        ///     Update all member references to target objects stored in the given <paramref name="owner"/>.
+        /// </summary>
+        /// <param name="owner">
+        ///     The catalog containing all required references.
+        /// </param>
+        internal void RefreshReferences(CatalogAsset owner)
+        {
+            m_CatalogItem = (TradableDefinitionAsset)owner.FindItem(m_CatalogItem.key);
+        }
     }
 }

@@ -11,7 +11,3 @@ For more information, there are many good articles on game-play and game economy
 * https://www.gamesindustry.biz/articles/2020-10-06-push-and-pull-how-to-build-an-in-game-economy
 
 * https://www.gamasutra.com/blogs/DarinaEmelyantseva/20190418/340987/5_Basic_Steps_in_Creating_Balanced_InGame_Economy.php
-
-
-## 
-< [_table of contents_](../TableOfContents.md)

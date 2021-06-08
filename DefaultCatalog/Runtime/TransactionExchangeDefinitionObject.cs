@@ -98,5 +98,19 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
 
             return clone;
         }
+
+        /// <summary>
+        ///     Update all member references to target objects stored in the given <paramref name="owner"/>.
+        /// </summary>
+        /// <param name="owner">
+        ///     The catalog containing all required references.
+        /// </param>
+        internal void RefreshReferences(CatalogAsset owner)
+        {
+            foreach (var exchange in m_Exchanges)
+            {
+                exchange.RefreshReferences(owner);
+            }
+        }
     }
 }

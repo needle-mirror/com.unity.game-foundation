@@ -94,22 +94,33 @@ namespace UnityEditor.GameFoundation.DefaultCatalog
         void ConvertKeyIfNecessary(ref string itemKey, ref string displayName)
         {
             var e = Event.current;
-            var desiredEvent = e.Equals(Event.KeyboardEvent("tab")) || e.type.Equals(EventType.MouseDown);
-            var desiredControlFocus = GUI.GetNameOfFocusedControl() == "displayName" || GUI.GetNameOfFocusedControl() == "key";
 
-            if (!desiredEvent
-                || !desiredControlFocus
-                || string.IsNullOrEmpty(displayName)
-                || !m_AutomaticKeyGenerationMode && !string.IsNullOrEmpty(itemKey))
+            // abort updating key for various reasons (incorrect mode, wrong field, key manually changed, etc.
+            if (!e.Equals(Event.KeyboardEvent("tab")) && !e.type.Equals(EventType.MouseDown))
+            {
+                return;
+            }
+            if (GUI.GetNameOfFocusedControl() != "displayName" && GUI.GetNameOfFocusedControl() != "key")
+            {
+                return;
+            }
+            if (string.IsNullOrEmpty(displayName))
+            {
+                return;
+            }
+            if (!m_AutomaticKeyGenerationMode && !string.IsNullOrEmpty(itemKey) &&
+                CollectionEditorTools.IsValidId(itemKey))
             {
                 return;
             }
 
+            // turn back on auto-gen if key is empty
             if (string.IsNullOrEmpty(itemKey))
             {
                 m_AutomaticKeyGenerationMode = true;
             }
 
+            // auto-gen the key based on display name
             itemKey = CollectionEditorTools.CraftUniqueKey(displayName, m_OldKeys);
         }
     }

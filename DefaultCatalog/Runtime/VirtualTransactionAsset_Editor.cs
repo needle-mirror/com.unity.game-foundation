@@ -116,6 +116,14 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
 
             base.CopyValues(virtualTransactionTarget);
         }
+
+        /// <inheritdoc/>
+        internal override void RefreshReferences(CatalogAsset owner)
+        {
+            base.RefreshReferences(owner);
+
+            m_Costs.RefreshReferences(owner);
+        }
     }
 }
 

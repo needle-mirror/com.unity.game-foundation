@@ -85,6 +85,17 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
         {
             GameFoundation.Tools.ThrowIfArgNull(catalogItem, nameof(catalogItem));
 
+            // NonConsumable and Subscription type IAP products don't support automatic payouts
+            if (this is IAPTransactionAsset iapTransactionAsset
+                && iapTransactionAsset.productType != IAPProductType.Consumable)
+            {
+                Debug.LogWarning(
+                    $"Tried to add a payout to IAP Transaction '{iapTransactionAsset.m_Key}', " +
+                    $"but the transaction type of '{iapTransactionAsset.productType}' " +
+                    "does not support automatic payouts.");
+                return;
+            }
+
             var exchange = new ExchangeDefinitionObject
             {
                 m_CatalogItem = catalogItem,
@@ -136,6 +147,14 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
             baseTransactionTarget.m_Payout = m_Payout.Clone();
 
             base.CopyValues(baseTransactionTarget);
+        }
+
+        /// <inheritdoc/>
+        internal override void RefreshReferences(CatalogAsset owner)
+        {
+            base.RefreshReferences(owner);
+
+            m_Payout.RefreshReferences(owner);
         }
     }
 }

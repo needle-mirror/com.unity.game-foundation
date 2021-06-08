@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using TMPro;
+using UnityEditor;
 using UnityEngine.UI;
 
 namespace UnityEngine.GameFoundation.Components
@@ -17,20 +18,20 @@ namespace UnityEngine.GameFoundation.Components
         internal Image m_ImageField;
 
         /// <summary>
-        ///     The Text component to show the display name.
+        ///     The TextMeshProUGUI component to show the display name.
         /// </summary>
-        public Text displayNameTextField => m_DisplayNameTextField;
+        public TextMeshProUGUI displayNameTextField => m_DisplayNameTextField;
 
         [SerializeField]
-        internal Text m_DisplayNameTextField;
+        internal TextMeshProUGUI m_DisplayNameTextField;
 
         /// <summary>
-        ///     The Text component to show the description.
+        ///     The TextMeshProUGUI component to show the description.
         /// </summary>
-        public Text descriptionTextField => m_DescriptionTextField;
+        public TextMeshProUGUI descriptionTextField => m_DescriptionTextField;
 
         [SerializeField]
-        internal Text m_DescriptionTextField;
+        internal TextMeshProUGUI m_DescriptionTextField;
 
         /// <summary>
         ///     Sets icon and text that are displayed in this view.
@@ -63,7 +64,7 @@ namespace UnityEngine.GameFoundation.Components
                 return;
 
             m_ImageField.sprite = icon;
-            if (!(icon is null)) m_ImageField.SetNativeSize();
+            m_ImageField.preserveAspect = true;
 #if UNITY_EDITOR
             EditorUtility.SetDirty(m_ImageField);
 #endif

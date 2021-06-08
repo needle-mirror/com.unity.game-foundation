@@ -149,7 +149,7 @@ namespace UnityEngine.GameFoundation
         }
 
         /// <inheritdoc/>
-        protected override void InitializeData(Completer completer)
+        protected override void InitializeData(Completer completer, GameFoundationInitOptions initOptions = null)
         {
             GetData();
 
@@ -175,56 +175,39 @@ namespace UnityEngine.GameFoundation
 
             foreach (var rewardDefinition in rewardDefinitions)
             {
-                var rewardData = new RewardData
-                {
-                    key = rewardDefinition.key,
-                    claimedRewardItemKeys = new List<string>(),
-                    claimedRewardItemTimestamps = new List<long>()
-                };
+                //Search for persisted data.
+                var rewardData = Array.Find(
+                    data.rewards,
+                    persistedRewardData => persistedRewardData.key.Equals(rewardDefinition.key));
 
-                foreach (var eachRewardData in data.rewards)
+                if (rewardData is null)
                 {
-                    if (rewardData.key.Equals(rewardDefinition.key))
+                    rewardData = new RewardData
                     {
-                        rewardData = eachRewardData;
-                    }
+                        key = rewardDefinition.key,
+                        claimedRewards = new List<ClaimedRewardData>()
+                    };
                 }
 
-                if (rewardData.claimedRewardItemKeys.Count != rewardData.claimedRewardItemTimestamps.Count)
-                {
-                    k_GFLogger.LogError(
-                        $"Invalid data for reward key {rewardData.key}. " +
-                        "Claimed reward item count does not equal claimed reward item timestamps.");
-                    continue;
-                }
-
-                Reward reward;
-
-                if (m_Rewards.ContainsKey(rewardDefinition.key))
-                {
-                    reward = m_Rewards[rewardDefinition.key];
-                }
-                else
+                if (!m_Rewards.TryGetValue(rewardDefinition.key, out var reward))
                 {
                     reward = new Reward
                     {
                         key = rewardDefinition.key,
                         rewardDefinition = rewardDefinition
                     };
-                    m_Rewards.Add(rewardData.key, reward);
+                    m_Rewards.Add(rewardDefinition.key, reward);
                 }
 
                 // refresh the claim timestamps
                 reward.claimTimestamps.Clear();
 
-                for (var i = 0; i < rewardData.claimedRewardItemKeys.Count; i++)
+                foreach (var claimedReward in rewardData.claimedRewards)
                 {
-                    var claimedRewardItemKey = rewardData.claimedRewardItemKeys[i];
-                    var claimedRewardItemTimestamp = rewardData.claimedRewardItemTimestamps[i];
-
-                    if (!string.IsNullOrEmpty(claimedRewardItemKey) && claimedRewardItemTimestamp > 0)
+                    if (!string.IsNullOrEmpty(claimedReward.rewardItemKey)
+                        && claimedReward.timestamp > 0)
                     {
-                        reward.claimTimestamps.Add(claimedRewardItemKey, claimedRewardItemTimestamp);
+                        reward.claimTimestamps.Add(claimedReward.rewardItemKey, claimedReward.timestamp);
                     }
                 }
 

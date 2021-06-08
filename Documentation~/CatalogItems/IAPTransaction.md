@@ -1,4 +1,4 @@
-# IAP Transactions
+# IAP Transaction
 
 ## Overview
 
@@ -25,17 +25,6 @@ The interface is similar to the other [catalog items editor].
 (2) The Payouts section shows a list of [currencies] and [item definitions].
   Those are the outcome of the transaction.
   The amounts next to each entry are the number of those items the player will get from the transaction.
-
-## 
-< [_table of contents_](../TableOfContents.md)
-
-
-
-
-
-
-
-
 
 
 [catalog item]:  ../Catalog.md#Catalog-Items

@@ -15,13 +15,17 @@ namespace UnityEngine.GameFoundation
         ///     Initializes this manager using GameFoundation's <see cref="GameFoundationSdk.dataLayer"/>
         ///     and <see cref="GameFoundationSdk.catalog"/>.
         /// </summary>
-        internal Deferred Initialize()
+        /// <param name="initOptions">
+        ///     An instance of <see cref="GameFoundationInitOptions"/>
+        ///     containing any dependencies you need to provide or wish to override.
+        /// </param>
+        internal Deferred Initialize(GameFoundationInitOptions initOptions = null)
         {
             Promises.GetHandles(out var deferred, out var completer);
 
             try
             {
-                InitializeData(completer);
+                InitializeData(completer, initOptions);
             }
             catch (Exception e)
             {
@@ -39,7 +43,10 @@ namespace UnityEngine.GameFoundation
         /// <param name="completer">
         ///     A handle to the initialization promise.
         /// </param>
-        protected abstract void InitializeData(Completer completer);
+        /// <param name="initOptions">
+        ///     A struct that holds optional parameters for Game Foundation to use during initialization.
+        /// </param>
+        protected abstract void InitializeData(Completer completer, GameFoundationInitOptions initOptions = null);
 
         /// <summary>
         ///     Reset this manager.

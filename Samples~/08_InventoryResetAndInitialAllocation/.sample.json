@@ -1,0 +1,5 @@
+{
+	"displayName":"08 Inventory Reset and Initial Allocation",
+	"description": "This sample showcases inventory initial allocation and to reinitialize Game Foundation.",
+	"createSeparatePackage": false
+}

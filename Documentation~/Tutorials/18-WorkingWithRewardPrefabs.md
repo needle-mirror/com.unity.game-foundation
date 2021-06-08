@@ -68,8 +68,6 @@ You can further customize your Reward by:
 Hopefully this Reward prefab will give you a quick and flexible way to get up and running with Rewards in your game.
 However, should you for any reason want to forgo the Reward prefab and work directly with the Reward System yourself, the [next tutorial] will walk you through how to do that.
 
-## 
-< [_table of contents_](../TableOfContents.md)
 
 [Reward Definitions]: ../CatalogItems/RewardDefinition.md
 [previous tutorial]: 17-CreatingRewards.md

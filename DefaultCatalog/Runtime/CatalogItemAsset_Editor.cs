@@ -228,6 +228,23 @@ namespace UnityEngine.GameFoundation.DefaultCatalog
                 target.Editor_AddStaticProperty(kvp.Key, kvp.Value);
             }
         }
+
+        /// <summary>
+        ///     Update all member references to target objects stored in the given <paramref name="owner"/>.
+        /// </summary>
+        /// <param name="owner">
+        ///     The catalog containing all required references.
+        /// </param>
+        internal virtual void RefreshReferences(CatalogAsset owner)
+        {
+            for (var i = 0; i < m_Tags.Count; i++)
+            {
+                var tag = m_Tags[i];
+                var newRefTag = owner.tagCatalog.GetTagOrDie(tag.key, nameof(tag));
+
+                m_Tags[i] = newRefTag;
+            }
+        }
     }
 }
 

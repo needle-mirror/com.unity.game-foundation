@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine.GameFoundation.Components;
 using UnityEngine.GameFoundation.DefaultCatalog;
 
 namespace UnityEditor.GameFoundation.Components
@@ -8,13 +9,13 @@ namespace UnityEditor.GameFoundation.Components
     ///     It's an helper class that populates Names and Key arrays
     ///     from Catalog Item Assets' display name and key for dropdown menus.
     /// </summary>
-    /// <typeparam name="T">
+    /// <typeparam name="TCatalogItemAsset">
     ///     Type of the Catalog Item Asset.
     /// </typeparam>
-    class DropdownCatalogItemHelper<T> : DropdownPopulateHelper where T : CatalogItemAsset
+    class DropdownCatalogItemHelper<TCatalogItemAsset> : DropdownPopulateHelper where TCatalogItemAsset : CatalogItemAsset
     {
-        List<Tuple<string, string>> m_TmpList = new List<Tuple<string, string>>();
-        List<T> m_TmpAssets = new List<T>();
+        List<TCatalogItemAsset> m_CatalogItemAssets = new List<TCatalogItemAsset>();
+        List<DropdownItem> m_DropdownItems = new List<DropdownItem>();
 
         /// <summary>
         ///     Populates arrays for dropdown menu from Catalog Assets' display name and key.
@@ -28,19 +29,19 @@ namespace UnityEditor.GameFoundation.Components
         /// <returns>
         ///     Return the index of the selected key.
         /// </returns>
-        public int Populate(string selectedKey, bool noneAsFirstItem = false)
+        public int Populate(string selectedKey, bool noneAsFirstItem = true)
         {
-            m_TmpList.Clear();
+            m_CatalogItemAssets.Clear();
+            m_DropdownItems.Clear();
 
-            CatalogSettings.catalogAsset.GetItems(m_TmpAssets);
-            foreach (var asset in m_TmpAssets)
+            PrefabTools.GetLookUpCatalogAsset().GetItems(m_CatalogItemAssets);
+            
+            foreach (var catalogItemAsset in m_CatalogItemAssets)
             {
-                m_TmpList.Add(new Tuple<string, string>(asset.displayName, asset.key));
+                m_DropdownItems.Add(new DropdownItem(catalogItemAsset.displayName, catalogItemAsset.key));
             }
 
-            m_TmpAssets.Clear();
-
-            return Populate(m_TmpList, selectedKey, noneAsFirstItem);
+            return Populate(m_DropdownItems, selectedKey, noneAsFirstItem);
         }
     }
 }

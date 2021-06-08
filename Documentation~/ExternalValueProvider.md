@@ -1,6 +1,6 @@
 ﻿# Using IExternalValueProvider at Initialization
 
-When initializing Game Foundation using a `MemoryDataLayer` class or `PersistenceDataLayer` class, you typically set the `CatalogAsset` class with fixed data. While having fixed data for your catalog at initialization works in most situations, there may be cases where it's useful to have catalog data with different values available under specific conditions, or determined for a select group of players. Some examaples of this being useful is when:
+When initializing Game Foundation using a `MemoryDataLayer` class or `PersistenceDataLayer` class, you typically set the `CatalogAsset` class with fixed data. While having fixed data for your catalog at initialization works in most situations, there may be cases where it's useful to have catalog data with different values available under specific conditions, or determined for a select group of players. Some examples of this being useful is when:
 
 * [A/B testing](https://en.wikipedia.org/wiki/A/B_testing)
 * Randomizing the catalog
@@ -157,6 +157,3 @@ public class Initializer : MonoBehaviour
 }
 ```
 
-
-## 
-< [_table of contents_](TableOfContents.md)

@@ -18,25 +18,16 @@ namespace UnityEngine.GameFoundation
     ///     This class instance will also make calls back to the TransactionManager
     ///     to do things like update the status of a purchase in progress.
     /// </summary>
-    sealed class UnityPurchasingAdapter : IStoreListener
+    sealed class UnityPurchasingAdapter : IStoreListener, IPurchasingAdapter
     {
-        public static TransactionManagerImpl transactionImpl => GameFoundationSdk.transactions as TransactionManagerImpl;
-
+        // public
+        static TransactionManagerImpl transactionImpl => GameFoundationSdk.transactions as TransactionManagerImpl;
+        
         /// <summary>
-        ///     Are we currently running on the Apple iOS platform?
+        ///     Current purchasing platform being used.
         /// </summary>
-        public bool isAppleIOS { get; private set; }
-
-        /// <summary>
-        ///     Are we currently running on the Google Play platform?
-        /// </summary>
-        public bool isGooglePlay { get; private set; }
-
-        /// <summary>
-        ///     Are we currently running on a fake platform just for testing?
-        /// </summary>
-        public bool isFakeStore { get; private set; }
-
+        public PurchasingPlatform currentPurchasingPlatform { get; private set; }
+        
         public bool isInitialized { get; private set; }
 
         IStoreController m_Controller;
@@ -98,7 +89,8 @@ namespace UnityEngine.GameFoundation
 
             var confirmation = new PurchaseConfirmation
             {
-                productId = currentPurchaseEventArgs.purchasedProduct.definition.storeSpecificId
+                productId = currentPurchaseEventArgs.purchasedProduct.definition.storeSpecificId,
+                receipt = currentPurchaseEventArgs.purchasedProduct.receipt
             };
 
             if (Debug.isDebugBuild)
@@ -114,14 +106,14 @@ namespace UnityEngine.GameFoundation
                 return confirmation;
             }
 
-            if (isAppleIOS)
+            if (currentPurchasingPlatform == PurchasingPlatform.AppleIOS)
             {
                 confirmation.receiptParts = new[]
                 {
                     receiptDict.TryGetValue("Payload", out var payloadObj) ? payloadObj.ToString() : ""
                 };
             }
-            else if (isGooglePlay)
+            else if (currentPurchasingPlatform == PurchasingPlatform.GooglePlay)
             {
                 confirmation.receiptParts = new string[2];
 
@@ -212,15 +204,19 @@ namespace UnityEngine.GameFoundation
 
 #if UNITY_EDITOR
             module.useFakeStoreAlways = true;
-            isFakeStore = true;
+            currentPurchasingPlatform = PurchasingPlatform.FakeStore;
 #endif
 
             var builder = ConfigurationBuilder.Instance(module);
 
-            isGooglePlay = Application.platform == RuntimePlatform.Android
-                && module.appStore == AppStore.GooglePlay;
-
-            isAppleIOS = Application.platform == RuntimePlatform.IPhonePlayer;
+            if (Application.platform == RuntimePlatform.Android && module.appStore == AppStore.GooglePlay)
+            {
+                currentPurchasingPlatform = PurchasingPlatform.GooglePlay;
+            }
+            else if (Application.platform == RuntimePlatform.IPhonePlayer)
+            {
+                currentPurchasingPlatform = PurchasingPlatform.AppleIOS;
+            }
 
             var catalog = ProductCatalog.LoadDefaultCatalog();
 
@@ -236,10 +232,10 @@ namespace UnityEngine.GameFoundation
 
 #if UNITY_EDITOR
 #if UNITY_ANDROID
-                        if (storeID.store == "GooglePlay")
+                        if (storeID.store == GooglePlay.Name)
                             ids.Add(storeID.id, "fake");
 #elif UNITY_IOS
-                        if (storeID.store == "AppleAppStore")
+                        if (storeID.store == AppleAppStore.Name)
                             ids.Add(storeID.id, "fake");
 #endif
 #endif
@@ -341,7 +337,7 @@ namespace UnityEngine.GameFoundation
 
                 var nextProductId = m_SuccessfulPurchaseQueue.Peek()?.purchasedProduct.definition.storeSpecificId;
 
-                if (string.IsNullOrEmpty(nextProductId)) continue; // TODO: throw?
+                if (string.IsNullOrEmpty(nextProductId)) continue;
 
                 // check if this is a background purchase
 
@@ -427,7 +423,8 @@ namespace UnityEngine.GameFoundation
 
             if (validator != null)
             {
-                if (isGooglePlay || isAppleIOS)
+                if (currentPurchasingPlatform == PurchasingPlatform.GooglePlay 
+                    || currentPurchasingPlatform == PurchasingPlatform.AppleIOS)
                 {
                     try
                     {
@@ -484,7 +481,12 @@ namespace UnityEngine.GameFoundation
 
             if (isValid)
             {
-                using (var deferred = transactionImpl.FinalizeSuccessfulIAP(currentPurchaseEventArgs))
+                var iapResult = new IapResult
+                {
+                    productId = currentPurchaseEventArgs.purchasedProduct.definition.storeSpecificId
+                };
+
+                using (var deferred = transactionImpl.FinalizeSuccessfulIapResult(iapResult))
                 {
                     while (!deferred.isDone || GameFoundationSdk.transactions.currentIap != null)
                     {
@@ -569,9 +571,7 @@ namespace UnityEngine.GameFoundation
 
             if (product == null)
             {
-                var platform = isFakeStore ? "Fake Store" :
-                    isGooglePlay ? "Google Play" :
-                    isAppleIOS ? "Apple iOS" : "unknown platform";
+                var platform = CurrentPlatformToString();
 
                 var message = $"Tried to complete a pending purchase for {nameof(productId)} '{productId}', " +
                     $"but that product was not found in the product collection of the platform {platform}.";
@@ -591,7 +591,7 @@ namespace UnityEngine.GameFoundation
         {
             k_GFLogger.Log("Attempting to restore purchases...");
 
-            if (isAppleIOS)
+            if (currentPurchasingPlatform == PurchasingPlatform.AppleIOS)
             {
                 m_AppleExtensions.RestoreTransactions(OnTransactionsRestored);
             }
@@ -629,9 +629,7 @@ namespace UnityEngine.GameFoundation
         public LocalizedProductMetadata GetLocalizedProductInfo(string productId)
         {
             ThrowIfNotInitialized(nameof(GetLocalizedProductInfo));
-            var platform = isFakeStore ? "Fake Store" :
-                isGooglePlay ? "Google Play" :
-                isAppleIOS ? "Apple iOS" : "unknown platform";
+            var platform = CurrentPlatformToString();
 
             var productMetadata = new LocalizedProductMetadata
             {
@@ -674,6 +672,30 @@ namespace UnityEngine.GameFoundation
             ThrowIfNotInitialized(nameof(FindProduct));
 
             return string.IsNullOrEmpty(productId) ? null : m_Controller.products.WithStoreSpecificID(productId);
+        }
+
+        string CurrentPlatformToString()
+        {
+            var platform = "unknown platform";
+            switch (currentPurchasingPlatform)
+            {
+                case PurchasingPlatform.FakeStore:
+                {
+                    platform = "Fake Store";
+                    break;
+                }
+                case PurchasingPlatform.GooglePlay:
+                {
+                    platform = "Google Play";
+                    break;
+                }
+                case PurchasingPlatform.AppleIOS:
+                {
+                    platform = "Apple iOS";
+                    break;
+                }
+            }
+            return platform;
         }
     }
 }

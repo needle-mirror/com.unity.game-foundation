@@ -907,11 +907,16 @@ namespace UnityEngine.GameFoundation
         {
             foreach (var kv in m_InventoryItems)
             {
-                if (ReferenceEquals(kv.Value, inventoryItem))
+                if (!ReferenceEquals(kv.Value, inventoryItem))
                 {
-                    m_InventoryItems.Remove(kv.Key);
-                    return;
+                    continue;
                 }
+
+                m_InventoryItems.Remove(kv.Key);
+
+                ((InventoryManagerImpl)GameFoundationSdk.inventory).SyncItemMapRemoveItem(id, kv.Key);
+
+                return;
             }
         }
 

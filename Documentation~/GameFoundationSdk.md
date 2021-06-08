@@ -36,7 +36,7 @@ GameFoundationSdk also holds the Catalog of all items available for to your appl
     /// </summary>
     public static Catalog catalog;
 
-As well as the TagCatalog.
+As well as the TagCatalog:
 
     /// <summary>
     ///     The collection of all tags created within Game Foundation.
@@ -47,7 +47,7 @@ As well as the TagCatalog.
 
 ## Initialization
 
-To use Game Foundation, it must first be initialized in your game, either through code using `GameFoundationSdk.Initialize` (below) or by utilizing the `GameFoundationInit.cs` script which automatically initializes Game Foundation and can even trigger methods in Game Objects within your Hierarchy when initialization completes to enable your game to begin using the package once it's ready.
+To use Game Foundation, it must first be initialized in your game, either through code using `GameFoundationSdk.Initialize` (below) or by utilizing the `GameFoundationInit.cs` script which automatically initializes Game Foundation and can even trigger methods in Game Objects within your Hierarchy when initialization completes to enable your game to begin using the package once it's ready.  To initialize manually, use:
 
     /// <summary>
     ///     Initialize GameFoundation systems.
@@ -61,7 +61,7 @@ To use Game Foundation, it must first be initialized in your game, either throug
     /// </returns>
     public static Deferred Initialize(IDataAccessLayer dataLayer);
 
-You can also unitialize Game Foundation if needed, for example to free resources or reload from Persisted Data using:
+You can also unintialize Game Foundation if needed to free resources or reload from Persisted Data using:
 
     /// <summary>
     ///     Frees the resources of the <see cref="GameFoundationSdk"/>.
@@ -109,6 +109,5 @@ If needed, you can also retrieve the current DataAccessLayer through:
     ///     The current Data Access Layer used by GameFoundation.
     /// </summary>
     public static IDataAccessLayer dataLayer;
-
-## 
-< [_table of contents_](TableOfContents.md)
+    
+Game Foundation also lets you override fixed catalog data at initialization using the External Value Provider. For more detail, please visit the [IExternalValueProvider](ExternalValueProvider.md) page.

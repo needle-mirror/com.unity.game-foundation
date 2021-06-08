@@ -267,14 +267,6 @@ public class GFInit : MonoBehaviour
 }
 ```
 
-## 
-< [_table of contents_](../TableOfContents.md)
-
-
-
-
-
-
 [inventory item definition]: ../CatalogItems/InventoryItemDefinition.md "Go to Inventory Item Definition"
 [definition]:                ../CatalogItems/InventoryItemDefinition.md "Go to Inventory Item Definition"
 [definitions]:               ../CatalogItems/InventoryItemDefinition.md "Go to Inventory Item Definition"

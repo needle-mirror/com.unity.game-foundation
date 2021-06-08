@@ -47,7 +47,7 @@ namespace UnityEngine.GameFoundation.Exceptions
         static string BuildMessage(string key, string catalogItemTypeName)
         {
             k_MessageBuilder.Clear()
-                .Append($"{catalogItemTypeName} {key} not found");
+                .Append($"{catalogItemTypeName} {key} not found.");
 
             return k_MessageBuilder.ToString();
         }

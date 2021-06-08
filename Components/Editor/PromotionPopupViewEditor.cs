@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.GameFoundation;
 using UnityEngine.GameFoundation.Components;
@@ -18,7 +19,6 @@ namespace UnityEditor.GameFoundation.Components
         string[] m_TransactionNames;
         string[] m_TransactionKeys;
 
-        string m_SelectedTransactionKey;
         int m_SelectedTransactionIndex = -1;
         int m_SelectedPromotionImageIndex = -1;
         int m_SelectedDescriptionTextIndex = -1;
@@ -30,7 +30,7 @@ namespace UnityEditor.GameFoundation.Components
         DropdownStaticPropertyHelper m_PromotionImageAssetDropdownHelper = new DropdownStaticPropertyHelper();
         DropdownStaticPropertyHelper m_PromoDescriptionPropertyDropdownHelper = new DropdownStaticPropertyHelper();
         DropdownStaticPropertyHelper m_PromoBadgeTextPropertyDropdownHelper = new DropdownStaticPropertyHelper();
-        DropdownPayoutItemPropertyHelper m_PriceIconPropertyDropdownHelper = new DropdownPayoutItemPropertyHelper();
+        DropdownCostItemPropertyHelper m_PriceIconPropertyDropdownHelper = new DropdownCostItemPropertyHelper();
         DropdownMultipleCatalogItemsHelper m_PayoutImagePropertyDropdownHelper = new DropdownMultipleCatalogItemsHelper();
 
         SerializedProperty m_TransactionKey_SerializedProperty;
@@ -48,8 +48,6 @@ namespace UnityEditor.GameFoundation.Components
         SerializedProperty m_PromoImageField_SerializedProperty;
         SerializedProperty m_BadgeField_SerializedProperty;
         SerializedProperty m_PurchaseButton_SerializedProperty;
-        SerializedProperty m_PayoutItemPrefab_SerializedProperty;
-        SerializedProperty m_SeparatorPrefab_SerializedProperty;
         SerializedProperty m_ShowTextsEditorFields_SerializedProperty;
         SerializedProperty m_ShowButtonEditorFields_SerializedProperty;
 
@@ -71,8 +69,6 @@ namespace UnityEditor.GameFoundation.Components
             nameof(PromotionPopupView.m_PromoImageField),
             nameof(PromotionPopupView.m_BadgeField),
             nameof(PromotionPopupView.m_PurchaseButton),
-            nameof(PromotionPopupView.m_PayoutItemPrefab),
-            nameof(PromotionPopupView.m_SeparatorPrefab),
             nameof(PromotionPopupView.showTextEditorFields),
             nameof(PromotionPopupView.showButtonEditorFields),
         };
@@ -96,12 +92,8 @@ namespace UnityEditor.GameFoundation.Components
             m_PromoImageField_SerializedProperty = serializedObject.FindProperty(nameof(m_PromotionPopupView.m_PromoImageField));
             m_BadgeField_SerializedProperty = serializedObject.FindProperty(nameof(m_PromotionPopupView.m_BadgeField));
             m_PurchaseButton_SerializedProperty = serializedObject.FindProperty(nameof(m_PromotionPopupView.m_PurchaseButton));
-            m_PayoutItemPrefab_SerializedProperty = serializedObject.FindProperty(nameof(m_PromotionPopupView.m_PayoutItemPrefab));
-            m_SeparatorPrefab_SerializedProperty = serializedObject.FindProperty(nameof(m_PromotionPopupView.m_SeparatorPrefab));
             m_ShowTextsEditorFields_SerializedProperty = serializedObject.FindProperty(nameof(m_PromotionPopupView.showTextEditorFields));
             m_ShowButtonEditorFields_SerializedProperty = serializedObject.FindProperty(nameof(m_PromotionPopupView.showButtonEditorFields));
-
-            m_SelectedTransactionKey = m_TransactionKey_SerializedProperty.stringValue;
 
             PopulateTransactions();
             PopulatePropertyKeys();
@@ -117,13 +109,18 @@ namespace UnityEditor.GameFoundation.Components
 
         void PopulatePropertyKeys()
         {
-            var transactionItem = CatalogSettings.catalogAsset.FindItem(m_TransactionKey_SerializedProperty.stringValue)
+            var transactionItem = PrefabTools.GetLookUpCatalogAsset().FindItem(m_TransactionKey_SerializedProperty.stringValue)
                 as BaseTransactionAsset;
 
-            m_SelectedPromotionImageIndex = m_PromotionImageAssetDropdownHelper.Populate(transactionItem, m_PromoImageAssetPropertyKey_SerializedProperty.stringValue, PropertyType.ResourcesAsset, true);
-            m_SelectedDescriptionTextIndex = m_PromoDescriptionPropertyDropdownHelper.Populate(transactionItem, m_DescriptionPropertyKey_SerializedProperty.stringValue, PropertyType.String, true);
-            m_SelectedBadgeTextIndex = m_PromoBadgeTextPropertyDropdownHelper.Populate(transactionItem, m_BadgePropertyKey_SerializedProperty.stringValue, PropertyType.String, true);
-            m_SelectedPriceIconPropertyIndex = m_PriceIconPropertyDropdownHelper.Populate(transactionItem, m_PriceIconSpritePropertyKey_SerializedProperty.stringValue, PropertyType.ResourcesAsset, true, true);
+            m_SelectedPromotionImageIndex = m_PromotionImageAssetDropdownHelper.Populate(transactionItem,
+                m_PromoImageAssetPropertyKey_SerializedProperty.stringValue, PropertyType.ResourcesAsset);
+            m_SelectedDescriptionTextIndex = m_PromoDescriptionPropertyDropdownHelper.Populate(transactionItem,
+                m_DescriptionPropertyKey_SerializedProperty.stringValue, PropertyType.String);
+            m_SelectedBadgeTextIndex = m_PromoBadgeTextPropertyDropdownHelper.Populate(transactionItem,
+                m_BadgePropertyKey_SerializedProperty.stringValue, PropertyType.String);
+            m_SelectedPriceIconPropertyIndex = m_PriceIconPropertyDropdownHelper.Populate(
+                transactionItem, m_PriceIconSpritePropertyKey_SerializedProperty.stringValue,
+                new []{ PropertyType.ResourcesAsset, PropertyType.Addressables });
 
             PopulatePayoutItemIconPropertyKeys(transactionItem);
         }
@@ -143,7 +140,9 @@ namespace UnityEditor.GameFoundation.Components
                 }
             }
 
-            m_SelectedPayoutItemImagePropertyIndex = m_PayoutImagePropertyDropdownHelper.Populate(catalogItemAssets, m_PayoutItemIconSpritePropertyKey_SerializedProperty.stringValue, PropertyType.ResourcesAsset, true);
+            m_SelectedPayoutItemImagePropertyIndex = m_PayoutImagePropertyDropdownHelper.Populate(
+                catalogItemAssets, m_PayoutItemIconSpritePropertyKey_SerializedProperty.stringValue,
+                new []{ PropertyType.ResourcesAsset, PropertyType.Addressables });
         }
 
         public override void OnInspectorGUI()
@@ -160,7 +159,7 @@ namespace UnityEditor.GameFoundation.Components
             DrawTextSection();
             EditorGUILayout.Space();
 
-            DrawButtonSection();
+            DrawPurchaseButtonSection();
             EditorGUILayout.Space();
 
             // Use the default object field GUI for these properties.
@@ -172,150 +171,72 @@ namespace UnityEditor.GameFoundation.Components
 
         void DrawTransactionItemSection()
         {
-            var itemDisplayContent = new GUIContent("Transaction Item", "The Transaction Item to display in this button");
-            if (m_TransactionDropdownHelper.displayNames != null && m_TransactionDropdownHelper.displayNames.Length > 0)
+            var itemDisplayContent = new GUIContent("Transaction Item", 
+                "The Transaction Item to display in this button");
+
+            PrefabTools.DisplayCatalogOverrideAlertIfNecessary();
+
+            using (var check = new EditorGUI.ChangeCheckScope())
             {
-                m_SelectedTransactionIndex = EditorGUILayout.Popup(itemDisplayContent, m_SelectedTransactionIndex, m_TransactionDropdownHelper.displayNames);
-                var transactionKey = m_TransactionDropdownHelper.GetKey(m_SelectedTransactionIndex);
-                if (m_PromotionPopupView.transactionKey != transactionKey)
+                m_SelectedTransactionIndex = EditorGUILayout.Popup(itemDisplayContent,
+                    m_SelectedTransactionIndex, m_TransactionDropdownHelper.displayNames);
+                m_TransactionKey_SerializedProperty.stringValue = m_TransactionDropdownHelper
+                    .GetKey(m_SelectedTransactionIndex);
+
+                if (check.changed)
                 {
-                    SetSelectedTransactionKey(transactionKey);
+                    PopulatePropertyKeys();
                 }
-            }
-            else
-            {
-                EditorGUILayout.Popup(itemDisplayContent, 0, new[] { "None" });
             }
         }
 
         void DrawPromoImageSection()
         {
-            var changed = false;
-            var autoGenerateImage = EditorGUILayout.Toggle("Auto Generate Promo Image", m_PromotionPopupView.autoGeneratePromoImage);
-            if (autoGenerateImage != m_PromotionPopupView.autoGeneratePromoImage)
-            {
-                changed = true;
-            }
+            var autoGeneratePromoImageContent = new GUIContent("Auto Generate Promo Image", 
+                "When true, a promo image will automatically be generated in the Promo Image Container. " +
+                "When false, a single image will be fetched from the Transaction Item's static properties using the " +
+                "Promo Image Property Key.");
+            var payoutItemIconPropertyContent = new GUIContent("Payout Item Icon Property Key",
+                "The key that is defined in the Static Properties of each of the Transaction's Payout Items. " +
+                "Used when auto generating promotion image.");
+            var itemPayoutCountPrefixContent = new GUIContent("Item Count Prefix",
+                "The string to add as a prefix to each item's payout count.");
+            var currencyPayoutCountPrefixContent = new GUIContent("Currency Count Prefix",
+                "The string to add as a prefix to each currency's payout count.");
+            var autoGenImageContent = new GUIContent("Promo Image Container",
+                "The Game Object in which to display the promotion image.");
+            var promoImageContent = new GUIContent("Promo Image Property Key",
+                "The key for the sprite that is defined in the Static Property of Transaction Item to " +
+                "display the promotion image.  If none is specified no image will be displayed.");
+            var promotionImageFieldContent = new GUIContent("Promo Image Field",
+                "The Game Object in which to display the promotion image.");
+
+            EditorGUILayout.PropertyField(m_AutoGeneratePromoImage_SerializedProperty, autoGeneratePromoImageContent);
 
             EditorGUI.indentLevel++;
 
-            if (autoGenerateImage)
+            if (m_AutoGeneratePromoImage_SerializedProperty.boolValue)
             {
-                var payoutItemIconPropertyContent = new GUIContent("Payout Item Icon Property Key",
-                    "The key that is defined in the Static Properties of each of the Transaction's Payout Items. Used when auto generating promotion image.");
-                m_SelectedPayoutItemImagePropertyIndex = EditorGUILayout.Popup(payoutItemIconPropertyContent, m_SelectedPayoutItemImagePropertyIndex, m_PayoutImagePropertyDropdownHelper.displayNames);
-                var payoutItemIconPropertyKey = m_PayoutImagePropertyDropdownHelper.GetKey(m_SelectedPayoutItemImagePropertyIndex);
-                if (m_PromotionPopupView.payoutItemIconSpritePropertyKey != payoutItemIconPropertyKey)
-                {
-                    changed = true;
-                }
+                m_SelectedPayoutItemImagePropertyIndex = EditorGUILayout.Popup(payoutItemIconPropertyContent, 
+                    m_SelectedPayoutItemImagePropertyIndex, m_PayoutImagePropertyDropdownHelper.displayNames);
+                m_PayoutItemIconSpritePropertyKey_SerializedProperty.stringValue = m_PayoutImagePropertyDropdownHelper
+                    .GetKey(m_SelectedPayoutItemImagePropertyIndex);
 
-                string itemPayoutCountPrefix = null;
-                using (var check = new EditorGUI.ChangeCheckScope())
-                {
-                    var itemPayoutCountPrefixContent = new GUIContent("Item Count Prefix", "The string to add as a prefix to each item's payout count.");
-                    itemPayoutCountPrefix = EditorGUILayout.TextField(itemPayoutCountPrefixContent, m_PromotionPopupView.itemPayoutCountPrefix);
-
-                    if (check.changed)
-                    {
-                        changed = true;
-                    }
-                }
-
-                string currencyPayoutCountPrefix = null;
-                using (var check = new EditorGUI.ChangeCheckScope())
-                {
-                    var currencyPayoutCountPrefixContent = new GUIContent("Currency Count Prefix", "The string to add as a prefix to each currency's payout count.");
-                    currencyPayoutCountPrefix = EditorGUILayout.TextField(currencyPayoutCountPrefixContent, m_PromotionPopupView.currencyPayoutCountPrefix);
-
-                    if (check.changed)
-                    {
-                        changed = true;
-                    }
-                }
-
-                if (changed)
-                {
-                    m_PromotionPopupView.SetAutoGeneratePromotionImage(payoutItemIconPropertyKey, itemPayoutCountPrefix, currencyPayoutCountPrefix);
-
-                    m_AutoGeneratePromoImage_SerializedProperty.boolValue = true;
-                    m_PayoutItemIconSpritePropertyKey_SerializedProperty.stringValue = payoutItemIconPropertyKey;
-                    m_ItemPayoutCountPrefix_SerializedProperty.stringValue = itemPayoutCountPrefix;
-                    m_CurrencyPayoutCountPrefix_SerializedProperty.stringValue = currencyPayoutCountPrefix;
-                }
+                EditorGUILayout.PropertyField(m_ItemPayoutCountPrefix_SerializedProperty, itemPayoutCountPrefixContent);
+                EditorGUILayout.PropertyField(m_CurrencyPayoutCountPrefix_SerializedProperty, currencyPayoutCountPrefixContent);
 
                 EditorGUILayout.Space();
 
-                using (var check = new EditorGUI.ChangeCheckScope())
-                {
-                    var autoGenImageContent = new GUIContent("Promo Image Container",
-                        "The Game Object in which to display the promotion image.");
-                    var autoGenImageContainer = (Transform)EditorGUILayout.ObjectField(autoGenImageContent,
-                        m_PromotionPopupView.autoGeneratedImageContainer, typeof(Transform), true);
-
-                    if (check.changed)
-                    {
-                        m_PromotionPopupView.SetAutoGeneratedImageContainer(autoGenImageContainer);
-                        m_AutoGeneratedImageContainer_SerializedProperty.objectReferenceValue = autoGenImageContainer;
-                    }
-                }
-
-                using (var check = new EditorGUI.ChangeCheckScope())
-                {
-                    var payoutItemContent = new GUIContent("Payout Item Prefab", "Prefab to use for an individual payout item when auto generating the promotion image.");
-                    var payoutItem = (ImageInfoView)EditorGUILayout.ObjectField(payoutItemContent, m_PromotionPopupView.payoutItemPrefab, typeof(ImageInfoView), true);
-
-                    if (check.changed)
-                    {
-                        m_PromotionPopupView.SetPayoutItemPrefab(payoutItem);
-                        m_PayoutItemPrefab_SerializedProperty.objectReferenceValue = payoutItem;
-                    }
-                }
-
-                using (var check = new EditorGUI.ChangeCheckScope())
-                {
-                    var separatorContent = new GUIContent("Separator Prefab", "");
-                    var separator = (GameObject)EditorGUILayout.ObjectField(separatorContent, m_PromotionPopupView.separatorPrefab, typeof(GameObject), true);
-
-                    if (check.changed)
-                    {
-                        m_PromotionPopupView.SetSeparatorPrefab(separator);
-                        m_SeparatorPrefab_SerializedProperty.objectReferenceValue = separator;
-                    }
-                }
+                EditorGUILayout.PropertyField(m_AutoGeneratedImageContainer_SerializedProperty, autoGenImageContent);
             }
             else
             {
-                var promoImageContent = new GUIContent("Promo Image Property Key",
-                    "The key for the sprite that is defined in the Static Property of Transaction Item to display the promotion image. " +
-                    "If none is specified no image will be displayed.");
-                m_SelectedPromotionImageIndex = EditorGUILayout.Popup(promoImageContent, m_SelectedPromotionImageIndex, m_PromotionImageAssetDropdownHelper.displayNames);
-                var promotionImagePropertyKey = m_PromotionImageAssetDropdownHelper.GetKey(m_SelectedPromotionImageIndex);
-                if (m_PromotionPopupView.promoImageSpritePropertyKey != promotionImagePropertyKey)
-                {
-                    changed = true;
-                }
+                m_SelectedPromotionImageIndex = EditorGUILayout.Popup(promoImageContent, 
+                    m_SelectedPromotionImageIndex, m_PromotionImageAssetDropdownHelper.displayNames);
+                m_PromoImageAssetPropertyKey_SerializedProperty.stringValue = m_PromotionImageAssetDropdownHelper
+                    .GetKey(m_SelectedPromotionImageIndex);
 
-                if (changed)
-                {
-                    m_PromotionPopupView.SetPromotionImagePropertyKey(promotionImagePropertyKey);
-                    m_AutoGeneratePromoImage_SerializedProperty.boolValue = false;
-                    m_PromoImageAssetPropertyKey_SerializedProperty.stringValue = promotionImagePropertyKey;
-                }
-
-                using (var check = new EditorGUI.ChangeCheckScope())
-                {
-                    var promotionImageFieldContent = new GUIContent("Promo Image Field",
-                        "The Game Object in which to display the promotion image.");
-                    var promotionImageField = (Image)EditorGUILayout.ObjectField(promotionImageFieldContent,
-                        m_PromotionPopupView.promoImageField, typeof(Image), true);
-
-                    if (check.changed)
-                    {
-                        m_PromotionPopupView.SetPromoImageField(promotionImageField);
-                        m_PromoImageField_SerializedProperty.objectReferenceValue = promotionImageField;
-                    }
-                }
+                EditorGUILayout.PropertyField(m_PromoImageField_SerializedProperty, promotionImageFieldContent);
             }
 
             EditorGUI.indentLevel--;
@@ -323,135 +244,75 @@ namespace UnityEditor.GameFoundation.Components
 
         void DrawTextSection()
         {
-            m_ShowTextsEditorFields_SerializedProperty.boolValue = EditorGUILayout.Foldout(m_ShowTextsEditorFields_SerializedProperty.boolValue, "Texts");
+            var titleTextFieldContent = new GUIContent("Title Text Field",
+                "Text component in which to display the transaction display name.");
+            var promoDescriptionContent = new GUIContent("Description Property Key",
+                "The key for the description text that is defined in the Static Property of Transaction Item.");
+            var descriptionTextFieldContent = new GUIContent("Description Text Field",
+                "Text component in which to display the promotion's description.");
+            var promoBadgeContent = new GUIContent("Badge Text Property Key",
+                "The key for the badge text that is defined in the Static Property of Transaction Item.");
+            var badgeFieldContent = new GUIContent("Badge",
+                "GameObject in which to display the promotion's badge.");
+            
+            m_ShowTextsEditorFields_SerializedProperty.boolValue = EditorGUILayout.Foldout(
+                m_ShowTextsEditorFields_SerializedProperty.boolValue, "Texts", true);
+
             if (m_ShowTextsEditorFields_SerializedProperty.boolValue)
             {
                 EditorGUI.indentLevel++;
 
-                using (var check = new EditorGUI.ChangeCheckScope())
-                {
-                    var titleTextFieldContent = new GUIContent("Title Text Field",
-                        "Text component in which to display the transaction display name.");
-                    var transactionNameTextField = (Text)EditorGUILayout.ObjectField(titleTextFieldContent,
-                        m_PromotionPopupView.titleTextField, typeof(Text), true);
-
-                    if (check.changed)
-                    {
-                        m_PromotionPopupView.SetTitleTextField(transactionNameTextField);
-                        m_TransactionNameTextField_SerializedProperty.objectReferenceValue = transactionNameTextField;
-                    }
-                }
+                EditorGUILayout.PropertyField(m_TransactionNameTextField_SerializedProperty, titleTextFieldContent);
 
                 EditorGUILayout.Space();
 
-                var promoDescriptionContent = new GUIContent("Description Property Key",
-                    "The key for the description text that is defined in the Static Property of Transaction Item.");
-                m_SelectedDescriptionTextIndex = EditorGUILayout.Popup(promoDescriptionContent, m_SelectedDescriptionTextIndex, m_PromoDescriptionPropertyDropdownHelper.displayNames);
-                var descriptionPropertyKey = m_PromoDescriptionPropertyDropdownHelper.GetKey(m_SelectedDescriptionTextIndex);
-                if (m_PromotionPopupView.descriptionPropertyKey != descriptionPropertyKey)
-                {
-                    m_PromotionPopupView.SetDescriptionPropertyKey(descriptionPropertyKey);
-                    m_DescriptionPropertyKey_SerializedProperty.stringValue = descriptionPropertyKey;
-                }
+                m_SelectedDescriptionTextIndex = EditorGUILayout.Popup(promoDescriptionContent, 
+                    m_SelectedDescriptionTextIndex, m_PromoDescriptionPropertyDropdownHelper.displayNames);
+                m_DescriptionPropertyKey_SerializedProperty.stringValue = m_PromoDescriptionPropertyDropdownHelper
+                    .GetKey(m_SelectedDescriptionTextIndex);
 
-                using (var check = new EditorGUI.ChangeCheckScope())
-                {
-                    var descriptionTextFieldContent = new GUIContent("Description Text Field",
-                        "Text component in which to display the promotion's description.");
-                    var promoDescriptionTextField = (Text)EditorGUILayout.ObjectField(descriptionTextFieldContent,
-                        m_PromotionPopupView.descriptionTextField, typeof(Text), true);
-
-                    if (check.changed)
-                    {
-                        m_PromotionPopupView.SetDescriptionTextField(promoDescriptionTextField);
-                        m_PromoDescriptionTextField_SerializedProperty.objectReferenceValue = promoDescriptionTextField;
-                    }
-                }
+                EditorGUILayout.PropertyField(m_PromoDescriptionTextField_SerializedProperty, descriptionTextFieldContent);
 
                 EditorGUILayout.Space();
 
-                var promoBadgeContent = new GUIContent("Badge Text Property Key",
-                    "The key for the badge text that is defined in the Static Property of Transaction Item.");
-                m_SelectedBadgeTextIndex = EditorGUILayout.Popup(promoBadgeContent, m_SelectedBadgeTextIndex, m_PromoBadgeTextPropertyDropdownHelper.displayNames);
-                var badgeTextPropertyKey = m_PromoBadgeTextPropertyDropdownHelper.GetKey(m_SelectedBadgeTextIndex);
-                if (m_PromotionPopupView.badgeTextPropertyKey != badgeTextPropertyKey)
-                {
-                    m_PromotionPopupView.SetBadgeTextPropertyKey(badgeTextPropertyKey);
-                    m_BadgePropertyKey_SerializedProperty.stringValue = badgeTextPropertyKey;
-                }
+                m_SelectedBadgeTextIndex = EditorGUILayout.Popup(promoBadgeContent,
+                    m_SelectedBadgeTextIndex, m_PromoBadgeTextPropertyDropdownHelper.displayNames);
+                m_BadgePropertyKey_SerializedProperty.stringValue = m_PromoBadgeTextPropertyDropdownHelper
+                    .GetKey(m_SelectedBadgeTextIndex);
 
-                using (var check = new EditorGUI.ChangeCheckScope())
-                {
-                    var badgeFieldContent = new GUIContent("Badge",
-                        "GameObject in which to display the promotion's badge.");
-                    var badgeField =
-                        (ImageInfoView)EditorGUILayout.ObjectField(badgeFieldContent,
-                            m_PromotionPopupView.badgeField, typeof(ImageInfoView), true);
-
-                    if (check.changed)
-                    {
-                        m_PromotionPopupView.SetBadgeField(badgeField);
-                        m_BadgeField_SerializedProperty.objectReferenceValue = badgeField;
-                    }
-                }
+                EditorGUILayout.ObjectField(m_BadgeField_SerializedProperty, badgeFieldContent);
 
                 EditorGUI.indentLevel--;
             }
         }
 
         /// <summary>
-        ///     Draws the buttons of the <see cref="PromotionPopupViewEditor"/>
+        ///     Draws the purchase button of the <see cref="PromotionPopupViewEditor"/>
         /// </summary>
-        public void DrawButtonSection()
+        void DrawPurchaseButtonSection()
         {
-            m_ShowButtonEditorFields_SerializedProperty.boolValue = EditorGUILayout.Foldout(m_ShowButtonEditorFields_SerializedProperty.boolValue, "Button");
+            var priceIconPropertyKeyContent = new GUIContent("Price Icon Asset Property Key",
+                "The key for the sprite that is defined in the Static Property of Transaction Item. " +
+                "If none is specified no image will be displayed.");
+            var purchaseButtonContent = new GUIContent("Purchase Button",
+                "PurchaseButton component to use when generating a button for purchasing item in this view.");
+
+            m_ShowButtonEditorFields_SerializedProperty.boolValue = EditorGUILayout.Foldout(
+                m_ShowButtonEditorFields_SerializedProperty.boolValue, "Purchase Button", true);
+
             if (m_ShowButtonEditorFields_SerializedProperty.boolValue)
             {
                 EditorGUI.indentLevel++;
 
-                var priceIconPropertyKeyContent = new GUIContent("Price Icon Asset Property Key", "The key for the sprite that is defined in the Static Property of Transaction Item. " +
-                    "If none is specified no image will be displayed.");
-                m_SelectedPriceIconPropertyIndex = EditorGUILayout.Popup(priceIconPropertyKeyContent, m_SelectedPriceIconPropertyIndex, m_PriceIconPropertyDropdownHelper.displayNames);
-                var priceIconPropertyKey = m_PriceIconPropertyDropdownHelper.GetKey(m_SelectedPriceIconPropertyIndex);
-                if (m_PromotionPopupView.priceIconSpritePropertyKey != priceIconPropertyKey)
-                {
-                    m_PromotionPopupView.SetPriceIconSpritePropertyKey(priceIconPropertyKey);
-                    m_PriceIconSpritePropertyKey_SerializedProperty.stringValue = priceIconPropertyKey;
-                }
+                m_SelectedPriceIconPropertyIndex = EditorGUILayout.Popup(priceIconPropertyKeyContent, 
+                    m_SelectedPriceIconPropertyIndex, m_PriceIconPropertyDropdownHelper.displayNames);
+                m_PriceIconSpritePropertyKey_SerializedProperty.stringValue = m_PriceIconPropertyDropdownHelper
+                    .GetKey(m_SelectedPriceIconPropertyIndex);
 
-                using (var check = new EditorGUI.ChangeCheckScope())
-                {
-                    var purchaseButtonContent = new GUIContent("Purchase Button",
-                        "PurchaseButton component to use when generating a button for purchasing item in this view.");
-                    var purchaseButton = (PurchaseButton)EditorGUILayout.ObjectField(purchaseButtonContent,
-                        m_PromotionPopupView.purchaseButton,
-                        typeof(PurchaseButton), true);
-
-                    if (check.changed)
-                    {
-                        m_PromotionPopupView.SetPurchaseButton(purchaseButton);
-                        m_PurchaseButton_SerializedProperty.objectReferenceValue = purchaseButton;
-                    }
-                }
+                EditorGUILayout.PropertyField(m_PurchaseButton_SerializedProperty, purchaseButtonContent);
 
                 EditorGUI.indentLevel--;
             }
-        }
-
-        void SetSelectedTransactionKey(string key)
-        {
-            if (m_SelectedTransactionKey == key) return;
-
-            m_SelectedTransactionKey = key;
-
-            // Update the serialized value
-            m_TransactionKey_SerializedProperty.stringValue = key;
-            m_PromotionPopupView.SetTransaction(key);
-
-            // Push all changes made on the serializedObject back to the target.
-            serializedObject.ApplyModifiedProperties();
-
-            PopulatePropertyKeys();
         }
     }
 }

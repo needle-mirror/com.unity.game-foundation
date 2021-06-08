@@ -3,9 +3,11 @@
     "references": [
         "Unity.GameFoundation",
         "Unity.GameFoundation.Editor",
-        "Unity.GameFoundation.DefaultCatalog"
+        "Unity.GameFoundation.DefaultCatalog",
+        "Unity.Addressables",
+        "Unity.Addressables.Editor",
+        "Unity.ResourceManager"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [
         "Editor"
     ],
@@ -14,5 +16,13 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": []
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.purchasing",
+            "expression": "3.0",
+            "define": "UNITY_PURCHASING"
+        }
+    ],
+    "noEngineReferences": false
 }
